@@ -242,7 +242,8 @@ export class GameScene {
         this.setDir(pk.idx, hit);
         return;
       }
-      // Tapping elsewhere just closes the picker (and continues below).
+      // Tapping elsewhere only closes the picker.
+      return;
     }
     const idx = this.cellAt(px, py);
     this.gesture = { id, x0: px, y0: py, x: px, y: py, idx, t0: this.t, moved: false, drag: null, done: false };
@@ -297,7 +298,15 @@ export class GameScene {
     if (g.drag) {
       const to = this.cellAt(px, py);
       const piece = g.drag;
-      if (to === g.idx) return;
+      if (to === g.idx) {
+        // A short swipe that stays on its tile re-orients an arrow.
+        const dx = px - g.x0;
+        const dy = py - g.y0;
+        if (piece.type === PIECE.ARROW && Math.hypot(dx, dy) > this.S * 0.28) {
+          this.setDir(g.idx, Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 1 : 3) : dy > 0 ? 2 : 0);
+        }
+        return;
+      }
       if (to < 0) {
         this.removeAt(g.idx);
         return;

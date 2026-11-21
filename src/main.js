@@ -93,6 +93,38 @@ function frame(now) {
 // ---------------------------------------------------------------------------
 // Screens
 
+// Android back button / browser back: walk back through the app instead of leaving it.
+let navDepth = 0;
+function pushNav(name) {
+  try {
+    history.pushState({ lumignons: name }, '');
+    navDepth++;
+  } catch {
+    /* ignore */
+  }
+}
+window.addEventListener('popstate', () => {
+  if (navDepth > 0) navDepth--;
+  const top = app.modalStack[app.modalStack.length - 1];
+  if (top) {
+    if (top.onBack) {
+      top.onBack();
+      return;
+    }
+    top.close();
+    pushNav(app.screen);
+    return;
+  }
+  if (app.screen === 'game') {
+    game.stop();
+    hideFail();
+    openMap(false, true);
+  } else if (app.screen === 'map') {
+    buildTitle();
+    showScreen('title');
+  }
+});
+
 function showScreen(name) {
   app.screen = name;
   for (const s of document.querySelectorAll('.screen')) s.classList.toggle('active', s.id === 'screen-' + name);
@@ -150,7 +182,8 @@ const NODE_PATH = [
   [56, 87],
 ];
 
-function openMap(scrollToCurrent = false) {
+function openMap(scrollToCurrent = false, fromBack = false) {
+  if (app.screen === 'title' && !fromBack) pushNav('map');
   buildMap();
   showScreen('map');
   if (scrollToCurrent) {
@@ -179,8 +212,11 @@ function buildMap() {
     <div class="map-scroll"></div>`;
   root.querySelector('[data-act=back]').onclick = () => {
     click();
-    buildTitle();
-    showScreen('title');
+    if (navDepth > 0) history.back();
+    else {
+      buildTitle();
+      showScreen('title');
+    }
   };
   const sc = root.querySelector('.map-scroll');
   WORLDS.forEach((w, wi) => {
@@ -294,6 +330,7 @@ function startLevel(id) {
   setSpeedLabel();
   const gs = $('#screen-game');
   gs.classList.remove('running', 'result');
+  if (app.screen !== 'game') pushNav('game');
   showScreen('game');
   layoutGame();
   app.hudChanged();
@@ -562,7 +599,7 @@ function bindGameHud() {
 
 // -------------------------------------------------------------------- modals
 
-function openModal(content, { onClose, dismissable = true, cls = '' } = {}) {
+function openModal(content, { onClose, dismissable = true, cls = '', onBack = null } = {}) {
   const root = $('#modal-root');
   const m = el('div', 'modal ' + cls);
   const card = el('div', 'card');
@@ -582,6 +619,7 @@ function openModal(content, { onClose, dismissable = true, cls = '' } = {}) {
       onClose?.();
     },
     dismissable,
+    onBack,
   };
   if (dismissable) {
     m.addEventListener('click', (e) => {
@@ -785,7 +823,8 @@ function openPause() {
     m.close();
     game.stop();
     hideFail();
-    openMap();
+    if (navDepth > 0) history.back();
+    else openMap();
   };
 }
 
@@ -860,7 +899,13 @@ function showVictory(stars, res, unlocks, gained) {
       g.fillText(a.icon, 36, 40);
     });
   }
-  const m = openModal(box, { dismissable: false });
+  const m = openModal(box, {
+    dismissable: false,
+    onBack: () => {
+      m.close();
+      openMap(true, true);
+    },
+  });
   const starsEls = box.querySelectorAll('.win-star');
   starsEls.forEach((s, i) => {
     setTimeout(() => {
@@ -1130,11 +1175,15 @@ async function installApp() {
   deferredInstall = null;
   buildTitle();
 }
-if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost') && !navigator.webdriver) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('sw.js').catch(() => {});
-  });
-}
+window.addEventListener('load', () => {
+  try {
+    if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost') && !navigator.webdriver) {
+      navigator.serviceWorker.register('sw.js').catch(() => {});
+    }
+  } catch {
+    /* sandboxed frames forbid service workers: the game still works online */
+  }
+});
 
 // --------------------------------------------------------------- keyboard
 
@@ -1143,7 +1192,8 @@ window.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') {
     const top = app.modalStack[app.modalStack.length - 1];
     if (top) {
-      if (top.dismissable) top.close();
+      if (top.onBack) top.onBack();
+      else top.close();
       return;
     }
     if (app.screen === 'game') {
