@@ -5,7 +5,7 @@ import { solve, checkSolution } from '../src/engine/solver.js';
 const ARROWS = ['↑', '→', '↓', '←'];
 
 export function overlay(L, placements) {
-  const rows = L.def.map.map((r) => r.padEnd(L.w, ' ').split(''));
+  const rows = L.rows.map((r) => r.padEnd(L.w, ' ').split(''));
   for (const p of placements) {
     const x = p.idx % L.w;
     const y = (p.idx / L.w) | 0;

@@ -1,0 +1,18 @@
+{
+  "name": "Lumignons — Le chemin des lanternes",
+  "short_name": "Lumignons",
+  "description": "Un jeu de réflexion : place des flèches pour guider de petites lueurs jusqu’à leurs lanternes.",
+  "lang": "fr",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#231a45",
+  "theme_color": "#231a45",
+  "categories": ["games", "puzzle", "entertainment"],
+  "icons": [
+    { "src": "assets/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "assets/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "assets/icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

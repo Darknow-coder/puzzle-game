@@ -1,0 +1,24 @@
+<!doctype html><html><head><meta charset="utf-8"><style>body{margin:0;background:transparent}canvas{display:block}</style></head>
+<body><canvas id="c"></canvas><script type="module">
+import * as A from '../../src/game/art.js';
+const q = new URLSearchParams(location.search);
+const size = +q.get('s') || 512; const mask = q.get('m') === '1';
+const c = document.getElementById('c'); c.width = size; c.height = size;
+const g = c.getContext('2d');
+const k = size / 512;
+g.save();
+if (!mask) { g.beginPath(); A.roundRect(g, 0, 0, size, size, size * 0.22); g.clip(); }
+const grd = g.createLinearGradient(0, 0, 0, size);
+grd.addColorStop(0, '#20164a'); grd.addColorStop(0.6, '#4a2c78'); grd.addColorStop(1, '#c45f74');
+g.fillStyle = grd; g.fillRect(0, 0, size, size);
+A.drawStars(g, A.makeStars(40, 3), size, size, 2, 1, 2.4 * k);
+// little island
+const s = mask ? 0.78 : 1;
+g.translate(size / 2, size / 2); g.scale(s, s); g.translate(-size / 2, -size / 2);
+g.fillStyle = '#6b4a33'; g.beginPath(); A.roundRect(g, 110 * k, 380 * k, 292 * k, 70 * k, 30 * k); g.fill();
+g.fillStyle = '#8fd18a'; g.beginPath(); A.roundRect(g, 100 * k, 330 * k, 312 * k, 80 * k, 36 * k); g.fill();
+g.fillStyle = '#b4e6a3'; g.fillRect(140 * k, 336 * k, 232 * k, 8 * k);
+A.drawLumi(g, 256 * k, 372 * k, 330 * k, { color: 0, dir: 2, t: 0.6, mood: 'happy', glowAmt: 1.1 });
+g.restore();
+window.done = true;
+</script></body></html>

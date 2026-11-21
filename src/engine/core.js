@@ -36,14 +36,36 @@ export const MAX_TICKS = 400;
  *   'R' weathervane (directions from `vanes`, reading order)
  *   'G' wandering Gloomnib (directions from dirs.G)    'Z' sleeping Gloomnib
  */
+/** Removes the empty border (void rows/columns) around a map. */
+export function cropMap(map) {
+  const isVoid = (c) => c === ' ' || c === '_' || c === undefined;
+  let x0 = Infinity;
+  let x1 = -1;
+  let y0 = Infinity;
+  let y1 = -1;
+  map.forEach((row, y) => {
+    for (let x = 0; x < row.length; x++) {
+      if (!isVoid(row[x])) {
+        x0 = Math.min(x0, x);
+        x1 = Math.max(x1, x);
+        y0 = Math.min(y0, y);
+        y1 = Math.max(y1, y);
+      }
+    }
+  });
+  if (x1 < 0) return map;
+  return map.slice(y0, y1 + 1).map((r) => r.padEnd(x1 + 1, ' ').slice(x0, x1 + 1));
+}
+
 export function parseLevel(def) {
-  const rows = def.map;
+  const rows = cropMap(def.map);
   const h = rows.length;
   const w = Math.max(...rows.map((r) => r.length));
   const n = w * h;
   const L = {
     id: def.id,
     def,
+    rows,
     w,
     h,
     terrain: new Uint8Array(n),
