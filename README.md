@@ -54,6 +54,7 @@ node tools/explore-fireflies.mjs ...  # où placer les lucioles pour un bon déf
 node tools/generate.mjs pond 2000     # candidats de niveaux pour un thème (à trier et retoucher)
 node tools/build-sw.mjs               # régénère la liste des fichiers mis en cache hors ligne
 node tools/levels-doc.mjs             # régénère docs/LEVELS.md
+node tools/build-artifact.mjs         # page autonome (CSS et police intégrées) pour un aperçu hébergé
 ```
 
 ### Structure
