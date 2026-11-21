@@ -461,6 +461,19 @@ export class GameScene {
     this.speed = s;
   }
 
+  playMelody() {
+    if (!this.melody) return;
+    clearTimeout(this.melodyTimer);
+    let i = 0;
+    const next = () => {
+      if (i >= this.melody.length) return;
+      for (const [c, x, y] of this.melody[i]) sound.step(c, x, y, this.L.h, this.worldKey);
+      i++;
+      this.melodyTimer = setTimeout(next, 170);
+    };
+    next();
+  }
+
   update(dt) {
     dt *= this.timeScale || 1;
     this.t += dt;
@@ -579,6 +592,17 @@ export class GameScene {
     const run = this.run;
     if (run.result === 'win') {
       sound.sfx('win');
+      // The tune written by the Lumignons' footsteps, replayable from the victory screen.
+      this.melody = [];
+      for (let t = 1; t < run.frames.length; t++) {
+        const notes = [];
+        for (const m of run.frames[t].moves) {
+          if ((m.type === 'step' || m.type === 'jump') && this.L.walkers[m.id].kind === KIND.LUMI && m.outcome !== 'fall' && m.outcome !== 'water') {
+            notes.push([this.L.walkers[m.id].color, m.toX, m.toY]);
+          }
+        }
+        this.melody.push(notes);
+      }
       // Constellation of the paths walked by each Lumignon.
       this.winPaths = this.L.walkers.map((w, id) => {
         if (w.kind !== KIND.LUMI) return null;

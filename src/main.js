@@ -855,6 +855,7 @@ function showVictory(stars, res, unlocks, gained) {
       ${next ? `<button class="btn btn-primary" data-a="next">${t('next')}${ICONS.next}</button>` : ''}
       <div class="actions" style="margin-top:0">
         <button class="btn btn-ghost btn-small" data-a="replay">${ICONS.retry}${t('replay')}</button>
+        <button class="btn btn-ghost btn-small" data-a="tune" aria-label="${t('tune')}">♫</button>
         <button class="btn btn-ghost btn-small" data-a="map">${ICONS.map}${t('map')}</button>
       </div>
     </div>`;
@@ -922,6 +923,10 @@ function showVictory(stars, res, unlocks, gained) {
     click();
     m.close();
     game.retry();
+  };
+  box.querySelector('[data-a=tune]').onclick = () => {
+    sound.unlock();
+    game.playMelody();
   };
   box.querySelector('[data-a=map]').onclick = () => {
     click();

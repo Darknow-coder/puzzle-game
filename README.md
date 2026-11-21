@@ -16,9 +16,15 @@ puis appuie sur **Go !** et regarde ton plan se dérouler… en musique.
 ## Jouer
 
 Version en ligne (GitHub Pages) : **https://darknow-coder.github.io/puzzle-game/**
+(publiée automatiquement à chaque push par `.github/workflows/pages.yml` — voir *Publication* ci-dessous
+pour l’unique réglage à faire dans GitHub).
 
 Sur smartphone, ouvrir le lien puis « Ajouter à l’écran d’accueil » (ou le bouton *Installer le jeu*
 sur l’écran titre) : le jeu se lance alors en plein écran et fonctionne sans connexion.
+
+Aperçu immédiat sans réglage, servi depuis un commit précis du dépôt :
+`https://raw.githack.com/Darknow-coder/puzzle-game/<commit>/index.html`
+(remplacer `<commit>` par l’identifiant du dernier commit).
 
 ### Comment jouer
 
@@ -69,11 +75,14 @@ tools/                   solveur en ligne de commande, générateur, vérificati
 
 ## Publication
 
-- **GitHub Pages** : le workflow `.github/workflows/pages.yml` teste puis publie le jeu à chaque push.
-  Dans *Settings → Pages*, choisir la source **GitHub Actions** ; si l’environnement
-  `github-pages` restreint les branches, y autoriser la branche publiée
-  (*Settings → Environments → github-pages → Deployment branches*).
-  Alternative sans workflow : *Settings → Pages → Deploy from a branch* (racine du dépôt).
+- **GitHub Pages** : le workflow `.github/workflows/pages.yml` lance les tests, vérifie les 66 niveaux,
+  puis publie le jeu à chaque push sur `main` ou sur la branche de développement.
+  1. *Settings → Pages → Build and deployment → Source* : **GitHub Actions**.
+  2. *Settings → Environments → github-pages → Deployment branches and tags* : autoriser la branche
+     publiée (ou fusionner la branche dans `main`, déjà autorisée par défaut).
+  3. Relancer le dernier workflow (*Actions → Deploy to GitHub Pages → Re-run jobs*).
+
+  Alternative sans workflow : *Settings → Pages → Deploy from a branch*, choisir la branche et `/ (root)`.
 - **Google Play** : le jeu est une PWA conforme ; il peut être empaqueté en *Trusted Web Activity*
   (par exemple avec Bubblewrap ou PWABuilder, gratuits).
 - **App Store** : empaquetage possible avec Capacitor (gratuit ; un compte développeur Apple reste payant).

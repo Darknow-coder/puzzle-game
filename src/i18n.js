@@ -90,6 +90,7 @@ const STR = {
     version: 'Version',
     offlineReady: 'Le jeu fonctionne maintenant hors ligne.',
     hintsUsed: 'Indices utilisés',
+    tune: 'Écouter la mélodie du chemin',
     soundOnTip: 'Touchez pour activer le son',
   },
   en: {
@@ -181,6 +182,7 @@ const STR = {
     version: 'Version',
     offlineReady: 'The game now works offline.',
     hintsUsed: 'Hints used',
+    tune: 'Play the tune of the path',
     soundOnTip: 'Tap to enable sound',
   },
 };
