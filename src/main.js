@@ -475,6 +475,7 @@ app.onWin = (res) => {
   if ((rec?.tries || 0) >= 10) SV.save.data.stats.stubborn = true;
   const { gained } = SV.recordWin(id, { stars, pieces: res.pieces, fireflies: res.fireflies, usedHint: res.hintsUsed > 0 });
   const unlocks = SV.collectUnlocks();
+  SV.persistNow();
   showVictory(stars, res, unlocks, gained);
   app.hudChanged();
 };
@@ -807,8 +808,8 @@ function showVictory(stars, res, unlocks, gained) {
       ${L.fireflies.length ? `<li class="${ffOk ? 'ok' : ''}"><span class="mark">${ffOk ? '✓' : '✗'}</span>${t('goal2')} (${res.fireflies}/${L.fireflies.length})<span class="stars-req">★★</span></li>` : ''}
       <li class="${ffOk && parOk ? 'ok' : ''}"><span class="mark">${ffOk && parOk ? '✓' : '✗'}</span>${t('goal3', game.par)} (${res.pieces})<span class="stars-req">★★★</span></li>
     </ul>
-    <div class="unlock-list"></div>
     ${worldDone ? `<p><b>${t('worldDone')}</b>${lastWorld ? '<br>' + t('ending') : ''}</p>` : ''}
+    <div class="unlock-list"></div>
     <div class="actions col">
       ${next ? `<button class="btn btn-primary" data-a="next">${t('next')}${ICONS.next}</button>` : ''}
       <div class="actions" style="margin-top:0">
@@ -817,7 +818,15 @@ function showVictory(stars, res, unlocks, gained) {
       </div>
     </div>`;
   const ul = box.querySelector('.unlock-list');
+  let shown = 0;
+  const totalUnlocks = unlocks.hats.length + unlocks.worlds.length + unlocks.achievements.length;
   const addUnlock = (label, name, drawFn) => {
+    if (shown >= 3) {
+      if (shown === 3) ul.appendChild(el('div', 'unlock', `<span>+ ${totalUnlocks - 3} ${getLang() === 'fr' ? 'autres récompenses dans le menu' : 'more rewards in the menu'}</span>`));
+      shown++;
+      return;
+    }
+    shown++;
     const row = el('div', 'unlock');
     const cv = document.createElement('canvas');
     cv.width = 72;
@@ -829,17 +838,17 @@ function showVictory(stars, res, unlocks, gained) {
     row.insertAdjacentHTML('beforeend', `<span><b>${label}</b> · ${name}</span>`);
     ul.appendChild(row);
   };
-  for (const h of unlocks.hats) {
-    addUnlock(t('newHat'), tr(h.name), (g) => {
-      g.scale(2, 2);
-      A.drawLumi(g, 18, 33, 30, { color: 0, dir: 2, t: 1, hat: h.id, noShadow: true });
-    });
-  }
   for (const w of unlocks.worlds) {
     addUnlock(t('newWorld'), tr(w.name), (g) => {
       g.scale(2, 2);
       g.fillStyle = '#ffcf5a';
       A.star(g, 18, 18, 14, 5, 0.45);
+    });
+  }
+  for (const h of unlocks.hats) {
+    addUnlock(t('newHat'), tr(h.name), (g) => {
+      g.scale(2, 2);
+      A.drawLumi(g, 18, 33, 30, { color: 0, dir: 2, t: 1, hat: h.id, noShadow: true });
     });
   }
   for (const a of unlocks.achievements) {
@@ -889,6 +898,7 @@ function openSettings() {
         <div class="row"><span class="grow">${t('vibration')}</span><button class="toggle ${s.vibration ? 'on' : ''}" data-k="vibration" aria-label="${t('vibration')}"></button></div>
         <div class="row"><span class="grow">${t('showGrid')}</span><button class="toggle ${s.dots ? 'on' : ''}" data-k="dots" aria-label="${t('showGrid')}"></button></div>
         <div class="row"><span class="grow">${t('reducedMotion')}</span><button class="toggle ${s.reducedMotion ? 'on' : ''}" data-k="reducedMotion" aria-label="${t('reducedMotion')}"></button></div>
+        <div class="row"><span class="grow">${t('symbols')}<small>${t('symbolsHelp')}</small></span><button class="toggle ${s.symbols ? 'on' : ''}" data-k="symbols" aria-label="${t('symbols')}"></button></div>
         <div class="row"><span class="grow">${t('language')}</span><div class="seg"><button data-lang="fr" class="${getLang() === 'fr' ? 'on' : ''}">FR</button><button data-lang="en" class="${getLang() === 'en' ? 'on' : ''}">EN</button></div></div>
         <div class="row"><span class="grow">${t('defaultSpeed')}</span><div class="seg">${[1, 2, 3].map((v) => `<button data-speed="${v}" class="${s.speed === v ? 'on' : ''}">×${v}</button>`).join('')}</div></div>
       </div>

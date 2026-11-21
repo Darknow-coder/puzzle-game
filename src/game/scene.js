@@ -192,12 +192,23 @@ export class GameScene {
 
   hint() {
     if (this.mode !== 'plan' || !this.solution) return;
-    const sol = this.solution.sol.map(([idx, type, dir]) => ({ idx, type, dir }));
-    const good = new Set();
-    for (const s of sol) {
+    // Follow the perfect layout that shares the most pieces with the player's.
+    const layouts = [this.solution.sol, ...(this.solution.alt || [])].map((l) => l.map(([idx, type, dir]) => ({ idx, type, dir })));
+    const matches = (s) => {
       const p = this.placements.get(s.idx);
-      if (p && p.type === s.type && (s.type !== PIECE.ARROW || p.dir === s.dir)) good.add(s.idx);
+      return p && p.type === s.type && (s.type !== PIECE.ARROW || p.dir === s.dir);
+    };
+    let sol = layouts[0];
+    let bestScore = -1;
+    for (const l of layouts) {
+      const score = l.filter(matches).length;
+      if (score > bestScore) {
+        bestScore = score;
+        sol = l;
+      }
     }
+    const good = new Set();
+    for (const s of sol) if (matches(s)) good.add(s.idx);
     const wrong = [...this.placements.keys()].filter((i) => !good.has(i));
     this.wrongCells = wrong;
     const next = sol.find((s) => !good.has(s.idx));
@@ -618,9 +629,10 @@ export class GameScene {
       A.glow(g, mx, my, 6 + m.s * 5, this.style.particle, 0.35 + 0.25 * Math.sin(t * 2 + m.p));
     }
     g.save();
-    if (this.shake > 0) g.translate(Math.sin(t * 60) * this.shake * 5, 0);
+    const calm = !!this.app.settings().reducedMotion;
+    if (this.shake > 0 && !calm) g.translate(Math.sin(t * 60) * this.shake * 5, 0);
     const isl = this.island;
-    const floatY = Math.sin(t * 0.8) * 1.5;
+    const floatY = calm ? 0 : Math.sin(t * 0.8) * 1.5;
     g.translate(0, floatY);
     g.drawImage(isl.canvas, this.ox - isl.pad, this.oy - isl.pad, isl.width, isl.height);
 
@@ -758,7 +770,7 @@ export class GameScene {
         const color = L.lantern[i];
         push(base, () => {
           const st = this.lanternState(color, run, f0, f1, p);
-          A.drawLantern(g, cx, base, S, color, { t, ...st });
+          A.drawLantern(g, cx, base, S, color, { t, ...st, symbol: this.app.settings().symbols });
         });
       }
       if (L.fixedMushroom[i] || this.placements.get(i)?.type === PIECE.MUSHROOM) {
@@ -828,6 +840,7 @@ export class GameScene {
             alpha: vis.alpha,
             blink: this.blinks[id] < 0 ? 1 : 0,
             hat: this.app.hat(),
+            symbol: this.app.settings().symbols,
           });
         } else {
           A.drawGloomnib(g, vis.x, vis.y, S * vis.scale, { t: t + id, dir: vis.dir, sleeping: wk.sleeping, squash: vis.squash, alpha: vis.alpha });

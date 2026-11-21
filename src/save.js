@@ -8,7 +8,7 @@ function defaults() {
   return {
     v: 1,
     levels: {},
-    settings: { music: true, sound: true, vibration: true, lang: null, speed: 1, reducedMotion: false, dots: true },
+    settings: { music: true, sound: true, vibration: true, lang: null, speed: 1, reducedMotion: false, dots: true, symbols: false },
     hat: 'none',
     seen: {},
     tips: {},

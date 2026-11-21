@@ -13,6 +13,31 @@ export const LUMI = [
   { name: 'mint', body: '#d4f8e2', shade: '#8fdcb0', line: '#2e8a5c', flame: '#1fcf7c', core: '#dcffe9', glow: 'rgba(40,220,130,', ui: '#7eebb0' },
 ];
 
+/** Shape drawn for colour-blind players: circle, triangle, diamond, square. */
+export function colorSymbol(g, kind, x, y, r, fill, stroke) {
+  g.save();
+  g.fillStyle = fill;
+  g.strokeStyle = stroke;
+  g.lineWidth = Math.max(1, r * 0.28);
+  g.beginPath();
+  if (kind === 0) g.arc(x, y, r, 0, Math.PI * 2);
+  else if (kind === 1) {
+    g.moveTo(x, y - r * 1.1);
+    g.lineTo(x + r, y + r * 0.75);
+    g.lineTo(x - r, y + r * 0.75);
+    g.closePath();
+  } else if (kind === 2) {
+    g.moveTo(x, y - r * 1.15);
+    g.lineTo(x + r * 0.95, y);
+    g.lineTo(x, y + r * 1.15);
+    g.lineTo(x - r * 0.95, y);
+    g.closePath();
+  } else g.rect(x - r * 0.85, y - r * 0.85, r * 1.7, r * 1.7);
+  g.stroke();
+  g.fill();
+  g.restore();
+}
+
 export const WORLD_STYLES = {
   meadow: {
     sky: ['#231a45', '#5a3478', '#c45f74', '#f3a066'],
@@ -955,6 +980,7 @@ export function drawLumi(g, x, y, S, o) {
       g.stroke();
     }
   }
+  if (o.symbol && flame > 0) colorSymbol(g, o.color ?? 0, x, cy + bodyH * 0.62, s * 0.055, P.flame, '#ffffff');
   // Hat (cosmetic) sits on the head, behind the flame.
   const headY = cy - bodyH * 1.0;
   if (o.hat) drawHat(g, x, headY, s, o.hat, t);
@@ -1292,6 +1318,7 @@ export function drawLantern(g, x, y, S, color, o = {}) {
   g.fillStyle = P.ui;
   ellipse(g, x, by - s * 0.15, s * 0.05, s * 0.05);
   g.fill();
+  if (o.symbol) colorSymbol(g, color, x, y - s * 0.09, s * 0.06, P.ui, '#2b1d33');
   // Inside: a flame if somebody is home, a keyhole-spark if locked.
   if (o.locked) {
     g.fillStyle = P.ui;

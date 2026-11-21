@@ -100,9 +100,11 @@ function assert(cond, msg) {
       });
     }
     assert(ok === ids.length, `all ${ids.length} stored solutions win in the client`);
+    await page.waitForTimeout(200);
     const save = await page.evaluate(() => JSON.parse(localStorage.getItem('lumignons.save.v1')));
     const perfect = ids.filter((id) => save.levels[id]?.stars === 3).length;
-    assert(perfect === ids.length, `every stored solution is rated 3 stars (${perfect}/${ids.length})`);
+    const notPerfect = ids.filter((id) => save.levels[id]?.stars !== 3).map((id) => `${id}:${JSON.stringify(save.levels[id])}`);
+    assert(perfect === ids.length, `every stored solution is rated 3 stars (${perfect}/${ids.length}) ${notPerfect.join(" ")}`);
     assert(errors.length === 0, 'no JavaScript error' + (errors.length ? ': ' + errors.join(' | ') : ''));
   } catch (e) {
     console.error(e.message);
