@@ -75,7 +75,7 @@ export function solve(L, opts = {}) {
       // Cell → chronological touches (turn, direction) of the current run.
       const touches = new Map();
       const lg = base.log;
-      for (let i = 0; i < lg.length; i += 3) {
+      for (let i = 0; i < lg.length; i += 4) {
         const c = lg[i + 1];
         if (!anyPlaceable[c] || occupied[c]) continue;
         let list = touches.get(c);
@@ -138,6 +138,96 @@ export function solve(L, opts = {}) {
     if (solutions.length) return { min: k, solutions, timedOut: false, nodes };
   }
   return { min: null, solutions: [], timedOut: false, nodes };
+}
+
+/**
+ * Lists every winning layout with at most `maxPieces` pieces in which each
+ * piece matters (design tool). For each: the pieces and the cells entered by
+ * Lumignons (where a firefly would be caught).
+ */
+export function enumerateSolutions(L, opts = {}) {
+  const inv = L.inventory;
+  const total = inv.arrow + inv.lily + inv.mushroom + inv.daisy;
+  const maxPieces = Math.min(opts.maxPieces ?? total, total);
+  const deadline = Date.now() + (opts.timeLimitMs ?? 10000);
+  const cap = opts.cap ?? 100000;
+  const n = L.w * L.h;
+  const lumi = L.walkers.map((w) => w.kind === 0);
+  const placeable = VARIANTS.map((v) => {
+    const ok = new Uint8Array(n);
+    for (let i = 0; i < n; i++) ok[i] = canPlace(L, i, v.type) ? 1 : 0;
+    return ok;
+  });
+  const out = [];
+  const seen = new Set();
+  const placed = [];
+  const occupied = new Uint8Array(n);
+  const left = { ...inv };
+  let timedOut = false;
+  let nodes = 0;
+  const record = (r) => {
+    const cells = new Set();
+    for (let i = 0; i < r.log.length; i += 4) if (lumi[r.log[i + 3]]) cells.add(r.log[i + 1]);
+    out.push({ pieces: placed.map((p) => ({ ...p })), size: placed.length, cells });
+  };
+  const dfs = (ctx, base, lastD) => {
+    if (timedOut || out.length >= cap) return;
+    if ((++nodes & 127) === 0 && Date.now() > deadline) {
+      timedOut = true;
+      return;
+    }
+    if (base.result === 'win') record(base);
+    if (placed.length >= maxPieces) return;
+    const touches = new Map();
+    const lg = base.log;
+    for (let i = 0; i < lg.length; i += 4) {
+      const c = lg[i + 1];
+      if (occupied[c]) continue;
+      let list = touches.get(c);
+      if (!list) touches.set(c, (list = []));
+      list.push(lg[i], lg[i + 2]);
+    }
+    for (const [c, list] of touches) {
+      for (let vi = 0; vi < VARIANTS.length; vi++) {
+        const v = VARIANTS[vi];
+        if (!left[v.key] || !placeable[vi][c]) continue;
+        let tAct = -1;
+        if (v.type === PIECE.ARROW) {
+          for (let j = 0; j < list.length; j += 2) {
+            if (list[j + 1] !== v.dir) {
+              tAct = list[j];
+              break;
+            }
+          }
+        } else tAct = list[0];
+        if (tAct < 0) continue;
+        const lower = v.type === PIECE.MUSHROOM ? tAct + 1 : tAct;
+        if (lower < lastD) continue;
+        const ctx2 = withPiece(ctx, c, v.type, v.dir);
+        const r = run(ctx2, { trace: true, resume: { base, t: tAct - 1 } });
+        const d = divergence(base.hashes, r.hashes, tAct);
+        if (d < 0 || d < lastD) continue;
+        placed.push({ idx: c, type: v.type, dir: v.dir });
+        const key = placed
+          .map((p) => p.idx * 8 + p.type * 2 + (p.type === PIECE.ARROW ? p.dir : 0))
+          .sort((a, b) => a - b)
+          .join(',');
+        if (!seen.has(key)) {
+          seen.add(key);
+          left[v.key]--;
+          occupied[c] = 1;
+          dfs(ctx2, r, d);
+          occupied[c] = 0;
+          left[v.key]++;
+        }
+        placed.pop();
+        if (timedOut) return;
+      }
+    }
+  };
+  const ctx0 = compile(L, []);
+  dfs(ctx0, run(ctx0, { trace: true }), -1);
+  return { solutions: out, timedOut, nodes };
 }
 
 /** Checks a stored solution against the level rules. */

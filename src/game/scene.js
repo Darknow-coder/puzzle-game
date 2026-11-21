@@ -77,14 +77,16 @@ export class GameScene {
     const L = this.L;
     const areaW = w - 16;
     const areaH = h - top - bottom - 10;
-    let S = Math.min(areaW / (L.w + 0.25), areaH / (L.h + 0.95));
+    // Room above the top row for tall props, below the last row for the island's side.
+    const above = 0.72;
+    const below = 0.55;
+    let S = Math.min(areaW / (L.w + 0.25), areaH / (L.h + above + below));
     S = Math.max(26, Math.min(S, 88));
     S = Math.floor(S);
     this.S = S;
     const bw = L.w * S;
-    const bh = L.h * S;
     this.ox = Math.round((w - bw) / 2);
-    this.oy = Math.round(top + (areaH - bh) / 2 + S * 0.42);
+    this.oy = Math.round(top + (areaH - (L.h + above + below) * S) / 2 + above * S);
     const key = `${S}|${dpr}|${w}|${h}`;
     if (key !== this.layoutKey) {
       this.layoutKey = key;
@@ -440,6 +442,7 @@ export class GameScene {
   }
 
   update(dt) {
+    dt *= this.timeScale || 1;
     this.t += dt;
     this.fx.update(dt);
     if (this.shake > 0) this.shake = Math.max(0, this.shake - dt * 2.5);

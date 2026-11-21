@@ -429,7 +429,7 @@ function isBlocked(L, s, i, x, y) {
 /**
  * Plays one turn. Returns null while the run goes on, else {result, cause}.
  * rec: optional {events: []} that also receives `moves`.
- * log: optional flat array receiving (turn, cell, direction) for each cell entered.
+ * log: optional flat array receiving (turn, cell, direction, walker) for each cell entered.
  */
 export function step(ctx, s, t, rec, log) {
   const L = ctx.L;
@@ -502,7 +502,7 @@ export function step(ctx, s, t, rec, log) {
       continue;
     }
     const c = y * W + x;
-    if (log) log.push(t, c, s.wd[i]);
+    if (log) log.push(t, c, s.wd[i], i);
     const ter = L.terrain[c];
     if (ter === T.VOID || (ter === T.CLOUD && s.broken[c])) {
       s.ws[i] = STATUS.DEAD;
@@ -648,7 +648,7 @@ export function run(ctx, opts = {}) {
     snaps = base.snaps.slice(0, t0 + 1);
     log = [];
     const bl = base.log;
-    for (let i = 0; i < bl.length && bl[i] <= t0; i += 3) log.push(bl[i], bl[i + 1], bl[i + 2]);
+    for (let i = 0; i < bl.length && bl[i] <= t0; i += 4) log.push(bl[i], bl[i + 1], bl[i + 2], bl[i + 3]);
   } else {
     t = 0;
     s = initialState(L);

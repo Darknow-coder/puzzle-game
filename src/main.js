@@ -200,8 +200,10 @@ function buildMap() {
         </div>
       </div>`;
     const con = el('div', 'constellation');
-    const pts = NODE_PATH.map(([x, y]) => [x, y]);
-    const bonusPt = [80, 97];
+    // Alternate the constellation's orientation from one world to the next.
+    const flip = wi % 2 === 1;
+    const pts = NODE_PATH.map(([x, y]) => [flip ? 100 - x : x, y]);
+    const bonusPt = [flip ? 20 : 80, 97];
     let svg = `<svg class="links" viewBox="0 0 100 100" preserveAspectRatio="none">`;
     for (let i = 0; i < w.levels.length - 1; i++) {
       const done = SV.isDone(w.levels[i].id) && SV.isDone(w.levels[i + 1].id);
@@ -1188,6 +1190,8 @@ function boot() {
 }
 
 app.startLevel = startLevel;
+app.worlds = WORLDS;
+app.solutions = SOLUTIONS;
 app.openMap = openMap;
 app.game = game;
 app.save = SV;

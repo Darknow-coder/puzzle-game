@@ -1187,6 +1187,15 @@ svg {
   width: min(92vw, 400px);
 }
 
+@media (max-width: 519px) {
+  .fail-banner {
+    flex-direction: column;
+    align-items: stretch;
+    text-align: center;
+    padding: 14px;
+  }
+}
+
 @media (min-width: 700px) {
   .hud-bottom {
     left: 50%;
