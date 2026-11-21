@@ -1235,6 +1235,51 @@ svg {
   }
 }
 
+/* Phones held sideways (and short desktop windows): tools move to a right-hand column. */
+@media (orientation: landscape) and (max-height: 560px) {
+  .hud-bottom {
+    left: auto;
+    right: calc(10px + var(--safe-r));
+    top: calc(var(--safe-t) + 64px);
+    bottom: calc(var(--safe-b) + 10px);
+    width: 196px;
+    justify-content: flex-end;
+    transform: none;
+  }
+  #screen-game.result .hud-bottom {
+    transform: translateX(30px);
+  }
+  .tray {
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+  .controls {
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+  .ctl {
+    width: 58px;
+  }
+  .go-btn {
+    flex: 1 1 100%;
+  }
+  .fail-banner {
+    left: auto;
+    right: calc(12px + var(--safe-r));
+    width: 300px;
+    margin-left: 0;
+    flex-direction: column;
+    align-items: stretch;
+    text-align: center;
+  }
+  .hud-top {
+    left: calc(10px + var(--safe-l));
+    right: calc(10px + var(--safe-r));
+    width: auto;
+    transform: none;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .node.current,
   .go-btn.glow {

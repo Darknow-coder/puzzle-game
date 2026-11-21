@@ -75,9 +75,11 @@ function resize() {
 
 function layoutGame() {
   const top = $('#screen-game .hud-top').getBoundingClientRect().bottom;
-  const bottomEl = $('#screen-game .hud-bottom').getBoundingClientRect();
-  const bottom = H - bottomEl.top;
-  game.resize(W, H, DPR, top + 6, bottom + 4);
+  const panel = $('#screen-game .hud-bottom').getBoundingClientRect();
+  // The tool panel is either a bottom bar or (landscape) a right-hand column.
+  const side = panel.left > W * 0.5 && panel.height > H * 0.4;
+  if (side) game.resize(W, H, DPR, top + 6, 10, W - panel.left + 8);
+  else game.resize(W, H, DPR, top + 6, H - panel.top + 4, 0);
 }
 
 let last = performance.now();

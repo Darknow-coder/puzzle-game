@@ -70,12 +70,12 @@ export class GameScene {
 
   // ----------------------------------------------------------------- layout
 
-  resize(w, h, dpr, top, bottom) {
+  resize(w, h, dpr, top, bottom, right = 0) {
     this.W = w;
     this.H = h;
     this.dpr = dpr;
     const L = this.L;
-    const areaW = w - 16;
+    const areaW = w - 16 - right;
     const areaH = h - top - bottom - 10;
     // Room above the top row for tall props, below the last row for the island's side.
     const above = 0.72;
@@ -85,7 +85,7 @@ export class GameScene {
     S = Math.floor(S);
     this.S = S;
     const bw = L.w * S;
-    this.ox = Math.round((w - bw) / 2);
+    this.ox = Math.round((w - right - bw) / 2);
     this.oy = Math.round(top + (areaH - (L.h + above + below) * S) / 2 + above * S);
     const key = `${S}|${dpr}|${w}|${h}`;
     if (key !== this.layoutKey) {
