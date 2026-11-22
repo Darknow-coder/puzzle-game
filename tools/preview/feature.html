@@ -1,0 +1,45 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><style>
+@font-face { font-family: 'Fredoka'; src: url('../../assets/fonts/fredoka-latin-wght.woff2') format('woff2'); font-weight: 300 700; }
+body { margin: 0; background: #231a45; }
+canvas { display: block; }
+</style></head>
+<body><canvas id="c" width="1024" height="500"></canvas><script type="module">
+import * as A from '../../src/game/art.js';
+import { parseLevel } from '../../src/engine/core.js';
+await document.fonts.load('700 96px Fredoka');
+const c = document.getElementById('c');
+const g = c.getContext('2d');
+g.drawImage(A.renderSky(1024, 500, 'meadow', { moon: { x: 0.9, y: 0.2, r: 0.07 } }), 0, 0);
+A.drawStars(g, A.makeStars(120, 4), 1024, 500, 1.3, 1, 1.6);
+const L = parseLevel({ id: 'f', map: [' ..... ', '.......', '..#.#..', ' ..... '], dirs: {} });
+const S = 64;
+const isl = A.renderIsland(L, 'meadow', S, 1);
+const ox = 548, oy = 170;
+g.drawImage(isl.canvas, ox - isl.pad, oy - isl.pad, isl.width, isl.height);
+const cell = (x, y) => [ox + (x + 0.5) * S, oy + (y + 0.5) * S];
+const items = [];
+for (const [x, y, kind] of [[2, 2, 'tree'], [4, 2, 'bush']]) {
+  const [cx, cy] = cell(x, y);
+  const spr = A.propSprite(kind, S, 'meadow', x, 1);
+  items.push([cy, () => g.drawImage(spr.canvas, cx - spr.ax, cy + S * 0.22 - spr.ay, spr.w, spr.h)]);
+}
+const [lx, ly] = cell(3, 1);
+items.push([ly, () => { A.glow(g, lx, ly - 30, 200, 'rgba(255,190,90,', 0.7); A.drawLantern(g, lx, ly + 14, S * 1.25, 0, { lit: 1, home: true, t: 1 }); }]);
+[[1, 1, 0, 1], [5, 1, 1, 3], [2, 3, 2, 2], [4, 3, 3, 2]].forEach(([x, y, col, dir]) => {
+  const [cx, cy] = cell(x, y);
+  items.push([cy + 15, () => A.drawLumi(g, cx, cy + 15, S, { color: col, dir, t: col * 1.7, mood: 'happy', hat: col === 0 ? 'flowers' : null })]);
+});
+items.sort((a, b) => a[0] - b[0]).forEach(([, f]) => f());
+g.textAlign = 'left';
+g.font = '700 104px Fredoka';
+g.fillStyle = '#fff4d6';
+g.shadowColor = 'rgba(255,170,70,0.8)';
+g.shadowBlur = 30;
+g.fillText('Lumignons', 60, 230);
+g.shadowBlur = 0;
+g.font = '500 30px Fredoka';
+g.fillStyle = '#d9cdf5';
+g.fillText('Le chemin des lanternes', 66, 285);
+window.done = true;
+</script></body></html>

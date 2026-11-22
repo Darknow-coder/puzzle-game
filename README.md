@@ -6,12 +6,17 @@ puis appuie sur **Go !** et regarde ton plan se dérouler… en musique.
 
 - **66 niveaux** répartis en 6 mondes + 6 « étoiles filantes », tous **prouvés solvables** par un solveur.
 - 3 étoiles par niveau : rentrer, attraper toutes les lucioles, le faire avec le minimum de pièces.
+- **Atelier** : crée tes niveaux, le jeu vérifie qu’ils sont faisables et calcule le nombre de pièces
+  parfait, puis partage-les avec un code ou un lien.
+- **Défi du jour** : un puzzle vérifié chaque jour (366 en réserve) et une série de jours d’affilée.
+- Pause, pas à pas et ralenti des échecs pour comprendre chaque parcours ; tutoriel animé.
 - Carte des constellations, chapeaux à collectionner, succès, carnet des éléments, indices illimités.
 - Pensé pour le tactile (toucher, glisser, appui long), jouable à la souris et au clavier.
 - Installable comme une application (PWA) et jouable **hors ligne**. Français / anglais.
 - Zéro dépendance : HTML, CSS, JavaScript, Canvas 2D et Web Audio. Aucune image ni aucun son externe.
 
-📖 Conception : [`docs/GAME_DESIGN.md`](docs/GAME_DESIGN.md) · Liste des niveaux : [`docs/LEVELS.md`](docs/LEVELS.md)
+📖 Conception : [`docs/GAME_DESIGN.md`](docs/GAME_DESIGN.md) · Liste des niveaux : [`docs/LEVELS.md`](docs/LEVELS.md) ·
+Nouveautés : [`CHANGELOG.md`](CHANGELOG.md) · Publication : [`docs/PUBLISHING.md`](docs/PUBLISHING.md)
 
 ## Jouer
 
@@ -34,6 +39,8 @@ Aperçu immédiat sans réglage, servi depuis un commit précis du dépôt :
 3. Touche une pièce posée pour la tourner ou la retirer ; fais-la glisser pour la déplacer.
 4. Appui long sur une case : explication de ce qu’elle contient.
 5. **Go !** lance la simulation ; **Stop** revient à la préparation sans rien perdre.
+6. Pendant la simulation, touche le plateau pour mettre en pause, puis **Pas** pour avancer d’un tour.
+   Après un échec, **Revoir** rejoue les derniers tours au ralenti.
 
 ## Développement
 
@@ -55,6 +62,8 @@ node tools/generate.mjs pond 2000     # candidats de niveaux pour un thème (à 
 node tools/build-sw.mjs               # régénère la liste des fichiers mis en cache hors ligne
 node tools/levels-doc.mjs             # régénère docs/LEVELS.md
 node tools/build-artifact.mjs         # page autonome (CSS et police intégrées) pour un aperçu hébergé
+node tools/build-daily.mjs <dossiers> # réserve du défi du jour (candidats issus de generate.mjs)
+node tools/store-shots.cjs            # captures 1080×1920 et image de présentation (store/screenshots)
 ```
 
 ### Structure
@@ -66,6 +75,9 @@ src/engine/solver.js     solveur exhaustif (preuve de solvabilité, par, indices
 src/data/levels.js       les 6 mondes et 66 niveaux (cartes en texte)
 src/data/solutions.js    généré : par et solution parfaite de chaque niveau
 src/data/meta.js         carnet, chapeaux, succès
+src/data/daily.js        généré : les 366 puzzles du défi du jour (solution parfaite unique prouvée)
+src/daily.js             choix du puzzle du jour et série de jours
+src/editor/              atelier : modèle, codes de partage, vérification (Web Worker), interface
 src/game/art.js          tout le dessin procédural (îles, personnages, pièces, décors)
 src/game/scene.js        écran de jeu : saisie tactile, préparation, animation des parcours
 src/audio.js             sons et musique synthétisés
@@ -87,6 +99,8 @@ tools/                   solveur en ligne de commande, générateur, vérificati
 - **Google Play** : le jeu est une PWA conforme ; il peut être empaqueté en *Trusted Web Activity*
   (par exemple avec Bubblewrap ou PWABuilder, gratuits).
 - **App Store** : empaquetage possible avec Capacitor (gratuit ; un compte développeur Apple reste payant).
+- Tout le nécessaire pour les magasins est dans `store/` (textes FR/EN, captures, image de présentation),
+  `privacy.html` (politique de confidentialité) et le pas-à-pas dans `docs/PUBLISHING.md`.
 
 ## Licences
 

@@ -320,9 +320,101 @@ class Sound {
         const n = chord[Math.floor(r * 10) % 3] + (r < 0.2 ? 12 : 0);
         this.box(midi(sc.root + 12 + n), t + (r < 0.3 ? spb / 2 : 0));
       }
+      this.ambience(this.theme, t, spb);
       this.nextBeat += spb;
       this.beat++;
     }
+  }
+
+  // --- ambience: little sounds of each world, scheduled with the music ------
+
+  ambience(theme, t, spb) {
+    const r = Math.random();
+    switch (theme) {
+      case 'meadow':
+      case 'title':
+        if (r < 0.35) this.cricket(t + Math.random() * spb);
+        break;
+      case 'pond':
+        if (r < 0.3) this.drip(t + Math.random() * spb);
+        else if (r < 0.38) this.frog(t + Math.random() * spb);
+        break;
+      case 'grove':
+        if (r < 0.12) this.hoot(t + Math.random() * spb, 430);
+        else if (r < 0.3) this.cricket(t + Math.random() * spb, 3600);
+        break;
+      case 'ruins':
+        if (r < 0.14) this.chime(t + Math.random() * spb);
+        break;
+      case 'gloom':
+        if (r < 0.18) this.wind(t, spb * 3, 260);
+        else if (r < 0.24) this.hoot(t + Math.random() * spb, 330);
+        break;
+      case 'peak':
+        if (r < 0.25) this.wind(t, spb * 3.5, 900);
+        else if (r < 0.31) this.chime(t + Math.random() * spb);
+        break;
+      default:
+        break;
+    }
+  }
+
+  ambTone(freq, t, { type = 'sine', attack = 0.004, decay = 0.08, gain = 0.02, glide = 0 } = {}) {
+    const c = this.ctx;
+    const o = c.createOscillator();
+    o.type = type;
+    o.frequency.setValueAtTime(freq, t);
+    if (glide) o.frequency.exponentialRampToValueAtTime(glide, t + attack + decay);
+    const gn = c.createGain();
+    gn.gain.setValueAtTime(0.0001, t);
+    gn.gain.exponentialRampToValueAtTime(gain, t + attack);
+    gn.gain.exponentialRampToValueAtTime(0.0001, t + attack + decay);
+    o.connect(gn).connect(this.musicBus);
+    o.start(t);
+    o.stop(t + attack + decay + 0.05);
+  }
+
+  cricket(t, f = 4400) {
+    for (let i = 0; i < 3; i++) this.ambTone(f, t + i * 0.055, { decay: 0.035, gain: 0.012 });
+  }
+
+  drip(t) {
+    this.ambTone(1500 + Math.random() * 600, t, { decay: 0.09, gain: 0.03, glide: 400 });
+  }
+
+  frog(t) {
+    for (let i = 0; i < 2; i++) this.ambTone(140 + Math.random() * 30, t + i * 0.13, { type: 'square', decay: 0.07, gain: 0.012 });
+  }
+
+  hoot(t, f) {
+    this.ambTone(f, t, { attack: 0.05, decay: 0.3, gain: 0.025, glide: f * 0.92 });
+    this.ambTone(f * 0.95, t + 0.45, { attack: 0.05, decay: 0.45, gain: 0.02, glide: f * 0.85 });
+  }
+
+  chime(t) {
+    const base = [1568, 1760, 2093, 2349, 2637][Math.floor(Math.random() * 5)];
+    this.ambTone(base, t, { attack: 0.005, decay: 1.6, gain: 0.018 });
+    this.ambTone(base * 2.7, t, { attack: 0.005, decay: 0.6, gain: 0.006 });
+  }
+
+  wind(t, dur, center) {
+    const c = this.ctx;
+    const src = c.createBufferSource();
+    src.buffer = this.noiseBuf;
+    src.loop = true;
+    const f = c.createBiquadFilter();
+    f.type = 'bandpass';
+    f.Q.value = 0.7;
+    f.frequency.setValueAtTime(center * 0.6, t);
+    f.frequency.linearRampToValueAtTime(center * 1.4, t + dur * 0.5);
+    f.frequency.linearRampToValueAtTime(center * 0.7, t + dur);
+    const gn = c.createGain();
+    gn.gain.setValueAtTime(0.0001, t);
+    gn.gain.linearRampToValueAtTime(0.03, t + dur * 0.45);
+    gn.gain.linearRampToValueAtTime(0.0001, t + dur);
+    src.connect(f).connect(gn).connect(this.musicBus);
+    src.start(t);
+    src.stop(t + dur + 0.1);
   }
 
   pad(freq, t, dur, gain = 0.035) {

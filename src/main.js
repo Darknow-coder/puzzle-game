@@ -13,6 +13,7 @@ import { EditorScene } from './editor/editor-scene.js';
 import { createAtelier } from './editor/ui.js';
 import { verifyAsync } from './editor/verify.js';
 import { THEMES } from './editor/model.js';
+import { dailyFor, recordDaily, liveStreak, dayKey } from './daily.js';
 
 const VERSION = '2.0.0';
 const $ = (sel, root = document) => root.querySelector(sel);
@@ -151,7 +152,10 @@ window.addEventListener('popstate', () => {
     game.stop();
     hideFail();
     if (current?.custom) leaveCustom();
-    else openMap(false, true);
+    else if (current?.daily) {
+      buildTitle();
+      showScreen('title');
+    } else openMap(false, true);
   } else if (app.screen === 'map' || app.screen === 'atelier') {
     buildTitle();
     showScreen('title');
@@ -178,6 +182,7 @@ function buildTitle() {
     <div class="title-actions">
       <button class="btn btn-primary" data-act="play">${ICONS.play}${started ? t('continue') : t('play')}</button>
       <div class="title-duo">
+        <button class="btn btn-ghost daily-btn" data-act="daily">${ICONS.sun}<span>${t('daily')}</span>${dailyBadge()}</button>
         <button class="btn btn-ghost" data-act="atelier">${ICONS.pencil}${t('atelier')}</button>
       </div>
       <div class="title-row">
@@ -192,6 +197,15 @@ function buildTitle() {
   root.querySelector('[data-act=play]').onclick = () => {
     click();
     openMap(true);
+  };
+  root.querySelector('[data-act=daily]').onclick = () => {
+    click();
+    if (!SV.isDone('1-5')) {
+      sound.sfx('invalid');
+      toast(t('dailyLocked'), 2800);
+      return;
+    }
+    startDaily();
   };
   root.querySelector('[data-act=atelier]').onclick = () => {
     click();
@@ -357,7 +371,40 @@ let tipTimer = 0;
 
 function levelLabel(f) {
   if (f.custom) return '✎';
+  if (f.daily) return '☀';
   return f.bonus ? `${f.wi + 1}-★` : `${f.wi + 1}-${f.li + 1}`;
+}
+
+function dailyBadge() {
+  if (!SV.isDone('1-5')) return `<i class="daily-lock">${ICONS.lock}</i>`;
+  const st = SV.save.data.daily;
+  const done = st?.results?.[dayKey()];
+  const streak = liveStreak(st);
+  return `${done ? `<i class="daily-done">${'★'.repeat(done)}</i>` : '<i class="daily-new"></i>'}${streak > 1 ? `<i class="daily-streak">🔥${streak}</i>` : ''}`;
+}
+
+/** Today's puzzle, drawn from the worlds already opened. */
+function startDaily() {
+  const themes = WORLDS.filter((w, i) => SV.worldUnlocked(i)).map((w) => w.id);
+  const d = dailyFor(themes);
+  if (!d) return;
+  const wi = Math.max(0, THEMES.indexOf(d.theme));
+  const world = WORLDS[wi] || { id: d.theme };
+  current = { daily: d, def: d.def, world, wi, li: 0, bonus: false };
+  closeAllModals();
+  hideFail();
+  game.load({ def: d.def, world, wi, li: 0, bonus: false, solution: d.solution });
+  const date = new Date().toLocaleDateString(getLang() === 'fr' ? 'fr-FR' : 'en-GB', { day: 'numeric', month: 'short' });
+  $('#screen-game .lv-num').textContent = '☀';
+  $('#screen-game .lv-name').textContent = `${t('daily')} · ${date}`;
+  buildTray();
+  setSpeedLabel();
+  $('#screen-game').classList.remove('running', 'result');
+  if (app.screen !== 'game') pushNav('game');
+  showScreen('game');
+  layoutGame();
+  app.hudChanged();
+  introCards(current);
 }
 
 /** Plays a level from the workshop (or received through a link). */
@@ -575,13 +622,13 @@ app.pulseTray = (k) => {
 };
 
 app.onHint = () => {
-  if (!current.custom) SV.recordHint(current.def.id);
+  if (!current.custom && !current.daily) SV.recordHint(current.def.id);
 };
 
 app.onRunStart = () => {
   hideFail();
   hideInfo();
-  if (!current.custom) SV.recordTry(current.def.id);
+  if (!current.custom && !current.daily) SV.recordTry(current.def.id);
 };
 
 app.onFail = (cause, name, replayed = false) => {
@@ -603,6 +650,15 @@ function hideFail() {
 }
 
 app.onWin = (res) => {
+  if (current.daily) {
+    const stars = 1 + (res.allFireflies ? 1 : 0) + (res.allFireflies && res.pieces <= game.par ? 1 : 0);
+    SV.save.data.daily = recordDaily(SV.save.data.daily, current.daily.key, stars);
+    const unlocks = SV.collectUnlocks();
+    SV.persistNow();
+    showVictory(stars, res, unlocks, 0);
+    app.hudChanged();
+    return;
+  }
   if (current.custom) {
     const known = !!game.solution;
     const stars = 1 + (res.allFireflies ? 1 : 0) + (known && res.allFireflies && res.pieces <= game.par ? 1 : 0);
@@ -927,7 +983,7 @@ function openPause() {
       <button class="btn btn-primary" data-a="resume">${ICONS.play}${t('resume')}</button>
       <button class="btn" data-a="restart">${ICONS.retry}${t('restart')}</button>
       <button class="btn btn-ghost" data-a="settings">${ICONS.gear}${t('settings')}</button>
-      <button class="btn btn-ghost" data-a="map">${current.custom ? ICONS.pencil + t('atelier') : ICONS.map + t('map')}</button>
+      <button class="btn btn-ghost" data-a="map">${current.custom ? ICONS.pencil + t('atelier') : current.daily ? ICONS.back + t('home') : ICONS.map + t('map')}</button>
     </div>`;
   const m = openModal(box);
   box.querySelector('[data-a=resume]').onclick = () => (click(), m.close());
@@ -946,7 +1002,10 @@ function openPause() {
     hideFail();
     if (navDepth > 0) history.back();
     else if (current.custom) leaveCustom();
-    else openMap();
+    else if (current.daily) {
+      buildTitle();
+      showScreen('title');
+    } else openMap();
   };
 }
 
@@ -954,8 +1013,9 @@ function showVictory(stars, res, unlocks, gained) {
   const L = game.L;
   const id = current.def.id;
   const custom = !!current.custom;
-  const next = custom ? null : SV.nextLevel(id);
-  const worldDone = !custom && !current.bonus && current.li === current.world.levels.length - 1;
+  const daily = !!current.daily;
+  const next = custom || daily ? null : SV.nextLevel(id);
+  const worldDone = !custom && !daily && !current.bonus && current.li === current.world.levels.length - 1;
   const lastWorld = current.wi === WORLDS.length - 1 && worldDone;
   const parKnown = !!game.solution;
   const box = el('div');
@@ -971,14 +1031,15 @@ function showVictory(stars, res, unlocks, gained) {
       ${L.fireflies.length ? `<li class="${ffOk ? 'ok' : ''}"><span class="mark">${ffOk ? '✓' : '✗'}</span>${t('goal2')} (${res.fireflies}/${L.fireflies.length})<span class="stars-req">★★</span></li>` : ''}
       ${parKnown ? `<li class="${ffOk && parOk ? 'ok' : ''}"><span class="mark">${ffOk && parOk ? '✓' : '✗'}</span>${t('goal3', game.par)} (${res.pieces})<span class="stars-req">★★★</span></li>` : ''}
     </ul>
-    ${worldDone ? `<p><b>${t('worldDone')}</b>${lastWorld ? '<br>' + t('ending') : ''}</p>` : ''}
+    ${worldDone ? `<canvas class="world-sky" width="560" height="300"></canvas><p><b>${t('worldDone')}</b>${lastWorld ? '<br>' + t('ending') : ''}</p>` : ''}
+    ${daily ? `<p class="streak-line">🔥 ${t('streak', liveStreak(SV.save.data.daily))}<br><small>${t('dailyCome')}</small></p>` : ''}
     <div class="unlock-list"></div>
     <div class="actions col">
       ${next ? `<button class="btn btn-primary" data-a="next">${t('next')}${ICONS.next}</button>` : ''}
       <div class="actions" style="margin-top:0">
         <button class="btn btn-ghost btn-small" data-a="replay">${ICONS.retry}${t('replay')}</button>
         <button class="btn btn-ghost btn-small" data-a="tune" aria-label="${t('tune')}">♫</button>
-        <button class="btn btn-ghost btn-small" data-a="map">${custom ? ICONS.pencil + t('atelier') : ICONS.map + t('map')}</button>
+        <button class="btn btn-ghost btn-small" data-a="map">${custom ? ICONS.pencil + t('atelier') : daily ? ICONS.back + t('home') : ICONS.map + t('map')}</button>
       </div>
       ${custom && current.from === 'link' ? `<button class="btn btn-ghost btn-small" data-a="keep">${ICONS.plus}${atelier.text().addToAtelier}</button>` : ''}
     </div>`;
@@ -987,7 +1048,11 @@ function showVictory(stars, res, unlocks, gained) {
   const totalUnlocks = unlocks.hats.length + unlocks.worlds.length + unlocks.achievements.length;
   const addUnlock = (label, name, drawFn) => {
     if (shown >= 3) {
-      if (shown === 3) ul.appendChild(el('div', 'unlock', `<span>+ ${totalUnlocks - 3} ${getLang() === 'fr' ? 'autres récompenses dans le menu' : 'more rewards in the menu'}</span>`));
+      if (shown === 3) {
+        const more = totalUnlocks - 3;
+        const txt = getLang() === 'fr' ? (more > 1 ? 'autres récompenses dans le menu' : 'autre récompense dans le menu') : more > 1 ? 'more rewards in the menu' : 'more reward in the menu';
+        ul.appendChild(el('div', 'unlock', `<span>+ ${more} ${txt}</span>`));
+      }
       shown++;
       return;
     }
@@ -1030,9 +1095,14 @@ function showVictory(stars, res, unlocks, gained) {
     onBack: () => {
       m.close();
       if (custom) leaveCustom();
-      else openMap(true, true);
+      else if (daily) {
+        buildTitle();
+        showScreen('title');
+      } else openMap(true, true);
     },
   });
+  const sky = box.querySelector('.world-sky');
+  if (sky) lightConstellation(sky, current.wi);
   const starsEls = box.querySelectorAll('.win-star');
   starsEls.forEach((s, i) => {
     setTimeout(() => {
@@ -1056,7 +1126,10 @@ function showVictory(stars, res, unlocks, gained) {
     click();
     m.close();
     if (custom) leaveCustom();
-    else openMap(true);
+    else if (daily) {
+      buildTitle();
+      showScreen('title');
+    } else openMap(true);
   };
   const kb = box.querySelector('[data-a=keep]');
   if (kb) {
@@ -1069,6 +1142,52 @@ function showVictory(stars, res, unlocks, gained) {
   const nb = box.querySelector('[data-a=next]');
   if (nb) nb.onclick = () => (click(), m.close(), startLevel(next));
 }
+
+/** World complete: the world's constellation lights up star after star. */
+function lightConstellation(cv, wi) {
+  const g = cv.getContext('2d');
+  const W = cv.width;
+  const H = cv.height;
+  const flip = wi % 2 === 1;
+  // The map's winding path, turned sideways to fit the card.
+  const pts = NODE_PATH.map(([x, y]) => [((y - 2) / 90) * (W - 60) + 30, ((flip ? 100 - x : x) / 100) * (H - 50) + 25]);
+  const style = A.WORLD_STYLES[WORLDS[wi].id];
+  const t0 = performance.now();
+  let lit = -1;
+  const draw = (now) => {
+    if (!cv.isConnected) return;
+    const k = (now - t0) / 1000;
+    const n = Math.min(pts.length, Math.floor(k / 0.22));
+    if (n - 1 > lit && n > 0) {
+      lit = n - 1;
+      sound.sfx('star', lit % 3);
+    }
+    const grd = g.createLinearGradient(0, 0, 0, H);
+    grd.addColorStop(0, style.sky[0]);
+    grd.addColorStop(1, style.sky[2]);
+    g.fillStyle = grd;
+    g.beginPath();
+    A.roundRect(g, 0, 0, W, H, 28);
+    g.fill();
+    A.drawStars(g, starField, W, H, k, 0.6, 2);
+    g.strokeStyle = 'rgba(255,230,160,0.85)';
+    g.lineWidth = 3;
+    g.lineCap = 'round';
+    g.beginPath();
+    for (let i = 0; i < n; i++) (i ? g.lineTo : g.moveTo).call(g, pts[i][0], pts[i][1]);
+    g.stroke();
+    for (let i = 0; i < pts.length; i++) {
+      const on = i < n;
+      const [x, y] = pts[i];
+      if (on) A.glow(g, x, y, 34 + 6 * Math.sin(k * 3 + i), 'rgba(255,210,110,', 0.9);
+      g.fillStyle = on ? '#fff6d6' : 'rgba(255,255,255,0.25)';
+      A.star(g, x, y, on ? 11 : 6, 5, 0.45);
+    }
+    requestAnimationFrame(draw);
+  };
+  requestAnimationFrame(draw);
+}
+const starField = A.makeStars(90, 77);
 
 function openSettings() {
   const s = SV.save.data.settings;

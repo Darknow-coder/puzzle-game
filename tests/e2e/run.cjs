@@ -105,6 +105,61 @@ function assert(cond, msg) {
     const perfect = ids.filter((id) => save.levels[id]?.stars === 3).length;
     const notPerfect = ids.filter((id) => save.levels[id]?.stars !== 3).map((id) => `${id}:${JSON.stringify(save.levels[id])}`);
     assert(perfect === ids.length, `every stored solution is rated 3 stars (${perfect}/${ids.length}) ${notPerfect.join(" ")}`);
+    // Moving on to the next level leaves nothing of the previous run on screen.
+    await page.evaluate(() => {
+      const app = window.lumignons;
+      app.startLevel('1-1');
+      document.querySelectorAll('.modal').forEach((m) => m.remove());
+      app.modalStack.splice(0);
+    });
+    const clean = await page.evaluate(() => {
+      const g = window.lumignons.game;
+      return !g.winPaths && !g.run && g.trails.length === 0 && !g.failInfo;
+    });
+    assert(clean, 'a new level starts without the previous win constellation');
+
+    // Workshop: create, check, play and share a level.
+    const ws = await page.evaluate(async () => {
+      const app = window.lumignons;
+      app.atelier.openEditor(null);
+      await new Promise((r) => setTimeout(r, 300));
+      document.querySelector('#screen-editor [data-a=verify]').click();
+      for (let i = 0; i < 100 && document.querySelector('.ed-status').classList.contains('busy'); i++) await new Promise((r) => setTimeout(r, 100));
+      const status = document.querySelector('.ed-status').textContent;
+      document.querySelector('#screen-editor [data-a=test]').click();
+      await new Promise((r) => setTimeout(r, 300));
+      document.querySelectorAll('.modal').forEach((m) => m.remove());
+      app.modalStack.splice(0);
+      const g = app.game;
+      g.timeScale = 12;
+      for (const [i, t, d] of g.solution.sol) g.placeAt(i, ['', 'arrow', 'lily', 'mushroom', 'daisy'][t], d);
+      g.go();
+      while (g.mode === 'run' || g.mode === 'post') await new Promise((r) => setTimeout(r, 50));
+      return { status, mode: g.mode, saved: JSON.parse(localStorage.getItem('lumignons.save.v1')).custom.length };
+    });
+    assert(ws.status.startsWith('✓') && ws.mode === 'result-win' && ws.saved >= 1, `workshop level is checked, saved and won (${ws.status})`);
+    await page.evaluate(() => {
+      document.querySelectorAll('.modal').forEach((m) => m.remove());
+      window.lumignons.modalStack.splice(0);
+    });
+
+    // Daily puzzle (level 1-5 is done by now).
+    const daily = await page.evaluate(async () => {
+      const app = window.lumignons;
+      app.screen = 'title';
+      document.querySelector('#screen-title [data-act=daily]')?.click();
+      await new Promise((r) => setTimeout(r, 300));
+      document.querySelectorAll('.modal').forEach((m) => m.remove());
+      app.modalStack.splice(0);
+      const g = app.game;
+      g.timeScale = 12;
+      for (const [i, t, d] of g.solution.sol) g.placeAt(i, ['', 'arrow', 'lily', 'mushroom', 'daisy'][t], d);
+      g.go();
+      while (g.mode === 'run' || g.mode === 'post') await new Promise((r) => setTimeout(r, 50));
+      await new Promise((r) => setTimeout(r, 100));
+      return { mode: g.mode, daily: JSON.parse(localStorage.getItem('lumignons.save.v1')).daily };
+    });
+    assert(daily.mode === 'result-win' && daily.daily && daily.daily.streak >= 1, 'the daily puzzle can be solved and starts a streak');
     assert(errors.length === 0, 'no JavaScript error' + (errors.length ? ': ' + errors.join(' | ') : ''));
   } catch (e) {
     console.error(e.message);

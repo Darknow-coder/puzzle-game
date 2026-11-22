@@ -9,6 +9,9 @@ import { overlay, describe } from './lib.mjs';
 
 const RECIPES = {
   meadow: { w: [6, 7], h: [7, 9], lumis: [2, 2], walls: [3, 7], arrows: [0, 2], inv: { arrow: 7 }, par: [4, 6] },
+  meadowDaily: { w: [5, 7], h: [6, 8], lumis: [1, 2], walls: [3, 6], arrows: [0, 2], inv: { arrow: 7 }, par: [4, 6] },
+  ruinsDaily: { style: 'ruins', w: [6, 7], h: [6, 8], lumis: [1, 2], walls: [2, 6], portals: [0, 1], plates: [0, 1], gates: [1, 2], inv: { arrow: 6 }, par: [4, 6] },
+  gloomDaily: { w: [5, 7], h: [6, 8], lumis: [1, 2], walls: [2, 5], shadows: [1, 2], sleepers: [0, 1], inv: { arrow: 6 }, par: [4, 6], need: ['shadow'] },
   pond: { style: 'pond', w: [6, 7], h: [6, 8], lumis: [1, 1], walls: [2, 4], water: [5, 12], arrows: [0, 1], inv: { arrow: 6, lily: 3 }, par: [3, 6], need: ['lily'] },
   pond2: { style: 'pond', w: [6, 7], h: [7, 9], lumis: [2, 2], walls: [2, 4], water: [5, 12], arrows: [0, 1], inv: { arrow: 6, lily: 3 }, par: [4, 7], need: ['lily'] },
   pondSpark: { style: 'pond', w: [6, 7], h: [6, 8], lumis: [1, 2], walls: [2, 4], water: [3, 9], arrows: [0, 1], sparks: [1, 2], inv: { arrow: 6, lily: 3 }, par: [3, 7], need: ['spark'] },

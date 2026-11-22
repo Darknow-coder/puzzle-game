@@ -171,6 +171,9 @@ export function summary() {
     worldNoHint: false,
     allPerfect: true,
     totalLevels: 0,
+    dailyDone: Object.keys(save.data.daily?.results || {}).length,
+    dailyBest: save.data.daily?.best || 0,
+    customMade: (save.data.custom || []).filter((c) => c.verified?.status === 'ok').length,
   };
   WORLDS.forEach((w) => {
     let done = 0;

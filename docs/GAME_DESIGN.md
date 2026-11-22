@@ -108,6 +108,18 @@ réussissable avec moins d’étoiles : les lucioles sont un défi facultatif.
 - **Indices** illimités et gratuits : ils révèlent pas à pas une solution parfaite et signalent les
   pièces mal placées. Le jeu n’est jamais bloquant ni punitif (pas de vies, pas d’attente).
 
+## 7 bis. Version 2
+
+- **Atelier** : le joueur devient concepteur. L’éditeur reprend exactement le rendu du jeu ; chaque case
+  se peint d’un toucher (un deuxième toucher tourne ou retire l’élément). Le solveur du jeu, exécuté
+  dans un Web Worker, répond en quelques secondes : faisable ou non, minimum de pièces pour ★ et ★★★,
+  nombre de solutions parfaites, et refuse les niveaux qui se gagnent sans pièce. Les niveaux se
+  partagent par un code compact (`LUMI1.…`, ~150 caractères) ou un lien qui ouvre directement le niveau.
+- **Défi du jour** : chaque date correspond à un puzzle, tiré d’une réserve de 366 niveaux générés puis
+  filtrés (formes cohérentes, solution parfaite unique, ni trop faciles ni trop longs). Le monde du jour
+  tourne parmi ceux que le joueur a déjà ouverts, pour ne jamais présenter une mécanique inconnue.
+- **Lisibilité** : pause, pas à pas, ralenti des échecs ; une main animée enseigne les gestes.
+
 ## 8. Conception et vérification des niveaux
 
 La campagne compte **66 niveaux** (6 mondes × 10 + 6 étoiles filantes). La liste complète, avec

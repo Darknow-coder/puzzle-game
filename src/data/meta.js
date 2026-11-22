@@ -205,5 +205,8 @@ export const ACHIEVEMENTS = [
   { id: 'perfect20', icon: '✪', name: { fr: 'Perfectionniste', en: 'Perfectionist' }, desc: { fr: 'Obtenir 3 étoiles sur 20 niveaux.', en: 'Get 3 stars on 20 levels.' }, check: (p) => p.perfectLevels >= 20, progress: (p) => [p.perfectLevels, 20] },
   { id: 'world6', icon: '🏮', name: { fr: 'La grande lanterne', en: 'The great lantern' }, desc: { fr: 'Terminer la Cime des Vents.', en: 'Finish the Windy Peak.' }, check: (p) => p.worldsDone >= 6 },
   { id: 'allbonus', icon: '🌠', name: { fr: 'Pluie d’étoiles', en: 'Meteor shower' }, desc: { fr: 'Réussir les six étoiles filantes.', en: 'Clear all six shooting stars.' }, check: (p) => p.bonusDone >= 6, progress: (p) => [p.bonusDone, 6] },
+  { id: 'daily7', icon: '☀', name: { fr: 'Fidèle au rendez-vous', en: 'Regular visitor' }, desc: { fr: 'Réussir 7 défis du jour.', en: 'Clear 7 daily puzzles.' }, check: (p) => p.dailyDone >= 7, progress: (p) => [p.dailyDone, 7] },
+  { id: 'streak5', icon: '🔥', name: { fr: 'Flamme vive', en: 'Burning bright' }, desc: { fr: 'Une série de 5 défis du jour.', en: 'A 5-day daily streak.' }, check: (p) => p.dailyBest >= 5, progress: (p) => [p.dailyBest, 5] },
+  { id: 'maker', icon: '✎', name: { fr: 'Architecte', en: 'Architect' }, desc: { fr: 'Créer un niveau vérifié dans l’atelier.', en: 'Make a checked level in the workshop.' }, check: (p) => p.customMade >= 1 },
   { id: 'master', icon: '👑', name: { fr: 'Gardien des chemins', en: 'Keeper of the paths' }, desc: { fr: '3 étoiles partout.', en: '3 stars everywhere.' }, check: (p) => p.allPerfect },
 ];
