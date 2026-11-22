@@ -1,5 +1,5 @@
 // Shared helpers for the level tools (Node only).
-import { parseLevel, simulate, validateLevel, PIECE, DIR_CHARS } from '../src/engine/core.js';
+import { parseLevel, simulate, validateLevel, PIECE, PIECE_KEYS, DIR_CHARS } from '../src/engine/core.js';
 import { solve, checkSolution } from '../src/engine/solver.js';
 
 const ARROWS = ['↑', '→', '↓', '←'];
@@ -9,7 +9,7 @@ export function overlay(L, placements) {
   for (const p of placements) {
     const x = p.idx % L.w;
     const y = (p.idx / L.w) | 0;
-    rows[y][x] = p.type === PIECE.ARROW ? ARROWS[p.dir] : p.type === PIECE.LILY ? 'L' : p.type === PIECE.MUSHROOM ? 'M' : 'F';
+    rows[y][x] = p.type === PIECE.ARROW ? ARROWS[p.dir] : p.type === PIECE.MIRROR ? (p.dir ? '⟍' : '⟋') : p.type === PIECE.LILY ? 'L' : p.type === PIECE.MUSHROOM ? 'M' : 'F';
   }
   return rows.map((r) => '   ' + r.join('')).join('\n');
 }
@@ -17,8 +17,9 @@ export function overlay(L, placements) {
 export function describe(p, L) {
   const x = p.idx % L.w;
   const y = (p.idx / L.w) | 0;
-  const t = ['', 'arrow', 'lily', 'mushroom', 'daisy'][p.type];
-  return `${t}${p.type === PIECE.ARROW ? ' ' + DIR_CHARS[p.dir] : ''}@${x},${y}`;
+  const t = PIECE_KEYS[p.type];
+  const o = p.type === PIECE.ARROW ? ' ' + DIR_CHARS[p.dir] : p.type === PIECE.MIRROR ? ' ' + '/\\'[p.dir] : '';
+  return `${t}${o}@${x},${y}`;
 }
 
 /** Full analysis of one level definition. */

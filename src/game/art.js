@@ -125,6 +125,21 @@ export const WORLD_STYLES = {
     props: ['pine', 'snowrock', 'pine', 'crystal'],
     aurora: true,
   },
+  dawn: {
+    sky: ['#2c3170', '#6f5bab', '#e48eb2', '#ffd9a6'],
+    stars: 0.35,
+    moon: { x: 0.76, y: 0.7, r: 0.1, color: '#fff0c4' },
+    sun: true,
+    hills: ['#4d4689', '#3c3675'],
+    grass: ['#ace6d4', '#9edcc9'],
+    grassEdge: '#dcfff4',
+    side: ['#8b78b9', '#6e5d9e'],
+    soilLine: '#a795d3',
+    water: ['#7bcbf0', '#59afe0'],
+    accent: '#ffd6ea',
+    particle: 'rgba(255,214,236,',
+    props: ['prism', 'rock', 'prism', 'flowers'],
+  },
 };
 
 const PORTAL_COLORS = ['#69e6ff', '#c78bff'];
@@ -299,14 +314,36 @@ export function renderSky(w, h, worldKey, opts = {}) {
   halo.addColorStop(1, rgba(m.color, 0));
   g.fillStyle = halo;
   g.fillRect(mx - mr * 5, my - mr * 5, mr * 10, mr * 10);
+  if (st.sun) {
+    // Dawn: a wide warm glow and the first rays above the horizon.
+    const warm = g.createRadialGradient(mx, my, mr, mx, my, unit * 0.9);
+    warm.addColorStop(0, rgba('#ffe2b0', 0.45));
+    warm.addColorStop(1, rgba('#ffe2b0', 0));
+    g.fillStyle = warm;
+    g.fillRect(0, 0, w, h);
+    g.save();
+    g.globalCompositeOperation = 'lighter';
+    for (let i = 0; i < 9; i++) {
+      const a = -Math.PI * (0.12 + (0.76 * i) / 8);
+      g.strokeStyle = rgba('#fff3d6', 0.06);
+      g.lineWidth = mr * 0.7;
+      g.beginPath();
+      g.moveTo(mx + Math.cos(a) * mr * 1.4, my + Math.sin(a) * mr * 1.4);
+      g.lineTo(mx + Math.cos(a) * unit * 0.8, my + Math.sin(a) * unit * 0.8);
+      g.stroke();
+    }
+    g.restore();
+  }
   g.fillStyle = m.color;
   ellipse(g, mx, my, mr, mr);
   g.fill();
-  g.fillStyle = rgba('#000000', 0.06);
-  ellipse(g, mx - mr * 0.3, my - mr * 0.2, mr * 0.22, mr * 0.22);
-  g.fill();
-  ellipse(g, mx + mr * 0.35, my + mr * 0.3, mr * 0.14, mr * 0.14);
-  g.fill();
+  if (!st.sun) {
+    g.fillStyle = rgba('#000000', 0.06);
+    ellipse(g, mx - mr * 0.3, my - mr * 0.2, mr * 0.22, mr * 0.22);
+    g.fill();
+    ellipse(g, mx + mr * 0.35, my + mr * 0.3, mr * 0.14, mr * 0.14);
+    g.fill();
+  }
   if (st.aurora) {
     g.globalCompositeOperation = 'lighter';
     for (let i = 0; i < 3; i++) {
@@ -509,7 +546,7 @@ export function renderIsland(L, worldKey, S, dpr = 1) {
         for (let i = 0; i < 3; i++) {
           const gx = x0 + S * (0.15 + 0.7 * hash2(x, y, i));
           const gy = y0 + S * (0.15 + 0.7 * hash2(x, y, i + 10));
-          g.strokeStyle = worldKey === 'peak' ? 'rgba(150,180,220,0.45)' : 'rgba(40,90,50,0.22)';
+          g.strokeStyle = worldKey === 'peak' ? 'rgba(150,180,220,0.45)' : worldKey === 'dawn' ? 'rgba(70,130,130,0.25)' : 'rgba(40,90,50,0.22)';
           g.lineWidth = Math.max(1, S * 0.025);
           g.beginPath();
           g.moveTo(gx, gy);
@@ -912,6 +949,43 @@ function drawProp(g, kind, x, y, S, v) {
       }
       break;
     }
+    case 'prism': {
+      shadow(g, x, y, s * 0.32, s * 0.1);
+      const shards = [
+        [-0.17, 0.46, 0.1, '#c9a6ff', '#efe2ff'],
+        [0.17, 0.4, 0.09, '#ffb3cf', '#ffe6f0'],
+        [0.02, 0.78, 0.13, '#9fe8e0', '#e6fffb'],
+        [-0.04, 0.34, 0.08, '#ffd59a', '#fff3dc'],
+      ];
+      const tilt = (v - 3) * 0.02;
+      for (const [dx, hh, ww, col, light] of shards) {
+        const bx = x + dx * s;
+        const tx = bx + tilt * s + dx * s * 0.25;
+        const ty = y - hh * s;
+        g.fillStyle = col;
+        g.beginPath();
+        g.moveTo(bx - ww * s, y);
+        g.lineTo(bx - ww * s * 0.85, y - hh * s * 0.72);
+        g.lineTo(tx, ty);
+        g.lineTo(bx + ww * s * 0.85, y - hh * s * 0.72);
+        g.lineTo(bx + ww * s, y);
+        g.closePath();
+        g.fill();
+        // Lit facet.
+        g.fillStyle = light;
+        g.beginPath();
+        g.moveTo(bx - ww * s * 0.85, y - hh * s * 0.72);
+        g.lineTo(tx, ty);
+        g.lineTo(bx - ww * s * 0.05, y - hh * s * 0.55);
+        g.lineTo(bx - ww * s * 0.35, y - s * 0.02);
+        g.lineTo(bx - ww * s, y);
+        g.closePath();
+        g.fill();
+      }
+      g.fillStyle = 'rgba(255,255,255,0.85)';
+      star(g, x + 0.06 * s, y - 0.7 * s, s * 0.05, 4, 0.3);
+      break;
+    }
     case 'crystal': {
       shadow(g, x, y, s * 0.3, s * 0.1);
       const cols = ['#9ad8ff', '#d4f0ff', '#6bb5f0'];
@@ -1222,6 +1296,27 @@ export function drawHat(g, x, y, s, hat, t = 0) {
       ellipse(g, x, y - s * 0.02, s * 0.025, s * 0.025);
       g.fill();
       break;
+    case 'prism': {
+      // Crystal tiara: a silver band and three dawn-coloured shards.
+      g.strokeStyle = '#e9e4ff';
+      g.lineWidth = s * 0.028;
+      g.beginPath();
+      g.moveTo(x - s * 0.19, y + s * 0.02);
+      g.quadraticCurveTo(x, y - s * 0.05, x + s * 0.19, y + s * 0.02);
+      g.stroke();
+      [[-0.11, 0.13, '#c9a6ff'], [0, 0.2, '#9fe8e0'], [0.11, 0.13, '#ffb3cf']].forEach(([dx, hh, col]) => {
+        g.fillStyle = col;
+        g.beginPath();
+        g.moveTo(x + dx * s - s * 0.035, y - s * 0.015);
+        g.lineTo(x + dx * s, y - hh * s);
+        g.lineTo(x + dx * s + s * 0.035, y - s * 0.015);
+        g.closePath();
+        g.fill();
+      });
+      g.fillStyle = `rgba(255,255,255,${0.6 + 0.4 * Math.sin(t * 3)})`;
+      star(g, x + s * 0.02, y - s * 0.2, s * 0.03, 4, 0.3);
+      break;
+    }
     case 'halo': {
       g.strokeStyle = '#fff3a6';
       g.lineWidth = s * 0.025;
@@ -1462,6 +1557,93 @@ export function drawArrowStone(g, x, y, S, dir, o = {}) {
     g.strokeStyle = 'rgba(40,30,60,0.6)';
     g.lineWidth = s * 0.02;
     g.stroke();
+  }
+  g.restore();
+}
+
+/**
+ * Crystal mirror standing on a stone disc. orient 0 = '/', 1 = '\'.
+ * o.fixed (set in the ground), o.ghost, o.scale, o.highlight, o.flash (0..1, just reflected someone).
+ */
+export function drawMirror(g, x, y, S, orient, o = {}) {
+  const s = S;
+  const fixed = !!o.fixed;
+  const flash = o.flash || 0;
+  g.save();
+  g.translate(x, y - (o.lift || 0));
+  g.scale(o.scale ?? 1, o.scale ?? 1);
+  if (!o.ghost) {
+    g.fillStyle = 'rgba(20,10,40,0.25)';
+    ellipse(g, 0, s * 0.06, s * 0.36, s * 0.3);
+    g.fill();
+  }
+  g.globalAlpha *= o.ghost ? 0.55 : 1;
+  // Stone disc, like the arrows: pale for the player's pieces, dark when set in the ground.
+  const r = s * 0.36;
+  g.fillStyle = fixed ? '#5e5a73' : '#efe6d2';
+  ellipse(g, 0, 0, r, r * 0.92);
+  g.fill();
+  g.fillStyle = fixed ? '#7b7694' : '#fffaf0';
+  ellipse(g, 0, -s * 0.03, r * 0.9, r * 0.8);
+  g.fill();
+  if (!fixed) {
+    g.strokeStyle = o.highlight ? '#ffffff' : 'rgba(150,220,255,0.95)';
+    g.lineWidth = s * 0.035;
+    ellipse(g, 0, -s * 0.03, r * 0.9, r * 0.8);
+    g.stroke();
+  }
+  // The pane stands on the diagonal it reflects along.
+  const a = s * 0.25;
+  const k = 0.82;
+  const h = s * 0.26;
+  const [x1, y1, x2, y2] = orient === 0 ? [-a, a * k, a, -a * k] : [-a, -a * k, a, a * k];
+  const lift = -s * 0.03;
+  if (!o.ghost) glow(g, 0, -h * 0.5, s * (0.42 + flash * 0.35), 'rgba(150,230,255,', 0.22 + flash * 0.7);
+  // Groove in the stone.
+  g.strokeStyle = fixed ? 'rgba(30,20,50,0.55)' : 'rgba(120,100,80,0.35)';
+  g.lineWidth = s * 0.07;
+  g.lineCap = 'round';
+  g.beginPath();
+  g.moveTo(x1, y1 + lift);
+  g.lineTo(x2, y2 + lift);
+  g.stroke();
+  // Glass.
+  const grd = g.createLinearGradient(0, lift + Math.max(y1, y2), 0, lift + Math.min(y1, y2) - h);
+  grd.addColorStop(0, fixed ? 'rgba(150,140,235,0.95)' : 'rgba(90,190,240,0.95)');
+  grd.addColorStop(0.55, fixed ? 'rgba(200,205,255,0.9)' : 'rgba(170,235,255,0.9)');
+  grd.addColorStop(1, 'rgba(250,255,255,0.95)');
+  g.fillStyle = grd;
+  g.beginPath();
+  g.moveTo(x1, y1 + lift);
+  g.lineTo(x2, y2 + lift);
+  g.lineTo(x2, y2 + lift - h);
+  g.lineTo(x1, y1 + lift - h);
+  g.closePath();
+  g.fill();
+  g.strokeStyle = `rgba(255,255,255,${0.75 + flash * 0.25})`;
+  g.lineWidth = s * 0.022;
+  g.lineJoin = 'round';
+  g.stroke();
+  // Reflection streak.
+  g.strokeStyle = `rgba(255,255,255,${0.55 + flash * 0.45})`;
+  g.lineWidth = s * 0.03;
+  g.beginPath();
+  g.moveTo(x1 + (x2 - x1) * 0.22, y1 + (y2 - y1) * 0.22 + lift - h * 0.25);
+  g.lineTo(x1 + (x2 - x1) * 0.42, y1 + (y2 - y1) * 0.42 + lift - h * 0.8);
+  g.stroke();
+  // Little crystal tips on the top corners.
+  g.fillStyle = '#ffffff';
+  for (const [tx, ty] of [[x1, y1], [x2, y2]]) {
+    g.beginPath();
+    g.moveTo(tx, ty + lift - h - s * 0.06);
+    g.lineTo(tx + s * 0.025, ty + lift - h);
+    g.lineTo(tx - s * 0.025, ty + lift - h);
+    g.closePath();
+    g.fill();
+  }
+  if (flash > 0) {
+    g.fillStyle = `rgba(255,255,255,${flash * 0.6})`;
+    star(g, (x1 + x2) / 2, (y1 + y2) / 2 + lift - h * 0.55, s * 0.12 * (0.6 + flash), 4, 0.3);
   }
   g.restore();
 }
@@ -1857,6 +2039,9 @@ export function drawPieceIcon(g, kind, x, y, S, t = 0) {
       break;
     case 'daisy':
       drawDaisy(g, x, y + S * 0.3, S, { t, fixed: true });
+      break;
+    case 'mirror':
+      drawMirror(g, x, y + S * 0.08, S, 0, {});
       break;
     default:
       break;

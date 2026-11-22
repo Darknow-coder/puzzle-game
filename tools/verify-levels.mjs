@@ -3,7 +3,7 @@
 //   node tools/verify-levels.mjs --check    verify against the stored file only
 import fs from 'node:fs';
 import { allLevels } from '../src/data/levels.js';
-import { parseLevel, validateLevel, simulate, PIECE } from '../src/engine/core.js';
+import { parseLevel, validateLevel, simulate, ORIENTED, inventorySize } from '../src/engine/core.js';
 import { solve, checkSolution } from '../src/engine/solver.js';
 import { overlay } from './lib.mjs';
 
@@ -27,14 +27,14 @@ for (const def of allLevels()) {
     const c = checkSolution(L, sol);
     if (!c.ok || !c.sim.allFireflies) errs.push('stored solution does not check out');
   }
-  const total = L.inventory.arrow + L.inventory.lily + L.inventory.mushroom + L.inventory.daisy;
+  const total = inventorySize(L.inventory);
   const line = `${def.id.padEnd(5)} ${String(L.w + 'x' + L.h).padEnd(5)} pieces ${String(total).padStart(2)}  ★ ${one.min ?? '-'}  ★★★ ${best.min ?? '-'} (${best.solutions.length}${best.solutions.length >= 6 ? '+' : ''} sol)`;
   console.log((errs.length ? '✗ ' : '✓ ') + line + (errs.length ? '  ← ' + errs.join('; ') : ''));
   if (errs.length) {
     problems++;
     if (sol) console.log(overlay(L, sol));
   }
-  const enc = (list) => list.map((p) => [p.idx, p.type, p.type === PIECE.ARROW ? p.dir : 0]);
+  const enc = (list) => list.map((p) => [p.idx, p.type, ORIENTED[p.type] ? p.dir : 0]);
   const entry = { min: one.min, par: best.min, n: best.solutions.length, sol: sol ? enc(sol) : [] };
   if (best.solutions.length > 1) entry.alt = best.solutions.slice(1).map(enc);
   out[def.id] = entry;

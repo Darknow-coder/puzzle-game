@@ -3,7 +3,7 @@
 // reviewed, reshaped by hand and given an intent.
 //
 // Usage: node tools/generate.mjs <recipe> [attempts] [seed]
-import { parseLevel, simulate, validateLevel, PIECE, KIND } from '../src/engine/core.js';
+import { parseLevel, simulate, validateLevel, PIECE, PIECE_KEYS, KIND, emptyInventory } from '../src/engine/core.js';
 import { solve, enumerateSolutions } from '../src/engine/solver.js';
 import { overlay, describe } from './lib.mjs';
 
@@ -25,6 +25,19 @@ const RECIPES = {
   peak: { style: 'peak', w: [6, 7], h: [6, 8], lumis: [1, 2], walls: [1, 4], vanes: [1, 2], clouds: [1, 4], inv: { arrow: 6, daisy: 1 }, par: [3, 6], need: ['vane'] },
   peakCloud: { style: 'peak', w: [6, 7], h: [7, 9], lumis: [1, 2], walls: [1, 4], clouds: [4, 9], vanes: [0, 1], inv: { arrow: 6, mushroom: 1, daisy: 1 }, par: [4, 7], need: ['cloud'] },
   finale3: { w: [7, 7], h: [7, 9], lumis: [3, 3], walls: [3, 6], water: [0, 4], portals: [0, 1], vanes: [0, 1], clouds: [0, 3], mush: [0, 1], shadows: [0, 1], inv: { arrow: 8, lily: 1, mushroom: 1, daisy: 1 }, par: [6, 8] },
+  // World 7, L'Aube de Cristal: mirrors.
+  dawn: { w: [5, 7], h: [6, 8], lumis: [1, 1], walls: [2, 5], mirrorsF: [0, 2], inv: { mirror: 5 }, spare: 'mirror', par: [3, 5], need: ['mirrorPiece'] },
+  dawn2: { w: [6, 7], h: [6, 8], lumis: [2, 2], walls: [2, 5], mirrorsF: [0, 2], inv: { mirror: 5 }, spare: 'mirror', par: [3, 6], need: ['mirrorTwice'] },
+  dawnMix: { w: [6, 7], h: [7, 9], lumis: [1, 2], walls: [2, 5], mirrorsF: [1, 3], inv: { mirror: 4, arrow: 2 }, spare: null, par: [4, 6], need: ['mirrorPiece', 'mirrorTwice'] },
+  dawnShadow: { w: [6, 7], h: [6, 8], lumis: [1, 2], walls: [2, 4], mirrorsF: [0, 2], shadows: [1, 2], inv: { mirror: 5 }, spare: 'mirror', par: [3, 6], need: ['mirrorPiece', 'shadow'] },
+  dawnPortal: { style: 'ruins', w: [7, 7], h: [6, 8], lumis: [1, 2], walls: [2, 5], mirrorsF: [0, 2], portals: [1, 1], inv: { mirror: 5 }, spare: 'mirror', par: [3, 6], need: ['mirrorPiece', 'portal'] },
+  dawnCloud: { style: 'peak', w: [6, 7], h: [7, 9], lumis: [1, 2], walls: [1, 3], mirrorsF: [0, 2], clouds: [2, 5], inv: { mirror: 5 }, spare: 'mirror', par: [3, 6], need: ['mirrorPiece', 'cloud'] },
+  dawnWater: { style: 'pond', w: [6, 7], h: [6, 8], lumis: [1, 2], walls: [1, 4], water: [4, 10], mirrorsF: [0, 2], inv: { mirror: 5, lily: 2 }, spare: 'mirror', par: [3, 6], need: ['mirrorPiece', 'lily'] },
+  dawnShadow2: { w: [5, 7], h: [6, 8], lumis: [1, 1], walls: [1, 4], mirrorsF: [0, 1], shadows: [1, 1], inv: { mirror: 4 }, spare: 'mirror', par: [2, 4], need: ['shadowFall', 'mirrorTwice'] },
+  dawnArrow: { w: [5, 7], h: [6, 8], lumis: [1, 2], walls: [2, 5], mirrorsF: [0, 2], inv: { arrow: 2, mirror: 4 }, spare: null, par: [3, 5], need: ['mirrorPiece', 'arrowPiece'] },
+  dawnPortal2: { style: 'ruins', w: [6, 7], h: [6, 8], lumis: [1, 1], walls: [2, 5], mirrorsF: [0, 1], portals: [1, 1], inv: { mirror: 4 }, spare: 'mirror', par: [2, 4], need: ['mirrorTwice', 'portal'] },
+  dawn3: { w: [7, 7], h: [7, 8], lumis: [3, 3], walls: [2, 5], mirrorsF: [0, 2], inv: { mirror: 6 }, spare: 'mirror', par: [4, 6], need: ['mirrorTwice'] },
+  dawnFinale: { w: [7, 7], h: [8, 9], lumis: [2, 3], walls: [3, 6], mirrorsF: [1, 3], water: [0, 4], portals: [0, 1], shadows: [0, 1], vanes: [0, 1], clouds: [0, 2], inv: { mirror: 5, arrow: 2, lily: 1 }, spare: null, par: [5, 8], need: ['mirrorTwice'] },
   finale: { w: [7, 7], h: [8, 9], lumis: [2, 3], walls: [3, 6], water: [0, 4], portals: [0, 1], plates: [0, 1], gates: [0, 2], shadows: [0, 1], vanes: [0, 1], clouds: [0, 4], mush: [0, 1], inv: { arrow: 7, lily: 1, mushroom: 1, daisy: 1 }, par: [5, 8] },
 };
 
@@ -168,6 +181,7 @@ function makeBoard() {
   for (let i = 0; i < sparks; i++) put(String(i + 1));
   const arrows = R.arrows ? ri(R.arrows) : 0;
   for (let i = 0; i < arrows; i++) put('^>v<'[Math.floor(rand() * 4)]);
+  if (R.mirrorsF) for (let i = ri(R.mirrorsF); i > 0; i--) put(rand() < 0.5 ? '/' : '\\');
   if (R.mush) put('m', ri(R.mush));
   if (R.daisyF) put('f', ri(R.daisyF));
   const portals = R.portals ? ri(R.portals) : 0;
@@ -226,6 +240,16 @@ function features(L, sol) {
   f.plate = f.events.plate || 0;
   f.vane = f.events.vane || 0;
   f.cloud = f.events.cloud || 0;
+  f.mirror = f.events.mirror || 0;
+  f.mirrorPiece = sol.filter((p) => p.type === PIECE.MIRROR).length;
+  f.arrowPiece = sol.filter((p) => p.type === PIECE.ARROW).length;
+  // A placed mirror that reflects two walkers, or the same one twice.
+  f.mirrorTwice = 0;
+  for (const p of sol) {
+    if (p.type !== PIECE.MIRROR) continue;
+    const ids = touchers.get(p.idx) || [];
+    if (ids.length > 1) f.mirrorTwice++;
+  }
   f.leap = 0;
   for (let t = 1; t < sim.frames.length; t++) {
     for (const m of sim.frames[t].moves) {
@@ -271,7 +295,7 @@ for (let a = 0; a < attempts && Date.now() - tStart < budget; a++) {
   // Free grass cells where a firefly may sit.
   const cells = [];
   for (let i = 0; i < L.w * L.h; i++) {
-    if (L.terrain[i] !== 1 || L.startCell[i] || L.lantern[i] >= 0 || L.spark[i] >= 0 || L.fixedArrow[i] >= 0) continue;
+    if (L.terrain[i] !== 1 || L.startCell[i] || L.lantern[i] >= 0 || L.spark[i] >= 0 || L.fixedArrow[i] >= 0 || L.fixedMirror[i] >= 0) continue;
     if (L.portal[i] >= 0 || L.plate[i] >= 0 || L.gate[i] >= 0 || L.vaneIndex[i] >= 0 || L.fixedMushroom[i] || L.fixedDaisy[i]) continue;
     cells.push(i);
   }
@@ -299,12 +323,12 @@ for (let a = 0; a < attempts && Date.now() - tStart < budget; a++) {
     for (let j = i + 1; j < cells.length; j++) consider([cells[i], cells[j]]);
   }
   if (!best || best.n > 2) continue;
-  // Final level: fireflies placed, inventory = what the perfect run uses + one spare arrow.
+  // Final level: fireflies placed, inventory = what the perfect run uses + one spare piece.
   const m = L.rows.map((r) => r.split(''));
   for (const c of best.F) m[(c / L.w) | 0][c % L.w] = '*';
-  const inv = { arrow: 0, lily: 0, mushroom: 0, daisy: 0 };
-  for (const p of best.pick.pieces) inv[['', 'arrow', 'lily', 'mushroom', 'daisy'][p.type]]++;
-  inv.arrow += 1;
+  const inv = emptyInventory();
+  for (const p of best.pick.pieces) inv[PIECE_KEYS[p.type]]++;
+  if (R.spare !== null) inv[R.spare || 'arrow'] += 1;
   const def = { id: 'g', map: m.map((r) => r.join('')), dirs: b.dirs, vanes: b.vanes, inv };
   const L3 = parseLevel(def);
   const check = solve(L3, { fireflies: true, countCap: 3, timeLimitMs: 4000 });
@@ -322,7 +346,7 @@ console.log(`\n${recipeName}: ${found.length} candidates from ${tries} boards`);
 function print(c) {
   const inv = {};
   for (const p of c.best.sol) {
-    const k = ['', 'arrow', 'lily', 'mushroom', 'daisy'][p.type];
+    const k = PIECE_KEYS[p.type];
     inv[k] = (inv[k] || 0) + 1;
   }
   console.log(`\nscore ${c.score}  ★min ${c.one}  par ${c.best.par} (${c.best.n} sol)  turns ${c.fx.wallTurns} shared ${c.fx.shared} revisit ${c.fx.revisit} uses ${JSON.stringify(inv)} events ${JSON.stringify(c.fx.events)}`);

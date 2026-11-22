@@ -14,8 +14,27 @@ export const COLORS = ['amber', 'blue', 'rose', 'mint'];
 export const LUMI_NAMES = ['Pip', 'Nim', 'Lou', 'Bo'];
 
 // Pieces the player can place. Index 0 = none.
-export const PIECE = { NONE: 0, ARROW: 1, LILY: 2, MUSHROOM: 3, DAISY: 4 };
-export const PIECE_KEYS = ['none', 'arrow', 'lily', 'mushroom', 'daisy'];
+export const PIECE = { NONE: 0, ARROW: 1, LILY: 2, MUSHROOM: 3, DAISY: 4, MIRROR: 5 };
+export const PIECE_KEYS = ['none', 'arrow', 'lily', 'mushroom', 'daisy', 'mirror'];
+/** Placeable kinds, in tray order. */
+export const PIECE_KINDS = PIECE_KEYS.slice(1);
+/** Pieces whose `dir` matters: arrows (4 directions) and mirrors (0 = '/', 1 = '\\'). */
+export const ORIENTED = { [PIECE.ARROW]: 4, [PIECE.MIRROR]: 2 };
+
+/** Direction after a mirror: '/' (0) swaps up/right and down/left, '\\' (1) up/left and down/right. */
+export function reflect(mirror, d) {
+  return mirror === 0 ? d ^ 1 : 3 - d;
+}
+
+export function emptyInventory() {
+  return { arrow: 0, lily: 0, mushroom: 0, daisy: 0, mirror: 0 };
+}
+
+export function inventorySize(inv) {
+  let n = 0;
+  for (const k of PIECE_KINDS) n += inv[k] || 0;
+  return n;
+}
 
 export const KIND = { LUMI: 0, SHADOW: 1 };
 export const STATUS = { ACTIVE: 0, HOME: 1, DEAD: 2 };
@@ -29,6 +48,7 @@ export const MAX_TICKS = 400;
  *   '*' firefly (optional collectible)
  *   'a'..'d' Lumignon start    'A'..'D' lantern      '1'..'4' spark (opens lantern A..D)
  *   '^' '>' 'v' '<' engraved (fixed) arrow
+ *   '/' '\\' crystal mirror (fixed): reflects whoever arrives, like light
  *   'm' fixed bounce mushroom  'f' fixed daisy
  *   '@' / '%' portal pairs
  *   'P' / 'Q' switch stones (groups 0 / 1)
@@ -70,6 +90,7 @@ export function parseLevel(def) {
     h,
     terrain: new Uint8Array(n),
     fixedArrow: new Int8Array(n).fill(-1),
+    fixedMirror: new Int8Array(n).fill(-1),
     fixedMushroom: new Uint8Array(n),
     fixedDaisy: new Uint8Array(n),
     portal: new Int16Array(n).fill(-1), // paired cell index
@@ -86,7 +107,7 @@ export function parseLevel(def) {
     fireflies: [], // idx list
     walkers: [], // {kind, color, x, y, dir, sleeping}
     startCell: new Uint8Array(n),
-    inventory: { arrow: 0, lily: 0, mushroom: 0, daisy: 0, ...(def.inv || {}) },
+    inventory: { ...emptyInventory(), ...(def.inv || {}) },
     colorsUsed: [],
     cloudCells: [],
   };
@@ -168,6 +189,12 @@ export function parseLevel(def) {
           break;
         case '<':
           L.fixedArrow[i] = 3;
+          break;
+        case '/':
+          L.fixedMirror[i] = 0;
+          break;
+        case '\\':
+          L.fixedMirror[i] = 1;
           break;
         case 'm':
           L.fixedMushroom[i] = 1;
@@ -264,7 +291,7 @@ export function canPlace(L, idx, type) {
   const t = L.terrain[idx];
   if (type === PIECE.LILY) return t === T.WATER;
   if (t !== T.GRASS) return false;
-  if (L.fixedArrow[idx] >= 0 || L.fixedMushroom[idx] || L.fixedDaisy[idx]) return false;
+  if (L.fixedArrow[idx] >= 0 || L.fixedMirror[idx] >= 0 || L.fixedMushroom[idx] || L.fixedDaisy[idx]) return false;
   if (L.portal[idx] >= 0 || L.plate[idx] >= 0 || L.gate[idx] >= 0 || L.vaneIndex[idx] >= 0) return false;
   return true;
 }
@@ -282,7 +309,7 @@ export function placementsToGrid(L, placements) {
 }
 
 export function countPieces(placements) {
-  const c = { arrow: 0, lily: 0, mushroom: 0, daisy: 0 };
+  const c = emptyInventory();
   for (const p of placements) c[PIECE_KEYS[p.type]]++;
   return c;
 }
@@ -325,19 +352,21 @@ export function compile(L, placements) {
   const mush = new Uint8Array(L.fixedMushroom);
   const daisy = new Uint8Array(L.fixedDaisy);
   const lily = new Uint8Array(n);
+  const mirror = new Int8Array(L.fixedMirror);
   for (let i = 0; i < n; i++) {
     const p = grid.type[i];
     if (p === PIECE.ARROW) arrow[i] = grid.dir[i];
     else if (p === PIECE.MUSHROOM) mush[i] = 1;
     else if (p === PIECE.DAISY) daisy[i] = 1;
     else if (p === PIECE.LILY) lily[i] = 1;
+    else if (p === PIECE.MIRROR) mirror[i] = grid.dir[i] & 1;
   }
-  return { L, arrow, mush, daisy, lily };
+  return { L, arrow, mush, daisy, lily, mirror };
 }
 
 /** Same compiled board with one more piece. */
 export function withPiece(ctx, idx, type, dir) {
-  const c = { L: ctx.L, arrow: ctx.arrow, mush: ctx.mush, daisy: ctx.daisy, lily: ctx.lily };
+  const c = { L: ctx.L, arrow: ctx.arrow, mush: ctx.mush, daisy: ctx.daisy, lily: ctx.lily, mirror: ctx.mirror };
   if (type === PIECE.ARROW) {
     c.arrow = ctx.arrow.slice();
     c.arrow[idx] = dir;
@@ -350,6 +379,9 @@ export function withPiece(ctx, idx, type, dir) {
   } else if (type === PIECE.LILY) {
     c.lily = ctx.lily.slice();
     c.lily[idx] = 1;
+  } else if (type === PIECE.MIRROR) {
+    c.mirror = ctx.mirror.slice();
+    c.mirror[idx] = dir & 1;
   }
   return c;
 }
@@ -436,7 +468,7 @@ export function step(ctx, s, t, rec, log) {
   const W = L.w;
   const H = L.h;
   const K = L.walkers.length;
-  const { arrow, mush, daisy, lily } = ctx;
+  const { arrow, mush, daisy, lily, mirror } = ctx;
   const walkers = L.walkers;
   const ev = rec ? rec.events : null;
 
@@ -543,6 +575,10 @@ export function step(ctx, s, t, rec, log) {
     if (arrow[c] >= 0) {
       if (ev && s.wd[i] !== arrow[c]) ev.push({ type: 'turn', id: i, idx: c });
       s.wd[i] = arrow[c];
+    }
+    if (mirror[c] >= 0) {
+      s.wd[i] = reflect(mirror[c], s.wd[i]);
+      if (ev) ev.push({ type: 'mirror', id: i, idx: c, dir: s.wd[i] });
     }
     const vi = L.vaneIndex[c];
     if (vi >= 0) {

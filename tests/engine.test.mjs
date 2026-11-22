@@ -160,6 +160,54 @@ test('clouds vanish once left', () => {
   assert.equal(sr.cause.type, 'fall');
 });
 
+test('engraved mirrors reflect like light: / and \\ in every direction', () => {
+  // '/' : east → north, north → east, west → south, south → west.
+  const L1 = lvl(['..A', 'a./', '...'], { a: 'E' });
+  assert.deepEqual(path(simulate(L1, [], { record: true })), ['0,1', '1,1', '2,1', '2,0']);
+  const L2 = lvl(['...', '/.a', 'A..'], { a: 'W' });
+  assert.deepEqual(path(simulate(L2, [], { record: true })), ['2,1', '1,1', '0,1', '0,2']);
+  // '\\' : east → south, south → east, west → north, north → west.
+  const L3 = lvl(['a.\\', '...', '..A'], { a: 'E' });
+  const s3 = simulate(L3, [], { record: true });
+  assert.equal(s3.result, 'win', 'east → south, down to the lantern');
+  assert.deepEqual(path(s3), ['0,0', '1,0', '2,0', '2,1', '2,2']);
+  const L4 = lvl(['A..', '\\..', 'a..'], { a: 'N' });
+  const s4 = simulate(L4, [], { record: true });
+  assert.deepEqual(path(s4).slice(0, 3), ['0,2', '0,1', '-1,1'], 'north → west');
+});
+
+test('placed mirrors take one of two orientations', () => {
+  const L = lvl(['a...', '....', '...A'], { a: 'E' }, { mirror: 1 });
+  const m = (x, y, o) => ({ idx: at(L, x, y), type: PIECE.MIRROR, dir: o });
+  assert.equal(simulate(L, [m(3, 0, 1)]).result, 'win', "'\\\\' sends it down to the lantern");
+  assert.equal(simulate(L, [m(3, 0, 0)]).result, 'fail', "'/' sends it up, off the island");
+  assert.equal(canPlace(L, at(L, 1, 0), PIECE.MIRROR), true);
+  const W = lvl(['a/~', '..A'], { a: 'E' }, { mirror: 1 });
+  assert.equal(canPlace(W, at(W, 1, 0), PIECE.MIRROR), false, 'not on an engraved mirror');
+  assert.equal(canPlace(W, at(W, 2, 0), PIECE.MIRROR), false, 'not on water');
+  assert.equal(canPlace(W, at(W, 1, 0), PIECE.ARROW), false, 'nothing else on an engraved mirror');
+});
+
+test('a mirror bounces a returning walker the other way', () => {
+  // East into '/' goes north into a dead end, turns back south, and the same
+  // mirror now sends it west, back where it came from.
+  const L = lvl(['####', '##.#', 'a./#', '###A'], { a: 'E' });
+  const s = simulate(L, [], { record: true });
+  assert.deepEqual(path(s), ['0,2', '1,2', '2,2', '2,1', '2,2', '1,2', '0,2', '-1,2']);
+  assert.equal(s.result, 'fail');
+});
+
+test('Gloomnibs obey mirrors; a mushroom jump landing on a mirror is reflected', () => {
+  const G = lvl(['a.....', '......', 'G..\\..', '......', 'A.....'], { a: 'S', G: 'E' });
+  const sg = simulate(G, [], { record: true });
+  assert.deepEqual(path(sg, 1).slice(0, 5), ['0,2', '1,2', '2,2', '3,2', '3,3']);
+  const M = lvl(['am./', '....', '..A.'], { a: 'E' });
+  const sm = simulate(M, [], { record: true });
+  // a: (0,0) → mushroom (1,0) → jumps to (3,0) '/' → north, off the board.
+  assert.deepEqual(path(sm).slice(0, 3), ['0,0', '1,0', '3,0']);
+  assert.equal(sm.result, 'fail');
+});
+
 test('Lumignons pass through each other', () => {
   const L = lvl(['Ba.bA'], { a: 'E', b: 'W' });
   const s = simulate(L, [], { record: true });

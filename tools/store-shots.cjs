@@ -48,7 +48,7 @@ function seed(lang) {
     await p.evaluate(() => {
       const app = window.lumignons;
       const g = app.game;
-      for (const [i, t, d] of app.solutions['2-10'].sol) g.placeAt(i, ['', 'arrow', 'lily', 'mushroom', 'daisy'][t], d);
+      for (const [i, t, d] of app.solutions['2-10'].sol) g.placeAt(i, ['', 'arrow', 'lily', 'mushroom', 'daisy', 'mirror'][t], d);
       g.picker = null;
       g.go();
     });

@@ -1,6 +1,6 @@
 // The puzzle screen: board rendering, touch/mouse input, planning and the
 // animated playback of a simulated run.
-import { parseLevel, simulate, canPlace, PIECE, PIECE_KEYS, KIND, STATUS, T, DX, DY, LUMI_NAMES } from '../engine/core.js';
+import { parseLevel, simulate, canPlace, PIECE, PIECE_KEYS, PIECE_KINDS, ORIENTED, KIND, STATUS, T, DX, DY, LUMI_NAMES } from '../engine/core.js';
 import * as A from './art.js';
 import { Particles } from './fx.js';
 import { sound } from '../audio.js';
@@ -44,9 +44,10 @@ export class GameScene {
     this.coach = null;
     this.clearRun();
     this.lastArrowDir = 1;
+    this.lastMirrorDir = 0;
     this.blinks = this.L.walkers.map(() => 1 + Math.random() * 3);
     const inv = this.L.inventory;
-    this.selected = ['arrow', 'lily', 'mushroom', 'daisy'].find((k) => inv[k] > 0) || 'arrow';
+    this.selected = PIECE_KINDS.find((k) => inv[k] > 0) || 'arrow';
     this.layoutKey = '';
     this.island = null;
     this.sky = null;
@@ -62,6 +63,7 @@ export class GameScene {
     this.failInfo = null;
     this.trails = [];
     this.winPaths = null;
+    this.mirrorFlash = new Map();
     this.melody = null;
     clearTimeout(this.melodyTimer);
     this.fx.clear();
@@ -142,7 +144,7 @@ export class GameScene {
   candidateTypes(idx) {
     const left = this.inventoryLeft();
     const out = [];
-    for (const k of ['arrow', 'lily', 'mushroom', 'daisy']) {
+    for (const k of PIECE_KINDS) {
       const type = PIECE[k.toUpperCase()];
       if (this.L.inventory[k] > 0 && canPlace(this.L, idx, type)) out.push({ k, type, left: left[k] });
     }
@@ -152,7 +154,7 @@ export class GameScene {
   placeAt(idx, typeKey, dir) {
     const type = PIECE[typeKey.toUpperCase()];
     this.snapshot();
-    this.placements.set(idx, { type, dir: type === PIECE.ARROW ? dir : 0, born: this.t });
+    this.placements.set(idx, { type, dir: ORIENTED[type] ? dir % ORIENTED[type] : 0, born: this.t });
     this.hintCells = this.hintCells.filter((h) => h.idx !== idx);
     this.wrongCells = this.wrongCells.filter((c) => c !== idx);
     sound.sfx('place');
@@ -174,11 +176,12 @@ export class GameScene {
 
   setDir(idx, dir) {
     const p = this.placements.get(idx);
-    if (!p || p.type !== PIECE.ARROW || p.dir === dir) return;
+    if (!p || !ORIENTED[p.type] || p.dir === dir) return;
     this.snapshot();
     p.dir = dir;
     p.born = this.t;
-    this.lastArrowDir = dir;
+    if (p.type === PIECE.MIRROR) this.lastMirrorDir = dir;
+    else this.lastArrowDir = dir;
     this.wrongCells = this.wrongCells.filter((c) => c !== idx);
     sound.sfx('rotate');
     this.app.hudChanged();
@@ -216,7 +219,7 @@ export class GameScene {
     const layouts = [this.solution.sol, ...(this.solution.alt || [])].map((l) => l.map(([idx, type, dir]) => ({ idx, type, dir })));
     const matches = (s) => {
       const p = this.placements.get(s.idx);
-      return p && p.type === s.type && (s.type !== PIECE.ARROW || p.dir === s.dir);
+      return p && p.type === s.type && (!ORIENTED[s.type] || p.dir === s.dir);
     };
     let sol = layouts[0];
     let bestScore = -1;
@@ -325,6 +328,8 @@ export class GameScene {
         const dy = py - g.y0;
         if (piece.type === PIECE.ARROW && Math.hypot(dx, dy) > this.S * 0.28) {
           this.setDir(g.idx, Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 1 : 3) : dy > 0 ? 2 : 0);
+        } else if (piece.type === PIECE.MIRROR && Math.hypot(dx, dy) > this.S * 0.28) {
+          this.setDir(g.idx, 1 - piece.dir); // a flick flips a mirror
         }
         return;
       }
@@ -360,7 +365,7 @@ export class GameScene {
     }
     const placed = this.placements.get(idx);
     if (placed) {
-      this.picker = { idx, t: this.t, arrow: placed.type === PIECE.ARROW };
+      this.picker = { idx, t: this.t, arrow: placed.type === PIECE.ARROW, mirror: placed.type === PIECE.MIRROR };
       sound.sfx('tap');
       return;
     }
@@ -380,8 +385,9 @@ export class GameScene {
       this.app.pulseTray(c.k);
       return;
     }
-    this.placeAt(idx, c.k, this.lastArrowDir);
+    this.placeAt(idx, c.k, c.type === PIECE.MIRROR ? this.lastMirrorDir : this.lastArrowDir);
     if (c.type === PIECE.ARROW) this.picker = { idx, t: this.t, arrow: true, fresh: true };
+    else if (c.type === PIECE.MIRROR) this.picker = { idx, t: this.t, mirror: true, fresh: true };
   }
 
   pickerGeometry() {
@@ -392,6 +398,10 @@ export class GameScene {
     const d = Math.max(r * 2.05, S * 0.98);
     const items = [];
     if (pk.arrow) for (let dir = 0; dir < 4; dir++) items.push({ key: dir, x: cx + DX[dir] * d, y: cy + DY[dir] * d, r });
+    if (pk.mirror) {
+      items.push({ key: 1, x: cx - d, y: cy, r });
+      items.push({ key: 0, x: cx + d, y: cy, r });
+    }
     const rr = r * 0.82;
     items.push({ key: 'remove', x: cx + d * 0.9, y: cy - d * 0.9, r: rr });
     return items;
@@ -407,6 +417,9 @@ export class GameScene {
   keyDir(dir) {
     if (this.picker && this.picker.arrow) {
       this.setDir(this.picker.idx, dir);
+      this.picker = null;
+    } else if (this.picker && this.picker.mirror && (dir === 1 || dir === 3)) {
+      this.setDir(this.picker.idx, dir === 1 ? 0 : 1);
       this.picker = null;
     }
   }
@@ -426,11 +439,12 @@ export class GameScene {
       return { title: LUMI_NAMES[wk.color], text: text('lumi') };
     }
     const placed = this.placements.get(idx);
-    if (placed) return entry(['', 'arrow', 'lily', 'mushroom', 'daisy'][placed.type]);
+    if (placed) return entry(PIECE_KEYS[placed.type]);
     if (L.lantern[idx] >= 0) return entry(L.sparkColors & (1 << L.lantern[idx]) ? 'spark' : 'lantern');
     if (L.spark[idx] >= 0) return entry('spark');
     if (L.fireflyIndex[idx] >= 0) return entry('firefly');
     if (L.fixedArrow[idx] >= 0) return entry('engraved');
+    if (L.fixedMirror[idx] >= 0) return entry('mirror');
     if (L.fixedMushroom[idx]) return entry('mushroom');
     if (L.fixedDaisy[idx]) return entry('daisy');
     if (L.portal[idx] >= 0) return entry('portal');
@@ -704,6 +718,11 @@ export class GameScene {
         case 'turn':
           sound.sfx('turn');
           break;
+        case 'mirror':
+          sound.sfx('mirror', e.dir);
+          this.mirrorFlash.set(e.idx, this.t);
+          this.fx.emit('star', cx, cy - S * 0.15, 5, { speed: 60, life: 0.45, size: S * 0.05, color: 'rgba(190,240,255,' });
+          break;
         case 'water':
           sound.sfx('water');
           this.fx.emit('drop', cx, cy, 16, { speed: 140, life: 0.7, size: S * 0.05, gravity: 400, vy: -120, fill: '#9fe0ff' });
@@ -902,6 +921,7 @@ export class GameScene {
       else if (h.type === PIECE.LILY) A.drawLily(g, cx, cy, S, { ghost: true, t });
       else if (h.type === PIECE.MUSHROOM) A.drawMushroom(g, cx, cy + S * 0.25, S, { ghost: true });
       else if (h.type === PIECE.DAISY) A.drawDaisy(g, cx, cy + S * 0.25, S, { ghost: true, t });
+      else if (h.type === PIECE.MIRROR) A.drawMirror(g, cx, cy, S, h.dir, { ghost: true });
     }
     if (this.mode === 'plan') {
       for (const c of this.wrongCells) {
@@ -950,6 +970,18 @@ export class GameScene {
           const pop = age < 0.25 ? Math.sin((age / 0.25) * Math.PI) * 0.4 : 0;
           if (this.gesture?.drag && this.gesture.idx === i) return;
           A.drawMushroom(g, cx, cy + S * 0.2, S, { fixed, squash: sq - pop });
+        });
+      }
+      if (L.fixedMirror[i] >= 0 || this.placements.get(i)?.type === PIECE.MIRROR) {
+        const pc = this.placements.get(i);
+        push(base - 2, () => {
+          if (this.gesture?.drag && this.gesture.idx === i) return;
+          const age = pc ? t - (pc.born ?? -10) : 9;
+          const pop = age < 0.25 ? 1 + Math.sin((age / 0.25) * Math.PI) * 0.18 : 1;
+          const fl = this.mirrorFlash.get(i);
+          const flash = run && fl !== undefined ? Math.max(0, 1 - (t - fl) / 0.55) : 0;
+          const fixed = L.fixedMirror[i] >= 0;
+          A.drawMirror(g, cx, cy, S, fixed ? L.fixedMirror[i] : pc.dir, { fixed, scale: pop, flash, highlight: this.picker && this.picker.idx === i });
         });
       }
       if (L.fixedDaisy[i] || this.placements.get(i)?.type === PIECE.DAISY) {
@@ -1072,6 +1104,7 @@ export class GameScene {
       if (pc.type === PIECE.ARROW) A.drawArrowStone(g, x, y, S, pc.dir, { lift: 6, scale: 1.1 });
       else if (pc.type === PIECE.LILY) A.drawLily(g, x, y, S, { t });
       else if (pc.type === PIECE.MUSHROOM) A.drawMushroom(g, x, y + S * 0.2, S, {});
+      else if (pc.type === PIECE.MIRROR) A.drawMirror(g, x, y, S, pc.dir, { lift: 6, scale: 1.1 });
       else A.drawDaisy(g, x, y + S * 0.2, S, { t });
     }
     // Radial picker.
@@ -1331,7 +1364,7 @@ export class GameScene {
       const x = lerp(cx, it.x, k);
       const y = lerp(cy, it.y, k);
       const r = it.r * (0.6 + 0.4 * k);
-      const active = it.key === cur?.dir && pk.arrow;
+      const active = it.key === cur?.dir && (pk.arrow || pk.mirror);
       g.fillStyle = it.key === 'remove' ? '#ff6b81' : active ? '#ffcf5a' : '#fff8ea';
       g.strokeStyle = 'rgba(60,30,80,0.35)';
       g.lineWidth = 2;
@@ -1350,6 +1383,19 @@ export class GameScene {
         g.lineTo(x + q, y + q);
         g.moveTo(x + q, y - q);
         g.lineTo(x - q, y + q);
+        g.stroke();
+      } else if (pk.mirror) {
+        g.lineWidth = Math.max(3, r * 0.22);
+        g.lineCap = 'round';
+        const q = r * 0.42;
+        g.beginPath();
+        if (it.key === 0) {
+          g.moveTo(x - q, y + q);
+          g.lineTo(x + q, y - q);
+        } else {
+          g.moveTo(x - q, y - q);
+          g.lineTo(x + q, y + q);
+        }
         g.stroke();
       } else {
         g.save();

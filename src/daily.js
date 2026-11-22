@@ -1,6 +1,7 @@
 // "Défi du jour": one verified puzzle per calendar day, chosen among the
 // worlds the player has already opened, plus a streak of consecutive days.
 import { DAILY } from './data/daily.js';
+import { PIECE_KINDS } from './engine/core.js';
 
 const EPOCH = Date.UTC(2026, 0, 1);
 
@@ -28,9 +29,9 @@ export function decodeEntry(e, theme, key) {
   const def = {
     id: 'daily-' + key,
     name: { fr: 'Défi du jour', en: 'Daily challenge' },
-    map: rows.split('/'),
+    map: rows.split(rows.includes('|') ? '|' : '/'),
     dirs,
-    inv: { arrow: +inv[0], lily: +inv[1], mushroom: +inv[2], daisy: +inv[3] },
+    inv: Object.fromEntries(PIECE_KINDS.map((k, i) => [k, +(inv[i] || 0)])),
   };
   if (vanes) def.vanes = vanes;
   const solution = { par, min, sol: sol.split(',').map((p) => p.split('.').map(Number)) };

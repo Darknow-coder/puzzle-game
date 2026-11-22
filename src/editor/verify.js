@@ -1,6 +1,6 @@
 // Verification of a player-made level: is it solvable, with how many pieces,
 // and what is the perfect layout (for stars and hints)?
-import { parseLevel, simulate, PIECE } from '../engine/core.js';
+import { parseLevel, simulate, ORIENTED } from '../engine/core.js';
 import { solve } from '../engine/solver.js';
 
 export function verifyDef(def, timeLimitMs = 15000, lib = { parseLevel, simulate, solve }) {
@@ -28,7 +28,7 @@ export function verifyDef(def, timeLimitMs = 15000, lib = { parseLevel, simulate
   }
 }
 
-const enc = (list) => (list || []).map((p) => [p.idx, p.type, p.type === PIECE.ARROW ? p.dir : 0]);
+const enc = (list) => (list || []).map((p) => [p.idx, p.type, ORIENTED[p.type] ? p.dir : 0]);
 
 /** Runs a verification in a Web Worker when possible, else on this thread. */
 export function verifyAsync(def, timeLimitMs = 15000) {

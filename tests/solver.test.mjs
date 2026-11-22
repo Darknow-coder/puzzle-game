@@ -2,7 +2,7 @@
 // tiny random boards that use every mechanic.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { parseLevel, simulate, canPlace, PIECE } from '../src/engine/core.js';
+import { parseLevel, simulate, canPlace, PIECE, PIECE_KEYS, ORIENTED, inventorySize } from '../src/engine/core.js';
 import { solve } from '../src/engine/solver.js';
 
 function rng(seed) {
@@ -14,7 +14,7 @@ function rng(seed) {
   };
 }
 
-function randomLevel(seed) {
+function randomLevel(seed, mirrors = false) {
   const r = rng(seed);
   const w = 3 + Math.floor(r() * 3);
   const h = 3 + Math.floor(r() * 2);
@@ -50,6 +50,7 @@ function randomLevel(seed) {
     dirs.b = D[Math.floor(r() * 4)];
   }
   const extras = ['*', '*', 'm', 'f', '>', 'v', '1', 'P', 'H', 'G', 'Z', 'o', 'o', 'R', '@'];
+  if (mirrors) extras.push('/', '\\', '/', '\\');
   const nx = Math.floor(r() * 4);
   let vanes = '';
   for (let k = 0; k < nx; k++) {
@@ -69,6 +70,10 @@ function randomLevel(seed) {
   const map = cells.map((row) => row.join(''));
   if (map.join('').split('@').length === 2) return null;
   const inv = { arrow: 1 + Math.floor(r() * 2), lily: r() < 0.5 ? 1 : 0, mushroom: r() < 0.3 ? 1 : 0, daisy: r() < 0.3 ? 1 : 0 };
+  if (mirrors) {
+    inv.arrow = Math.floor(r() * 2);
+    inv.mirror = 1 + Math.floor(r() * 2);
+  }
   const d = {};
   for (const k of Object.keys(dirs)) if (dirs[k]) d[k] = dirs[k];
   try {
@@ -82,12 +87,11 @@ function brute(L, maxK, wantFireflies) {
   const n = L.w * L.h;
   const opts = [];
   for (let i = 0; i < n; i++) {
-    for (const t of [PIECE.ARROW, PIECE.LILY, PIECE.MUSHROOM, PIECE.DAISY]) {
+    for (const t of [PIECE.ARROW, PIECE.LILY, PIECE.MUSHROOM, PIECE.DAISY, PIECE.MIRROR]) {
       if (!canPlace(L, i, t)) continue;
-      const key = ['', 'arrow', 'lily', 'mushroom', 'daisy'][t];
+      const key = PIECE_KEYS[t];
       if (!L.inventory[key]) continue;
-      if (t === PIECE.ARROW) for (let d = 0; d < 4; d++) opts.push({ idx: i, type: t, dir: d, key });
-      else opts.push({ idx: i, type: t, dir: 0, key });
+      for (let d = 0; d < (ORIENTED[t] || 1); d++) opts.push({ idx: i, type: t, dir: d, key });
     }
   }
   const ok = (sim) => sim.result === 'win' && (!wantFireflies || sim.allFireflies);
@@ -120,13 +124,13 @@ function brute(L, maxK, wantFireflies) {
   return null;
 }
 
-test('pruned solver agrees with brute force on random tiny levels', () => {
+function crossCheck(mirrors, boards) {
   let checked = 0;
   let solvable = 0;
-  for (let seed = 1; checked < 500 && seed < 20000; seed++) {
-    const L = randomLevel(seed);
+  for (let seed = 1; checked < boards && seed < 20000; seed++) {
+    const L = randomLevel(seed, mirrors);
     if (!L) continue;
-    const total = L.inventory.arrow + L.inventory.lily + L.inventory.mushroom + L.inventory.daisy;
+    const total = inventorySize(L.inventory);
     const maxK = Math.min(3, total);
     for (const ff of [false, true]) {
       const b = brute(L, maxK, ff);
@@ -137,6 +141,17 @@ test('pruned solver agrees with brute force on random tiny levels', () => {
     }
     checked++;
   }
+  return { checked, solvable };
+}
+
+test('pruned solver agrees with brute force on random tiny levels', () => {
+  const { checked, solvable } = crossCheck(false, 500);
   assert.ok(checked >= 400);
   assert.ok(solvable > 150, `only ${solvable} solvable cases`);
+});
+
+test('pruned solver agrees with brute force on random levels with mirrors', () => {
+  const { checked, solvable } = crossCheck(true, 400);
+  assert.ok(checked >= 350);
+  assert.ok(solvable > 100, `only ${solvable} solvable cases`);
 });

@@ -87,3 +87,31 @@ test('resizing keeps the top-left content', () => {
   assert.equal(big.w, 8);
   assert.equal(big.h, 10);
 });
+
+test('engraved mirrors and mirror pieces go through the editor and share codes', () => {
+  const m = newModel();
+  const i = 1 * m.w + 3;
+  assert.ok(applyTool(m, i, 'mirror'));
+  assert.equal(m.cells[i].e, 'mirror');
+  assert.equal(toDef(m).map[1][3], '/');
+  applyTool(m, i, 'mirror');
+  assert.equal(toDef(m).map[1][3], '\\', 'tapping again flips it');
+  m.inv.mirror = 2;
+  const back = fromDef(toDef(m));
+  assert.equal(back.cells[i].e, 'mirror');
+  assert.equal(back.cells[i].d, 1);
+  const shared = decodeShare(encodeShare(m));
+  assert.deepEqual(toDef(shared).map, toDef(m).map, 'rows with mirrors survive the code');
+  assert.equal(shared.inv.mirror, 2);
+  assert.equal(shared.inv.arrow, m.inv.arrow);
+});
+
+test('codes made before mirrors existed still open', () => {
+  // Version 2 format: rows joined with '/', four inventory digits.
+  const payload = { n: 'Ancien', t: 1, m: ['a....', '.....', '....A'].join('/'), d: { a: 'E' }, i: '2100' };
+  const code = 'LUMI1.' + Buffer.from(JSON.stringify(payload)).toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  const m = decodeShare(code);
+  assert.deepEqual(toDef(m).map, ['a....', '.....', '....A']);
+  assert.equal(m.theme, 'pond');
+  assert.deepEqual([m.inv.arrow, m.inv.lily, m.inv.mushroom, m.inv.daisy, m.inv.mirror], [2, 1, 0, 0, 0]);
+});

@@ -9,6 +9,7 @@ const SCALES = {
   ruins: { root: 65, steps: [0, 2, 4, 7, 9], prog: [[0, 4, 7], [2, 6, 9], [-1, 2, 7], [-3, 0, 4]], bpm: 58 },
   gloom: { root: 62, steps: [0, 3, 5, 7, 10], prog: [[0, 3, 7], [-2, 2, 5], [-4, 0, 3], [-5, -2, 2]], bpm: 56 },
   peak: { root: 67, steps: [0, 2, 4, 7, 9], prog: [[0, 4, 7], [-3, 0, 4], [-8, -5, -1], [-5, -1, 2]], bpm: 70 },
+  dawn: { root: 69, steps: [0, 2, 4, 7, 9], prog: [[0, 4, 7], [-7, -3, 0], [-3, 0, 4], [-5, -1, 2]], bpm: 76 },
 };
 
 const midi = (m) => 440 * Math.pow(2, (m - 69) / 12);
@@ -237,6 +238,13 @@ class Sound {
       case 'turn':
         this.tone({ freq: 1200, type: 'sine', decay: 0.04, gain: 0.03 });
         break;
+      case 'mirror': {
+        // A glassy ping, a little higher for each new direction.
+        const f = midi(88 + [0, 2, 4, 7][arg & 3]);
+        this.tone({ freq: f, type: 'sine', decay: 0.22, gain: 0.05 });
+        this.tone({ freq: f * 2.01, type: 'sine', at: 0.01, decay: 0.12, gain: 0.02 });
+        break;
+      }
       case 'portal':
         this.tone({ freq: 300, type: 'sine', decay: 0.35, gain: 0.1, glide: 1400 });
         this.hiss({ dur: 0.35, gain: 0.06, from: 500, to: 5000 });
@@ -354,6 +362,10 @@ class Sound {
         if (r < 0.25) this.wind(t, spb * 3.5, 900);
         else if (r < 0.31) this.chime(t + Math.random() * spb);
         break;
+      case 'dawn':
+        if (r < 0.22) this.bird(t + Math.random() * spb);
+        else if (r < 0.3) this.chime(t + Math.random() * spb);
+        break;
       default:
         break;
     }
@@ -389,6 +401,13 @@ class Sound {
   hoot(t, f) {
     this.ambTone(f, t, { attack: 0.05, decay: 0.3, gain: 0.025, glide: f * 0.92 });
     this.ambTone(f * 0.95, t + 0.45, { attack: 0.05, decay: 0.45, gain: 0.02, glide: f * 0.85 });
+  }
+
+  bird(t) {
+    // The first birds of the morning: two or three quick rising chirps.
+    const f = 2200 + Math.random() * 900;
+    const n = 2 + Math.floor(Math.random() * 2);
+    for (let i = 0; i < n; i++) this.ambTone(f * (1 + i * 0.06), t + i * 0.11, { attack: 0.01, decay: 0.07, gain: 0.014, glide: f * 1.35 });
   }
 
   chime(t) {

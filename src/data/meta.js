@@ -174,6 +174,15 @@ export const NOTEBOOK = [
     },
     has: (L) => L.cloudCells.length > 0,
   },
+  {
+    id: 'mirror',
+    name: { fr: 'Miroir de cristal', en: 'Crystal mirror' },
+    text: {
+      fr: 'Un Lumignon est une lumière : un miroir le renvoie de côté, comme un rayon. Ce qui arrive de face repart d’un côté, ce qui arrive de l’autre côté repart de l’autre. Touche un miroir posé pour le tourner (/ ou \\).',
+      en: 'A Lumignon is light: a mirror sends it sideways, like a ray. Coming from one side it leaves one way, from the other side the other way. Tap a mirror you placed to turn it (/ or \\).',
+    },
+    has: (L) => L.inventory.mirror > 0 || L.fixedMirror.some((m) => m >= 0),
+  },
 ];
 
 /** Cosmetic hats. `need` is evaluated by the progress module. */
@@ -189,6 +198,7 @@ export const HATS_INFO = [
   { id: 'feather', name: { fr: 'Plume', en: 'Feather' }, need: { bonus: 1 } },
   { id: 'wizard', name: { fr: 'Chapeau d’astronome', en: 'Stargazer hat' }, need: { stars: 100 } },
   { id: 'crown', name: { fr: 'Couronne', en: 'Crown' }, need: { world: 5 } },
+  { id: 'prism', name: { fr: 'Diadème de cristal', en: 'Crystal tiara' }, need: { world: 6 } },
   { id: 'halo', name: { fr: 'Auréole d’étoiles', en: 'Star halo' }, need: { perfect: true } },
 ];
 
@@ -204,7 +214,8 @@ export const ACHIEVEMENTS = [
   { id: 'nohint', icon: '◎', name: { fr: 'Esprit clair', en: 'Clear mind' }, desc: { fr: 'Finir un monde entier sans indice.', en: 'Finish a whole world without hints.' }, check: (p) => p.worldNoHint },
   { id: 'perfect20', icon: '✪', name: { fr: 'Perfectionniste', en: 'Perfectionist' }, desc: { fr: 'Obtenir 3 étoiles sur 20 niveaux.', en: 'Get 3 stars on 20 levels.' }, check: (p) => p.perfectLevels >= 20, progress: (p) => [p.perfectLevels, 20] },
   { id: 'world6', icon: '🏮', name: { fr: 'La grande lanterne', en: 'The great lantern' }, desc: { fr: 'Terminer la Cime des Vents.', en: 'Finish the Windy Peak.' }, check: (p) => p.worldsDone >= 6 },
-  { id: 'allbonus', icon: '🌠', name: { fr: 'Pluie d’étoiles', en: 'Meteor shower' }, desc: { fr: 'Réussir les six étoiles filantes.', en: 'Clear all six shooting stars.' }, check: (p) => p.bonusDone >= 6, progress: (p) => [p.bonusDone, 6] },
+  { id: 'world7', icon: '🌅', name: { fr: 'Lever du jour', en: 'Daybreak' }, desc: { fr: 'Terminer l’Aube de Cristal.', en: 'Finish the Crystal Dawn.' }, check: (p) => p.worldsDone >= 7 },
+  { id: 'allbonus', icon: '🌠', name: { fr: 'Pluie d’étoiles', en: 'Meteor shower' }, desc: { fr: 'Réussir les sept étoiles filantes.', en: 'Clear all seven shooting stars.' }, check: (p) => p.bonusDone >= 7, progress: (p) => [p.bonusDone, 7] },
   { id: 'daily7', icon: '☀', name: { fr: 'Fidèle au rendez-vous', en: 'Regular visitor' }, desc: { fr: 'Réussir 7 défis du jour.', en: 'Clear 7 daily puzzles.' }, check: (p) => p.dailyDone >= 7, progress: (p) => [p.dailyDone, 7] },
   { id: 'streak5', icon: '🔥', name: { fr: 'Flamme vive', en: 'Burning bright' }, desc: { fr: 'Une série de 5 défis du jour.', en: 'A 5-day daily streak.' }, check: (p) => p.dailyBest >= 5, progress: (p) => [p.dailyBest, 5] },
   { id: 'maker', icon: '✎', name: { fr: 'Architecte', en: 'Architect' }, desc: { fr: 'Créer un niveau vérifié dans l’atelier.', en: 'Make a checked level in the workshop.' }, check: (p) => p.customMade >= 1 },

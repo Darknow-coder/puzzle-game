@@ -9,7 +9,7 @@
 // resumed from the turn where the new piece first acts, so each candidate
 // costs only the end of a run.
 
-import { canPlace, compile, withPiece, run, PIECE, T } from './core.js';
+import { canPlace, compile, withPiece, run, PIECE, PIECE_KEYS, ORIENTED, emptyInventory, inventorySize, T } from './core.js';
 
 const VARIANTS = [
   { type: PIECE.ARROW, dir: 0, key: 'arrow' },
@@ -19,7 +19,12 @@ const VARIANTS = [
   { type: PIECE.MUSHROOM, dir: 0, key: 'mushroom' },
   { type: PIECE.DAISY, dir: 0, key: 'daisy' },
   { type: PIECE.LILY, dir: 0, key: 'lily' },
+  { type: PIECE.MIRROR, dir: 0, key: 'mirror' },
+  { type: PIECE.MIRROR, dir: 1, key: 'mirror' },
 ];
+
+// Identity of a placed piece, to skip layouts already explored in another order.
+const pieceKey = (p) => (p.idx << 5) | (p.type << 2) | (ORIENTED[p.type] ? p.dir : 0);
 
 function divergence(a, b, from) {
   const m = Math.min(a.length, b.length);
@@ -36,7 +41,7 @@ function divergence(a, b, from) {
  */
 export function solve(L, opts = {}) {
   const inv = L.inventory;
-  const total = inv.arrow + inv.lily + inv.mushroom + inv.daisy;
+  const total = inventorySize(inv);
   const maxPieces = Math.min(opts.maxPieces ?? total, total);
   const countCap = opts.countCap ?? 1;
   const deadline = Date.now() + (opts.timeLimitMs ?? 60000);
@@ -112,7 +117,7 @@ export function solve(L, opts = {}) {
           if (d < lastD) continue;
           placed.push({ idx: c, type: v.type, dir: v.dir });
           const key = placed
-            .map((p) => p.idx * 8 + p.type * 2 + (p.type === PIECE.ARROW ? p.dir : 0))
+            .map(pieceKey)
             .sort((a, b) => a - b)
             .join(',');
           if (!seen.has(key)) {
@@ -147,7 +152,7 @@ export function solve(L, opts = {}) {
  */
 export function enumerateSolutions(L, opts = {}) {
   const inv = L.inventory;
-  const total = inv.arrow + inv.lily + inv.mushroom + inv.daisy;
+  const total = inventorySize(inv);
   const maxPieces = Math.min(opts.maxPieces ?? total, total);
   const deadline = Date.now() + (opts.timeLimitMs ?? 10000);
   const cap = opts.cap ?? 100000;
@@ -209,7 +214,7 @@ export function enumerateSolutions(L, opts = {}) {
         if (d < 0 || d < lastD) continue;
         placed.push({ idx: c, type: v.type, dir: v.dir });
         const key = placed
-          .map((p) => p.idx * 8 + p.type * 2 + (p.type === PIECE.ARROW ? p.dir : 0))
+          .map(pieceKey)
           .sort((a, b) => a - b)
           .join(',');
         if (!seen.has(key)) {
@@ -232,8 +237,8 @@ export function enumerateSolutions(L, opts = {}) {
 
 /** Checks a stored solution against the level rules. */
 export function checkSolution(L, placements) {
-  const counts = { arrow: 0, lily: 0, mushroom: 0, daisy: 0 };
-  const keys = ['none', 'arrow', 'lily', 'mushroom', 'daisy'];
+  const counts = emptyInventory();
+  const keys = PIECE_KEYS;
   const cells = new Set();
   for (const p of placements) {
     if (!canPlace(L, p.idx, p.type)) return { ok: false, why: `cannot place ${keys[p.type]} at ${p.idx}` };

@@ -5,7 +5,7 @@ import { dailyFor, recordDaily, liveStreak, dayKey, decodeEntry } from '../src/d
 import { parseLevel, simulate } from '../src/engine/core.js';
 import { checkSolution } from '../src/engine/solver.js';
 
-const THEMES = ['meadow', 'pond', 'grove', 'ruins', 'gloom', 'peak'];
+const THEMES = ['meadow', 'pond', 'grove', 'ruins', 'gloom', 'peak', 'dawn'];
 
 test('every daily puzzle decodes, is not trivial and its stored layout is perfect', () => {
   let n = 0;
@@ -22,7 +22,7 @@ test('every daily puzzle decodes, is not trivial and its stored layout is perfec
       n++;
     }
   }
-  assert.ok(n >= 300, `only ${n} daily puzzles`);
+  assert.ok(n >= 420, `only ${n} daily puzzles`);
 });
 
 test('the daily puzzle depends only on the date and the opened worlds', () => {

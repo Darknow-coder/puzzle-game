@@ -1,6 +1,6 @@
 // "Atelier": the player's own levels — list, editor, verification, sharing.
 import * as A from '../game/art.js';
-import { parseLevel, KIND, T } from '../engine/core.js';
+import { parseLevel, KIND, T, PIECE_KINDS } from '../engine/core.js';
 import { newModel, cloneModel, toDef, fromDef, applyTool, resize, problems, encodeShare, decodeShare, THEMES, MIN_W, MAX_W, MIN_H, MAX_H } from './model.js';
 import { verifyAsync } from './verify.js';
 
@@ -49,7 +49,7 @@ const TXT = {
     shared: 'Niveau partagé',
     addToAtelier: 'Ajouter à mon atelier',
     back: 'Retour',
-    pieces: { arrow: 'Flèches', lily: 'Nénuphars', mushroom: 'Champignons', daisy: 'Pâquerettes' },
+    pieces: { arrow: 'Flèches', lily: 'Nénuphars', mushroom: 'Champignons', daisy: 'Pâquerettes', mirror: 'Miroirs' },
     fix: 'À corriger avant de jouer :',
     untitled: 'Mon niveau',
     copyOf: (n) => `${n} (copie)`,
@@ -98,7 +98,7 @@ const TXT = {
     shared: 'Shared level',
     addToAtelier: 'Add to my workshop',
     back: 'Back',
-    pieces: { arrow: 'Arrows', lily: 'Lily pads', mushroom: 'Mushrooms', daisy: 'Daisies' },
+    pieces: { arrow: 'Arrows', lily: 'Lily pads', mushroom: 'Mushrooms', daisy: 'Daisies', mirror: 'Mirrors' },
     fix: 'To fix before playing:',
     untitled: 'My level',
     copyOf: (n) => `${n} (copy)`,
@@ -109,11 +109,11 @@ const TOOLS = [
   ['.', ' ', '#', '~', 'o'],
   ['a', 'b', 'c', 'd', 'G', 'Z'],
   ['A', 'B', 'C', 'D', '1', '2', '3', '4', '*'],
-  ['arrow', 'm', 'f', '@', '%', 'P', 'H', 'Q', 'K', 'R'],
+  ['arrow', 'mirror', 'm', 'f', '@', '%', 'P', 'H', 'Q', 'K', 'R'],
 ];
 const TOOL_NAMES = {
-  fr: { '.': 'Herbe', ' ': 'Vide', '#': 'Obstacle', '~': 'Eau', o: 'Nuage', a: 'Pip', b: 'Nim', c: 'Lou', d: 'Bo', G: 'Grignombre', Z: 'Dormeur', A: 'Lanterne de Pip', B: 'Lanterne de Nim', C: 'Lanterne de Lou', D: 'Lanterne de Bo', 1: 'Étincelle de Pip', 2: 'Étincelle de Nim', 3: 'Étincelle de Lou', 4: 'Étincelle de Bo', '*': 'Luciole', arrow: 'Flèche gravée', m: 'Champignon', f: 'Pâquerette', '@': 'Arche cyan', '%': 'Arche violette', P: 'Dalle cyan', H: 'Ronces cyan', Q: 'Dalle orange', K: 'Ronces orange', R: 'Girouette' },
-  en: { '.': 'Grass', ' ': 'Void', '#': 'Obstacle', '~': 'Water', o: 'Cloud', a: 'Pip', b: 'Nim', c: 'Lou', d: 'Bo', G: 'Gloomnib', Z: 'Sleeper', A: 'Pip’s lantern', B: 'Nim’s lantern', C: 'Lou’s lantern', D: 'Bo’s lantern', 1: 'Pip’s spark', 2: 'Nim’s spark', 3: 'Lou’s spark', 4: 'Bo’s spark', '*': 'Firefly', arrow: 'Engraved arrow', m: 'Mushroom', f: 'Daisy', '@': 'Cyan gate', '%': 'Violet gate', P: 'Cyan switch', H: 'Cyan brambles', Q: 'Orange switch', K: 'Orange brambles', R: 'Weathervane' },
+  fr: { '.': 'Herbe', ' ': 'Vide', '#': 'Obstacle', '~': 'Eau', o: 'Nuage', a: 'Pip', b: 'Nim', c: 'Lou', d: 'Bo', G: 'Grignombre', Z: 'Dormeur', A: 'Lanterne de Pip', B: 'Lanterne de Nim', C: 'Lanterne de Lou', D: 'Lanterne de Bo', 1: 'Étincelle de Pip', 2: 'Étincelle de Nim', 3: 'Étincelle de Lou', 4: 'Étincelle de Bo', '*': 'Luciole', arrow: 'Flèche gravée', mirror: 'Miroir gravé', m: 'Champignon', f: 'Pâquerette', '@': 'Arche cyan', '%': 'Arche violette', P: 'Dalle cyan', H: 'Ronces cyan', Q: 'Dalle orange', K: 'Ronces orange', R: 'Girouette' },
+  en: { '.': 'Grass', ' ': 'Void', '#': 'Obstacle', '~': 'Water', o: 'Cloud', a: 'Pip', b: 'Nim', c: 'Lou', d: 'Bo', G: 'Gloomnib', Z: 'Sleeper', A: 'Pip’s lantern', B: 'Nim’s lantern', C: 'Lou’s lantern', D: 'Bo’s lantern', 1: 'Pip’s spark', 2: 'Nim’s spark', 3: 'Lou’s spark', 4: 'Bo’s spark', '*': 'Firefly', arrow: 'Engraved arrow', mirror: 'Engraved mirror', m: 'Mushroom', f: 'Daisy', '@': 'Cyan gate', '%': 'Violet gate', P: 'Cyan switch', H: 'Cyan brambles', Q: 'Orange switch', K: 'Orange brambles', R: 'Weathervane' },
 };
 
 export function createAtelier(api) {
@@ -372,7 +372,7 @@ export function createAtelier(api) {
     box.innerHTML = '';
     if (tab === TOOLS.length) {
       // Pieces given to the player.
-      for (const k of ['arrow', 'lily', 'mushroom', 'daisy']) {
+      for (const k of PIECE_KINDS) {
         const row = el('div', 'ed-stepper');
         const cv = icon(k === 'arrow' ? 'piece-arrow' : 'piece-' + k);
         row.appendChild(cv);
@@ -474,6 +474,9 @@ export function createAtelier(api) {
           break;
         case 'arrow':
           A.drawArrowStone(g, 22, 22, 30, 1, { fixed: true });
+          break;
+        case 'mirror':
+          A.drawMirror(g, 22, 26, 30, 0, { fixed: true });
           break;
         case 'm':
           A.drawMushroom(g, 22, 36, 30, { fixed: true });

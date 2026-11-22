@@ -8,7 +8,7 @@ import { sound } from './audio.js';
 import { GameScene } from './game/scene.js';
 import { TitleScene, MapBackdrop } from './ui/backdrops.js';
 import * as A from './game/art.js';
-import { parseLevel, rateRun, KIND } from './engine/core.js';
+import { parseLevel, rateRun, KIND, PIECE_KINDS } from './engine/core.js';
 import { EditorScene } from './editor/editor-scene.js';
 import { createAtelier } from './editor/ui.js';
 import { verifyAsync } from './editor/verify.js';
@@ -556,7 +556,7 @@ function buildTray() {
   const tray = $('#screen-game .tray');
   tray.innerHTML = '';
   const inv = game.L.inventory;
-  for (const k of ['arrow', 'lily', 'mushroom', 'daisy']) {
+  for (const k of PIECE_KINDS) {
     if (!inv[k]) continue;
     const b = el('button', 'tray-item');
     b.dataset.piece = k;
@@ -922,6 +922,23 @@ function illustration(kind, w = 140, h = 120) {
       case 'cloud':
         A.drawCloud(g, cx, h / 2 - 6, S * 1.3, 1);
         break;
+      case 'mirror': {
+        // A ray of light bent by the mirror.
+        const my = h / 2 + 6;
+        g.strokeStyle = 'rgba(255,225,150,0.9)';
+        g.lineWidth = 3;
+        g.setLineDash([2, 7]);
+        g.lineCap = 'round';
+        g.beginPath();
+        g.moveTo(10, my);
+        g.lineTo(cx, my);
+        g.lineTo(cx, 8);
+        g.stroke();
+        g.setLineDash([]);
+        A.drawMirror(g, cx, my, S * 1.15, 0, { flash: 0.5 });
+        A.drawLumi(g, 26, my + 16, S * 0.62, { color: 1, dir: 1, t: 1, mood: 'happy' });
+        break;
+      }
       default:
         break;
     }
@@ -1035,7 +1052,7 @@ function showVictory(stars, res, unlocks, gained) {
       ${L.fireflies.length ? `<li class="${ffOk ? 'ok' : ''}"><span class="mark">${ffOk ? '✓' : '✗'}</span>${t('goal2')} (${res.fireflies}/${L.fireflies.length})<span class="stars-req">★★</span></li>` : ''}
       ${parKnown ? `<li class="${ffOk && parOk ? 'ok' : ''}"><span class="mark">${ffOk && parOk ? '✓' : '✗'}</span>${t('goal3', game.par)} (${res.pieces})<span class="stars-req">★★★</span></li>` : ''}
     </ul>
-    ${worldDone ? `<canvas class="world-sky" width="560" height="300"></canvas><p><b>${t('worldDone')}</b>${lastWorld ? '<br>' + t('ending') : ''}</p>` : ''}
+    ${worldDone ? `<canvas class="world-sky" width="560" height="300"></canvas><p><b>${t('worldDone')}</b>${lastWorld ? '<br>' + t('ending') : current.world.outro ? '<br>' + tr(current.world.outro) : ''}</p>` : ''}
     ${daily ? `<p class="streak-line">🔥 ${t('streak', liveStreak(SV.save.data.daily))}<br><small>${t('dailyCome')}</small></p>` : ''}
     <div class="unlock-list"></div>
     <div class="actions col">

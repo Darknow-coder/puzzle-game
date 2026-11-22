@@ -1,8 +1,8 @@
 // Level editor model: an editable grid <-> the campaign's level definition
 // format, plus compact share codes. Pure module (works in Node for tests).
-import { parseLevel, validateLevel, simulate, KIND, COLORS, DIR_CHARS } from '../engine/core.js';
+import { parseLevel, validateLevel, simulate, KIND, COLORS, DIR_CHARS, PIECE_KINDS, emptyInventory, inventorySize } from '../engine/core.js';
 
-export const THEMES = ['meadow', 'pond', 'grove', 'ruins', 'gloom', 'peak'];
+export const THEMES = ['meadow', 'pond', 'grove', 'ruins', 'gloom', 'peak', 'dawn'];
 export const MIN_W = 3;
 export const MAX_W = 8;
 export const MIN_H = 3;
@@ -17,7 +17,7 @@ export function newModel(name = 'Mon niveau', theme = 'meadow') {
   const h = 7;
   const cells = [];
   for (let i = 0; i < w * h; i++) cells.push({ t: '.', e: null, d: 1 });
-  const m = { name, theme, w, h, cells, gateOpen: [false, false], inv: { arrow: 3, lily: 0, mushroom: 0, daisy: 0 } };
+  const m = { name, theme, w, h, cells, gateOpen: [false, false], inv: { ...emptyInventory(), arrow: 3 } };
   // Rounded corners.
   for (const [x, y] of [[0, 0], [w - 1, 0], [0, h - 1], [w - 1, h - 1]]) m.cells[y * w + x].t = ' ';
   set(m, 1, 1, { t: '.', e: 'a', d: 1 });
@@ -48,7 +48,7 @@ export function resize(m, w, h) {
 /**
  * Applies a palette tool to a cell. Returns true when something changed.
  * Tools: terrain chars ('.', ' ', '#', '~', 'o') or entity codes
- * ('a'..'d', 'A'..'D', '1'..'4', '*', 'arrow', 'm', 'f', '@', '%', 'P', 'Q', 'H', 'K', 'R', 'G', 'Z').
+ * ('a'..'d', 'A'..'D', '1'..'4', '*', 'arrow', 'mirror', 'm', 'f', '@', '%', 'P', 'Q', 'H', 'K', 'R', 'G', 'Z').
  */
 export function applyTool(m, idx, tool, { repeat = false } = {}) {
   const c = m.cells[idx];
@@ -65,6 +65,10 @@ export function applyTool(m, idx, tool, { repeat = false } = {}) {
     if (repeat) return false;
     if (DIRECTED.has(tool)) {
       c.d = (c.d + 1) & 3;
+      return true;
+    }
+    if (tool === 'mirror') {
+      c.d ^= 1; // '/' <-> '\\'
       return true;
     }
     if (tool === 'H' || tool === 'K') {
@@ -100,6 +104,9 @@ export function toDef(m, { forRender = false } = {}) {
         switch (c.e) {
           case 'arrow':
             ch = '^>v<'[c.d];
+            break;
+          case 'mirror':
+            ch = '/\\'[c.d & 1];
             break;
           case 'H':
             ch = m.gateOpen[0] ? 'h' : 'H';
@@ -138,7 +145,7 @@ export function fromDef(def, theme = 'meadow') {
     cursor[key] = i + 1;
     return Math.max(0, DIR_CHARS.indexOf(s[Math.min(i, s.length - 1)]));
   };
-  const m = { name: def.name?.fr || def.name || 'Niveau', theme, w, h, cells: [], gateOpen: [false, false], inv: { arrow: 0, lily: 0, mushroom: 0, daisy: 0, ...(def.inv || {}) } };
+  const m = { name: def.name?.fr || def.name || 'Niveau', theme, w, h, cells: [], gateOpen: [false, false], inv: { ...emptyInventory(), ...(def.inv || {}) } };
   for (let y = 0; y < h; y++)
     for (let x = 0; x < w; x++) {
       const ch = rows[y][x] ?? ' ';
@@ -147,6 +154,9 @@ export function fromDef(def, theme = 'meadow') {
       else if ('^>v<'.includes(ch)) {
         cell.e = 'arrow';
         cell.d = '^>v<'.indexOf(ch);
+      } else if (ch === '/' || ch === '\\') {
+        cell.e = 'mirror';
+        cell.d = ch === '/' ? 0 : 1;
       } else if (ch === 'h' || ch === 'H') {
         cell.e = 'H';
         m.gateOpen[0] = ch === 'h';
@@ -179,7 +189,7 @@ export function problems(m) {
     if (n && n !== 2) out.push({ fr: 'Chaque arche de lune a besoin d’exactement une jumelle.', en: 'Each moon gate needs exactly one twin.' });
   }
   if (count('*') > 30) out.push({ fr: 'Trop de lucioles (30 au plus).', en: 'Too many fireflies (30 at most).' });
-  const pieces = m.inv.arrow + m.inv.lily + m.inv.mushroom + m.inv.daisy;
+  const pieces = inventorySize(m.inv);
   if (pieces > 12) out.push({ fr: 'Pas plus de 12 pièces au total.', en: 'No more than 12 pieces in total.' });
   if (!out.length) {
     try {
@@ -201,6 +211,8 @@ export function quickCheck(m) {
 
 // ---------------------------------------------------------------------------
 // Share codes: "LUMI1." + base64url(JSON). Short enough to paste in a message.
+// Rows are joined with '|' ('/' is a mirror); the first codes, made before
+// mirrors existed, joined them with '/' and are still read.
 
 function b64urlEncode(str) {
   const bytes = new TextEncoder().encode(str);
@@ -219,8 +231,8 @@ function b64urlDecode(s) {
 
 export function encodeShare(m) {
   const def = toDef(m);
-  const inv = [def.inv.arrow, def.inv.lily, def.inv.mushroom, def.inv.daisy].join('');
-  const payload = { n: m.name.slice(0, 40), t: THEMES.indexOf(m.theme), m: def.map.join('/'), d: def.dirs, i: inv };
+  const inv = PIECE_KINDS.map((k) => def.inv[k] || 0).join('');
+  const payload = { n: m.name.slice(0, 40), t: THEMES.indexOf(m.theme), m: def.map.join('|'), d: def.dirs, i: inv };
   if (def.vanes) payload.v = def.vanes;
   return 'LUMI1.' + b64urlEncode(JSON.stringify(payload));
 }
@@ -231,15 +243,16 @@ export function decodeShare(text) {
   const m = raw.match(/LUMI1\.[A-Za-z0-9_-]+/);
   if (!m) throw new Error('code');
   const payload = JSON.parse(b64urlDecode(m[0].slice(6)));
-  const map = String(payload.m || '').split('/');
+  const rows = String(payload.m || '');
+  const map = rows.split(rows.includes('|') ? '|' : '/');
   if (!map.length || map.length > MAX_H || map.some((r) => r.length > MAX_W)) throw new Error('size');
-  const inv = String(payload.i || '0000').padEnd(4, '0');
+  const inv = String(payload.i || '').padEnd(PIECE_KINDS.length, '0');
   const def = {
     id: 'custom',
     name: { fr: String(payload.n || 'Niveau partagé'), en: String(payload.n || 'Shared level') },
     map,
     dirs: payload.d || {},
-    inv: { arrow: +inv[0] || 0, lily: +inv[1] || 0, mushroom: +inv[2] || 0, daisy: +inv[3] || 0 },
+    inv: Object.fromEntries(PIECE_KINDS.map((k, i) => [k, +inv[i] || 0])),
   };
   if (payload.v) def.vanes = String(payload.v);
   parseLevel(def); // throws when the map is not a valid level
