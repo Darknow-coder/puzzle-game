@@ -2,9 +2,12 @@
 // never with real money, and spent in the shop on hints and cosmetics. Every
 // amount lives here so the whole balance can be read, and tuned, in one place.
 //
-// Rough balance: a whole campaign played well brings about 3,000 éclats
-// (plus the daily puzzle and the daily gift), the cosmetics cost 2,150 in all,
-// and a hint 15 to 20: hints stay within easy reach, and cosmetics are a goal.
+// Rough balance: a whole campaign played well brings about 3,000 éclats, the
+// daily puzzle and gift about 70 more a day, the collection milestones 1,100;
+// the 37 cosmetics cost about 10,800 in all (the chest and the daily offer make
+// them cheaper) and a hint 15 to 20. Hints stay within easy reach; the collection is
+// a long-term goal for players who come back every day.
+import { COSMETICS, ODDS, RARITIES } from './data/cosmetics.js';
 
 export const START = { coins: 60, hints: 3 };
 
@@ -20,7 +23,7 @@ export const REWARD = {
 };
 
 /** Daily gift by days in a row (the seventh day and every seventh after also give a hint). */
-export const GIFT = [10, 15, 20, 25, 30, 40, 60];
+export const GIFT = [15, 20, 25, 30, 40, 50, 80];
 
 /** One hint bought on the spot, when none is left. */
 export const HINT_PRICE = 20;
@@ -29,18 +32,54 @@ export const CATALOG = [
   { id: 'hint1', kind: 'hints', qty: 1, price: 20 },
   { id: 'hint5', kind: 'hints', qty: 5, price: 85 },
   { id: 'hint12', kind: 'hints', qty: 12, price: 180 },
-  { id: 'bow', kind: 'hat', price: 100 },
-  { id: 'beret', kind: 'hat', price: 140 },
-  { id: 'pompom', kind: 'hat', price: 160 },
-  { id: 'chef', kind: 'hat', price: 180 },
-  { id: 'headphones', kind: 'hat', price: 220 },
-  { id: 'tophat', kind: 'hat', price: 260 },
-  { id: 'sparkle', kind: 'trail', price: 150 },
-  { id: 'petals', kind: 'trail', price: 200 },
-  { id: 'notes', kind: 'trail', price: 220 },
-  { id: 'comet', kind: 'trail', price: 240 },
-  { id: 'rainbow', kind: 'trail', price: 280 },
+  ...COSMETICS.map((c) => ({ id: c.id, kind: c.slot, rarity: c.rarity, price: c.price })),
 ];
+
+/** The surprise chest: one cosmetic not owned yet, at random by rarity (odds in data/cosmetics.js). */
+export const CHEST_PRICE = 160;
+/** At least one epic or legendary every CHEST_PITY chests. */
+export const CHEST_PITY = 6;
+/** Discount of the daily featured item. */
+export const OFFER_OFF = 0.3;
+
+export const offerPrice = (price) => Math.max(5, Math.round((price * (1 - OFFER_OFF)) / 5) * 5);
+
+/**
+ * Draws a chest: a rarity first (odds among the rarities still available), then an item of
+ * that rarity. `highOnly` keeps epic and legendary items when some are left.
+ */
+export function drawChest(unowned, rng = Math.random, highOnly = false) {
+  let pool = unowned;
+  if (highOnly) {
+    const hi = unowned.filter((c) => c.rarity === 'epic' || c.rarity === 'legendary');
+    if (hi.length) pool = hi;
+  }
+  if (!pool.length) return null;
+  const present = RARITIES.filter((r) => pool.some((c) => c.rarity === r));
+  let x = rng() * present.reduce((n, r) => n + ODDS[r], 0);
+  let rarity = present[present.length - 1];
+  for (const r of present) {
+    x -= ODDS[r];
+    if (x < 0) {
+      rarity = r;
+      break;
+    }
+  }
+  const items = pool.filter((c) => c.rarity === rarity);
+  return items[Math.min(items.length - 1, Math.floor(rng() * items.length))];
+}
+
+/** The featured item of a day: the same for everyone, starting from a hash of the day. */
+export function pickOffer(day, isOwned) {
+  const list = [...COSMETICS].sort((a, b) => (a.id < b.id ? -1 : 1));
+  let h = Math.imul(day ^ 0x9e3779b9, 2654435761) >>> 0;
+  h = (h ^ (h >>> 13)) >>> 0; // keep it unsigned: a negative index would pick nothing
+  for (let k = 0; k < list.length; k++) {
+    const it = list[(h + k) % list.length];
+    if (!isOwned(it.id)) return it;
+  }
+  return null;
+}
 
 export const findItem = (id) => CATALOG.find((c) => c.id === id) || null;
 

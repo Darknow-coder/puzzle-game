@@ -1,5 +1,36 @@
 # Journal des versions
 
+## 3.2.0
+
+**Nouveautés**
+
+- **La boutique de Madame Phalène** devient un vrai lieu : un marché de nuit avec un auvent rayé, des
+  guirlandes de lumières, des bocaux de lucioles et une enseigne qui se balance. Madame Phalène, une
+  phalène marchande (les papillons de nuit adorent la lumière), parle, réagit à tes choix et se réjouit
+  de tes achats. Elle a sa propre musique.
+- **Cabine d’essayage** : touche un objet et les quatre Lumignons l’essaient aussitôt sur l’estrade ;
+  habille-les tous pareil ou chacun à sa façon (Pip, Nim, Lou, Bo). Les traînées se montrent en
+  courant, les fêtes se jouent sur l’estrade.
+- **37 objets** en 4 raretés (commun, rare, épique, légendaire), cadres de couleur et reflet animé
+  pour les légendaires :
+  - 12 **chapeaux** à acheter (6 nouveaux : chapeau de paille, chapeau de fête, bois de lumière,
+    petit nuage, couronne d’aurore, plumes de phénix) en plus des chapeaux gagnés en jouant ;
+  - 7 **lunettes** (rondes, de soleil, cœur, étoiles, monocle, masque de héros, visière arc-en-ciel) ;
+  - 5 **flammes** (cœur, étoile, jumelle, tourbillon, cierge magique), qui gardent toujours la couleur
+    du Lumignon pour que le jeu reste lisible ;
+  - 8 **traînées** (dont bulles, petits cœurs, flocons) ;
+  - 5 **fêtes de victoire** jouées quand un niveau est réussi : confettis, ballons, papillons, feu
+    d’artifice, pluie d’étoiles filantes.
+- **Coffre à surprises** (160 ✦) : un objet que tu n’as pas encore, jamais de doublon, chances affichées
+  (50 / 32 / 14 / 4 %) et un objet épique ou mieux garanti au moins tous les 6 coffres. Ouverture en
+  grande pompe : le coffre tremble, s’ouvre dans un éclat de la couleur de la rareté, l’objet s’élève.
+- **Vitrine du jour** : un objet à −30 %, différent chaque jour, avec un compte à rebours.
+- **Cadeau du jour** plus généreux (15 à 80 ✦ sur 7 jours) avec le calendrier de la semaine.
+- **Collection** : un livre avec les silhouettes de tout ce qui manque, et des paliers récompensés
+  (25 % +100 ✦, 50 % +200 ✦, 75 % +300 ✦, 100 % +500 ✦ et la Couronne du collectionneur, exclusive).
+- Achat célébré : les pièces volent de la bourse vers l’estrade, la bourse décompte, confettis et
+  fanfare d’autant plus belle que l’objet est rare. Rubans « Nouveau » et pastilles sur les onglets.
+
 ## 3.1.0
 
 **Nouveautés**

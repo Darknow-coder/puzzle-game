@@ -222,6 +222,7 @@ export function hatUnlocked(h, sum = summary()) {
   if (n.bonus !== undefined) return sum.bonusDone >= n.bonus;
   if (n.perfect) return sum.allPerfect;
   if (n.shop) return !!save.data.wallet?.owned?.[h.id];
+  if (n.collector) return !!save.data.wallet?.owned?.collector;
   return false;
 }
 

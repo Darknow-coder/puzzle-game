@@ -110,7 +110,7 @@ export class TitleScene {
       const e = l.p < 1 ? (l.p < 0.5 ? 2 * l.p * l.p : 1 - Math.pow(-2 * l.p + 2, 2) / 2) : 1;
       const x = ax + (bx - ax) * e;
       const y = ay + (by - ay) * e + S * 0.24 - (l.p < 1 ? Math.sin(Math.PI * l.p) * S * 0.2 : 0);
-      items.push([y, () => A.drawLumi(g, x, y, S, { color: l.c, dir: l.dir, t: t + l.c, walk: l.p * 2, squash: l.p < 1 ? 0 : Math.sin(t * 3 + l.c) * 0.05, hat: this.app.hat(), mood: l.p < 1 ? 'idle' : 'happy' })]);
+      items.push([y, () => A.drawLumi(g, x, y, S, { color: l.c, dir: l.dir, t: t + l.c, walk: l.p * 2, squash: l.p < 1 ? 0 : Math.sin(t * 3 + l.c) * 0.05, ...this.app.dress(l.c), mood: l.p < 1 ? 'idle' : 'happy' })]);
     }
     items.sort((a, b) => a[0] - b[0]);
     for (const [, fn] of items) fn();

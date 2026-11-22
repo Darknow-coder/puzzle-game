@@ -86,6 +86,13 @@ function seed(lang) {
     await p.waitForTimeout(800);
     await clean();
     await shot('7-atelier');
+    // Madame Phalène's shop, the Lumignons trying on a top hat.
+    await p.evaluate(() => window.lumignons.shop.open('hat'));
+    await p.waitForTimeout(700);
+    await clean();
+    await p.click('#screen-shop .sk-card[data-item="tophat"]');
+    await p.waitForTimeout(1200);
+    await shot('8-shop');
     await ctx.close();
   }
   // Feature graphic 1024×500.

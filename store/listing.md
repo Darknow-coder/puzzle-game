@@ -33,6 +33,10 @@ regarde ton plan se dérouler. Chaque pas joue une note : ta solution devient un
 **Catégorie** : Jeux › Réflexion. **Classification** : tout public (aucune violence, aucun contenu
 sensible, aucune interaction entre joueurs, aucune donnée collectée).
 
+**Nouveautés 3.2** : la boutique de Madame Phalène, un marché de nuit où les Lumignons essaient
+37 objets (chapeaux, lunettes, flammes, traînées, fêtes de victoire), coffre à surprises sans doublon,
+vitrine du jour, collection avec récompenses.
+
 **Nouveautés 3.1** : les éclats, une monnaie gagnée en jouant, et la boutique : indices, chapeaux,
 traînées de lumière, cadeau du jour, journal des gains.
 

@@ -1,0 +1,64 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><style>
+@font-face { font-family: 'Fredoka'; src: url('../../assets/fonts/fredoka-latin-wght.woff2') format('woff2'); font-weight: 300 700; }
+body { margin: 0; background: #241a48; }
+canvas { display: block; }
+</style></head>
+<body><canvas id="c" width="1260" height="1100"></canvas><script type="module">
+// Design sheet of every skin (node tools/store-shots.cjs is not needed: open it with the local server).
+import * as A from '../../src/game/art.js';
+import { Particles } from '../../src/game/fx.js';
+await document.fonts.load('600 20px Fredoka');
+const c = document.getElementById('c');
+const g = c.getContext('2d');
+g.fillStyle = '#241a48';
+g.fillRect(0, 0, c.width, c.height);
+const label = (txt, x, y) => {
+  g.fillStyle = '#d9cdf5';
+  g.font = '500 15px Fredoka';
+  g.textAlign = 'center';
+  g.fillText(txt, x, y);
+};
+const T = 1.4;
+const row = (items, y, draw) => items.forEach((it, i) => draw(it, 90 + i * 180, y));
+row(['straw', 'partyhat', 'antlers', 'raincloud', 'aurora', 'phoenix', 'collector'], 190, (h, x, y) => {
+  A.drawLumi(g, x, y, 110, { color: [0, 1, 2, 3][x % 4], dir: 2, t: T, mood: 'happy', hat: h });
+  label(h, x, y + 28);
+});
+row(['round', 'shades', 'lovely', 'starry', 'monocle', 'mask', 'visor'], 400, (gl, x, y) => {
+  A.drawLumi(g, x, y, 110, { color: 1, dir: 2, t: T, glasses: gl });
+  label(gl, x, y + 28);
+});
+row(['classic', 'flame-heart', 'flame-star', 'flame-twin', 'flame-swirl', 'flame-sparkler'], 610, (f, x, y) => {
+  A.drawLumi(g, x, y, 110, { color: 2, dir: 2, t: T, flameStyle: f, mood: 'happy' });
+  label(f, x, y + 28);
+});
+// Trails: a short path for each.
+['bubbles', 'hearts', 'snow', 'sparkle', 'rainbow'].forEach((st, j) => {
+  const ox = 30 + j * 245;
+  for (let i = 0; i < 22; i++) A.drawTrailDot(g, st, ox + i * 8, 760 - Math.sin(i / 5) * 18, 60, (i + 1) / 22, A.LUMI[3].glow, i * 2, T);
+  A.drawLumi(g, ox + 195, 790, 60, { color: 3, dir: 1, t: T, hat: 'bow', glasses: 'round' });
+  label(st, ox + 100, 815);
+});
+// Celebrations, frozen at 1.2 s.
+['confetti', 'balloons', 'butterflies', 'fireworks', 'starfall'].forEach((st, j) => {
+  const w = 240;
+  const h = 240;
+  const ox = 10 + j * 250;
+  const oy = 840;
+  g.save();
+  g.beginPath();
+  g.rect(ox, oy, w, h);
+  g.clip();
+  g.fillStyle = '#1a1336';
+  g.fillRect(ox, oy, w, h);
+  g.translate(ox, oy);
+  const fx = new Particles();
+  fx.party(st, w, h, [[w / 2, h * 0.7]], 40);
+  for (let k = 0; k < (st === 'fireworks' ? 95 : 60); k++) fx.update(1 / 50);
+  fx.draw(g);
+  g.restore();
+  label(st, ox + w / 2, oy + h - 8);
+});
+window.done = true;
+</script></body></html>

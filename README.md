@@ -17,7 +17,9 @@ puis appuie sur **Go !** et regarde ton plan se dérouler… en musique.
 - Pause, pas à pas et ralenti des échecs pour comprendre chaque parcours ; tutoriel animé.
 - Carte des constellations, chapeaux à collectionner, succès, carnet des éléments.
 - **Boutique et éclats** : une monnaie gagnée uniquement en jouant (premiers passages, étoiles,
-  mondes, succès, défi et cadeau du jour), dépensée en indices, chapeaux et traînées de lumière.
+  mondes, succès, défi et cadeau du jour), dépensée chez **Madame Phalène** : indices et 37 objets
+  (chapeaux, lunettes, flammes, traînées, fêtes de victoire) en 4 raretés, essayés en direct par les
+  Lumignons ; coffre à surprises sans doublon (chances affichées), vitrine du jour, collection.
 - Pensé pour le tactile (toucher, glisser, appui long), jouable à la souris et au clavier.
 - Installable comme une application (PWA) et jouable **hors ligne**. Français / anglais.
 - Zéro dépendance : HTML, CSS, JavaScript, Canvas 2D et Web Audio. Aucune image ni aucun son externe.
@@ -93,7 +95,10 @@ src/share.js             image souvenir d’un niveau réussi
 src/backup.js            codes de sauvegarde de la progression
 src/economy.js           tous les montants de l’économie (gains, prix, cadeau du jour)
 src/wallet.js            la bourse : éclats, jetons d’indice, achats, cadeau du jour, journal
-src/ui/shop.js           la boutique
+src/data/cosmetics.js    les 37 objets de la boutique (emplacement, rareté, prix), chances du coffre
+src/ui/shop.js           la boutique (onglets, essayage, achats, coffre, vitrine, collection)
+src/ui/shop-scene.js     la scène de la boutique : le marché de nuit, Madame Phalène, l’estrade
+tools/preview/skins.html planche de tous les objets (à ouvrir avec le serveur local)
 src/editor/              atelier : modèle, codes de partage, vérification (Web Worker), interface
 src/game/art.js          tout le dessin procédural (îles, personnages, pièces, décors)
 src/game/scene.js        écran de jeu : saisie tactile, préparation, animation des parcours

@@ -10,6 +10,7 @@ const SCALES = {
   gloom: { root: 62, steps: [0, 3, 5, 7, 10], prog: [[0, 3, 7], [-2, 2, 5], [-4, 0, 3], [-5, -2, 2]], bpm: 56 },
   peak: { root: 67, steps: [0, 2, 4, 7, 9], prog: [[0, 4, 7], [-3, 0, 4], [-8, -5, -1], [-5, -1, 2]], bpm: 70 },
   dawn: { root: 69, steps: [0, 2, 4, 7, 9], prog: [[0, 4, 7], [-7, -3, 0], [-3, 0, 4], [-5, -1, 2]], bpm: 76 },
+  shop: { root: 65, steps: [0, 2, 4, 7, 9], prog: [[0, 4, 7], [2, 5, 9], [-3, 0, 4], [-5, -1, 2]], bpm: 88 },
 };
 
 const midi = (m) => 440 * Math.pow(2, (m - 69) / 12);
@@ -245,6 +246,38 @@ class Sound {
         this.tone({ freq: f * 2.01, type: 'sine', at: 0.01, decay: 0.12, gain: 0.02 });
         break;
       }
+      case 'shopBell':
+        // The little bell over the shop's door.
+        [0, 0.13].forEach((at, i) => {
+          this.tone({ freq: midi(91 - i * 5), type: 'sine', at, decay: 0.9, gain: 0.05 });
+          this.tone({ freq: midi(91 - i * 5) * 2.76, type: 'sine', at, decay: 0.35, gain: 0.015 });
+        });
+        break;
+      case 'select':
+        this.tone({ freq: midi(84), type: 'triangle', decay: 0.07, gain: 0.04 });
+        this.tone({ freq: midi(91), type: 'sine', at: 0.04, decay: 0.1, gain: 0.03 });
+        break;
+      case 'equip':
+        this.hiss({ dur: 0.18, gain: 0.04, from: 2500, to: 7000 });
+        [0, 7].forEach((st, i) => this.tone({ freq: midi(86 + st), type: 'sine', at: 0.05 + i * 0.07, decay: 0.2, gain: 0.05 }));
+        break;
+      case 'fanfare': {
+        // Bigger and brighter with rarity (0 common … 3 legendary).
+        const notes = [[0, 4, 7], [0, 4, 7, 12], [0, 4, 7, 11, 14], [0, 4, 7, 12, 16, 19, 24]][arg] || [0, 4, 7];
+        notes.forEach((st, i) => this.tone({ freq: midi(79 + st), type: i % 2 ? 'sine' : 'triangle', at: i * 0.075, decay: 0.45 + arg * 0.15, gain: 0.06 }));
+        if (arg >= 2) [0, 4, 7].forEach((st) => this.tone({ freq: midi(67 + st), type: 'sine', at: notes.length * 0.075, decay: 1.2, gain: 0.04 }));
+        if (arg >= 3) this.hiss({ at: 0.2, dur: 1.2, gain: 0.05, from: 4000, to: 10000 });
+        this.vibrate(arg >= 3 ? [30, 50, 30, 50, 80] : [20, 40, 20]);
+        break;
+      }
+      case 'chestShake':
+        this.tone({ freq: 90 + arg * 80, type: 'square', decay: 0.06, gain: 0.05, filter: [600, 150] });
+        this.hiss({ dur: 0.08, gain: 0.04 + arg * 0.04, from: 900, to: 400 });
+        break;
+      case 'chestOpen':
+        this.tone({ freq: 220, type: 'sine', decay: 0.4, gain: 0.12, glide: 880 });
+        this.hiss({ at: 0.02, dur: 0.6, gain: 0.08, from: 3000, to: 9000 });
+        break;
       case 'coin':
         this.tone({ freq: midi(96 + Math.floor(Math.random() * 3) * 2), type: 'triangle', decay: 0.05, gain: 0.035 });
         break;
@@ -373,6 +406,9 @@ class Sound {
       case 'peak':
         if (r < 0.25) this.wind(t, spb * 3.5, 900);
         else if (r < 0.31) this.chime(t + Math.random() * spb);
+        break;
+      case 'shop':
+        if (r < 0.12) this.chime(t + Math.random() * spb);
         break;
       case 'dawn':
         if (r < 0.22) this.bird(t + Math.random() * spb);

@@ -19,8 +19,9 @@ import { makeShareCard, shareImage } from './share.js';
 import * as Wallet from './wallet.js';
 import { winReward, dailyReward, REWARD, HINT_PRICE } from './economy.js';
 import { createShop, COIN_SVG } from './ui/shop.js';
+import { ShopScene } from './ui/shop-scene.js';
 
-const VERSION = '3.1.0';
+const VERSION = '3.2.0';
 const $ = (sel, root = document) => root.querySelector(sel);
 const el = (tag, cls, html) => {
   const e = document.createElement(tag);
@@ -66,7 +67,13 @@ const app = {
   screen: null,
   modalStack: [],
   settings: () => SV.save.data.settings,
-  hat: () => SV.save.data.hat || 'none',
+  hat: () => Wallet.look(0).hat,
+  /** drawLumi options for what the Lumignon of this colour wears. */
+  dress: (color) => {
+    const l = Wallet.look(color);
+    return { hat: l.hat, glasses: l.glasses, flameStyle: l.flame };
+  },
+  party: () => Wallet.wallet().party,
   progressGlow: () => {
     const s = SV.summary();
     return Math.min(1, s.stars / Math.max(1, s.totalLevels * 3));
@@ -80,6 +87,7 @@ const title = new TitleScene(app);
 const mapBg = new MapBackdrop();
 const game = new GameScene(app);
 const editorScene = new EditorScene(app);
+const shopScene = new ShopScene(app);
 let active = title;
 let W = 0;
 let H = 0;
@@ -95,6 +103,7 @@ function resize() {
   mapBg.resize(W, H, DPR);
   if (game.L) layoutGame();
   if (app.screen === 'editor') layoutEditor();
+  if (app.screen === 'shop') layoutShop();
 }
 
 function layoutEditor() {
@@ -103,6 +112,32 @@ function layoutEditor() {
   const side = panel.left > W * 0.5 && panel.height > H * 0.4;
   if (side) editorScene.resize(W, H, DPR, top + 6, 10, W - panel.left + 8);
   else editorScene.resize(W, H, DPR, top + 6, H - panel.top + 4, 0);
+}
+
+/** The shop's stage: between its header and the chips under the podium. */
+function layoutShop() {
+  const r = $('#screen-shop');
+  const head = r.querySelector('.shop-head');
+  const tabs = r.querySelector('.shop-tabs2');
+  if (!head || !tabs) return;
+  const chips = r.querySelector('.who');
+  const bottom = (chips || tabs).getBoundingClientRect().top - 4;
+  shopScene.resize(W, H, DPR, head.getBoundingClientRect().bottom, bottom);
+}
+
+let shopReturn = 'title';
+function leaveShop() {
+  if (shopReturn === 'game' && game.L) {
+    showScreen('game');
+    layoutGame();
+    app.hudChanged();
+  } else if (shopReturn === 'map') {
+    buildMap();
+    showScreen('map');
+  } else {
+    buildTitle();
+    showScreen('title');
+  }
 }
 
 function layoutGame() {
@@ -170,16 +205,18 @@ window.addEventListener('popstate', () => {
     showScreen('title');
   } else if (app.screen === 'editor') {
     atelier.openList();
+  } else if (app.screen === 'shop') {
+    leaveShop();
   }
 });
 
 function showScreen(name) {
   app.screen = name;
   for (const s of document.querySelectorAll('.screen')) s.classList.toggle('active', s.id === 'screen-' + name);
-  active = name === 'title' ? title : name === 'map' || name === 'atelier' ? mapBg : name === 'editor' ? editorScene : game;
+  active = name === 'title' ? title : name === 'map' || name === 'atelier' ? mapBg : name === 'editor' ? editorScene : name === 'shop' ? shopScene : game;
   if (name !== 'game') hideInfo();
   if (name === 'atelier') mapBg.setWorld('meadow');
-  sound.startMusic(name === 'game' ? game.worldKey : name === 'map' ? mapBg.key : name === 'editor' ? editorScene.model?.theme || 'meadow' : 'title');
+  sound.startMusic(name === 'game' ? game.worldKey : name === 'map' ? mapBg.key : name === 'editor' ? editorScene.model?.theme || 'meadow' : name === 'shop' ? 'shop' : 'title');
 }
 
 function buildTitle() {
@@ -222,7 +259,7 @@ function buildTitle() {
     pushNav('atelier');
     atelier.openList();
   };
-  root.querySelectorAll('[data-act=shop]').forEach((b) => (b.onclick = () => (click(), shop.open(Wallet.giftState().available ? 'hints' : 'hats'))));
+  root.querySelectorAll('[data-act=shop]').forEach((b) => (b.onclick = () => (click(), shop.open('featured'))));
   root.querySelector('[data-act=achievements]').onclick = () => (click(), openAchievements());
   root.querySelector('[data-act=notebook]').onclick = () => (click(), openNotebook());
   root.querySelector('[data-act=settings]').onclick = () => (click(), openSettings());
@@ -279,7 +316,7 @@ function buildMap() {
       <div class="star-total"><span class="st">★</span>${SV.totalStars()}</div>
     </div>
     <div class="map-scroll"></div>`;
-  root.querySelector('[data-act=shop]').onclick = () => (click(), shop.open());
+  root.querySelector('[data-act=shop]').onclick = () => (click(), shop.open('featured'));
   root.querySelector('[data-act=back]').onclick = () => {
     click();
     if (navDepth > 0) history.back();
@@ -737,7 +774,7 @@ function askHint() {
 /** Refreshes every coin counter on screen (after a purchase, a gift, a win). */
 function refreshCoins() {
   const w = Wallet.wallet();
-  const gift = Wallet.giftState().available;
+  const gift = shop.attention();
   document.querySelectorAll('.coin-pill[data-act=shop], .shop-tile').forEach((p) => {
     const b = p.querySelector('b');
     if (b) b.textContent = w.coins;
@@ -818,6 +855,10 @@ function bindGameHud() {
   const board = () => (app.screen === 'game' ? game : app.screen === 'editor' ? editorScene : null);
   canvas.addEventListener('pointerdown', (e) => {
     sound.unlock();
+    if (app.screen === 'shop') {
+      if (!app.modalStack.length) shop.stageTap(e.clientX, e.clientY);
+      return;
+    }
     const b = board();
     if (!b || app.modalStack.length) return;
     hideInfo();
@@ -1695,8 +1736,23 @@ const shop = createShop({
   hatUnlocked: SV.hatUnlocked,
   summary: SV.summary,
   onChange: () => refreshCoins(),
+  scene: shopScene,
+  show: () => {
+    if (app.screen !== 'shop') {
+      shopReturn = app.screen;
+      pushNav('shop');
+    }
+    showScreen('shop');
+    layoutShop();
+  },
+  back: () => {
+    if (navDepth > 0) history.back();
+    else leaveShop();
+  },
+  layout: () => layoutShop(),
 });
 app.shop = shop;
+app.shopScene = shopScene;
 app.wallet = Wallet;
 app.trail = () => Wallet.wallet().trail;
 app.editorPaint = (idx, repeat) => atelier.paint(idx, repeat);

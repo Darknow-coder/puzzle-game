@@ -647,7 +647,7 @@ export class GameScene {
     if (this.mode === 'run') this.advance(dt);
     else if (this.mode === 'post') {
       this.post += dt;
-      if (this.post > (this.run.result === 'win' ? 1.25 : 0.95)) this.finish();
+      if (this.post > (this.run.result === 'win' ? this.winHold || 1.25 : 0.95)) this.finish();
     }
   }
 
@@ -790,6 +790,15 @@ export class GameScene {
         return { color: w.color, pts };
       }).filter(Boolean);
       this.winT = this.t;
+      // The celebration bought in the shop, from every lantern reached.
+      const homes = this.winPaths.map((wp) => {
+        const [x, y] = wp.pts[wp.pts.length - 1];
+        return [this.ox + (x + 0.5) * this.S, this.oy + (y + 0.5) * this.S];
+      });
+      const party = this.app.party ? this.app.party() : 'classic';
+      this.fx.party(party, this.W, this.H, homes, this.S);
+      // A bought celebration gets its moment before the victory card.
+      this.winHold = party === 'classic' ? 1.25 : 2.4;
     } else {
       const c = run.cause;
       if (c.type === 'loop') sound.sfx('loop');
@@ -1058,7 +1067,7 @@ export class GameScene {
             flame: vis.flame,
             alpha: vis.alpha,
             blink: this.blinks[id] < 0 ? 1 : 0,
-            hat: this.app.hat(),
+            ...this.app.dress(wk.color),
             symbol: this.app.settings().symbols,
           });
         } else {

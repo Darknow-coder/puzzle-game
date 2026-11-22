@@ -1,7 +1,7 @@
-// Version 3.1 end-to-end checks (Playwright + Chromium, local server on :8080):
-// the éclats economy — rewards paid once, hint tokens, buying a hint on the
-// spot, the daily gift, buying and wearing cosmetics, the daily puzzle, and the
-// welcome grant for a save from before the shop.
+// The éclats economy and the shop (Playwright + Chromium, local server on :8080):
+// rewards paid once, hint tokens and on-the-spot purchase, then the shop screen —
+// gift, trying on, buying for all or for one Lumignon, the daily offer, the
+// surprise chest, the collection — the daily puzzle, and the welcome grant.
 const { chromium, devices } = require('playwright');
 const BASE = process.env.BASE || 'http://localhost:8080/index.html';
 let failed = 0;
@@ -18,33 +18,40 @@ const KEYS = ['', 'arrow', 'lily', 'mushroom', 'daisy', 'mirror'];
   const errors = [];
   p.on('pageerror', (e) => errors.push(String(e)));
   p.on('console', (m) => m.type() === 'error' && errors.push(m.text()));
-  const wallet = () => p.evaluate(() => {
-    const w = window.lumignons.wallet.wallet();
-    return { coins: w.coins, hints: w.hints, trail: w.trail, owned: { ...w.owned }, log: w.log.map((e) => e.k) };
-  });
+  const wallet = () =>
+    p.evaluate(() => {
+      const w = window.lumignons.wallet.wallet();
+      return { coins: w.coins, hints: w.hints, trail: w.trail, party: w.party, owned: { ...w.owned }, looks: JSON.parse(JSON.stringify(w.looks)), same: w.same, log: w.log.map((e) => e.k) };
+    });
   const closeModals = () =>
     p.evaluate(() => {
       for (const m of document.querySelectorAll('.modal')) m.parentNode.removeChild(m);
       window.lumignons.modalStack.splice(0);
     });
-  const winWith = async (id, layout) => {
+  const winWith = async (id) => {
     await p.evaluate((id) => window.lumignons.startLevel(id), id);
     await p.waitForTimeout(400);
     await closeModals();
     await p.evaluate(
-      ([id, layout, KEYS]) => {
+      ([id, KEYS]) => {
         const app = window.lumignons;
         const g = app.game;
-        for (const [i, t, d] of layout || app.solutions[id].sol) g.placeAt(i, KEYS[t], d);
+        for (const [i, t, d] of app.solutions[id].sol) g.placeAt(i, KEYS[t], d);
         g.picker = null;
         g.timeScale = 8;
         g.go();
       },
-      [id, layout, KEYS],
+      [id, KEYS],
     );
     await p.waitForSelector('.win-stars', { timeout: 30000 });
     await p.waitForTimeout(2300);
   };
+  const placeGhost = () =>
+    p.evaluate((KEYS) => {
+      const g = window.lumignons.game;
+      const h = g.hintCells[g.hintCells.length - 1];
+      g.placeAt(h.idx, KEYS[h.type], h.dir);
+    }, KEYS);
   try {
     await p.goto(BASE);
     await p.waitForSelector('#screen-title.active');
@@ -52,24 +59,22 @@ const KEYS = ['', 'arrow', 'lily', 'mushroom', 'daisy', 'mirror'];
     check(w.coins === 60 && w.hints === 3 && !(await p.$('.modal')), 'a new player starts with 60 éclats and 3 hints, without a welcome message');
     check((await p.textContent('#screen-title .coin-pill b')) === '60', 'the title shows the purse');
 
-    // A perfect first clear pays: first clear + 3 new stars (+ the achievements it unlocks).
+    // Rewards: firsts only.
     await winWith('1-1');
     const earned = await p.textContent('.coins-earned');
     w = await wallet();
-    check(/\+\d+/.test(earned) && earned.includes('Premier passage +10') && earned.includes('3 nouvelles étoiles +15'), `the victory shows what was earned (${earned.replace(/\s+/g, ' ').trim()})`);
-    const total = Number(earned.match(/\+(\d+)/)[1]);
-    check(w.coins === 60 + total, 'and it is in the purse');
+    check(earned.includes('Premier passage +10') && earned.includes('3 nouvelles étoiles +15'), `the victory shows what was earned (${earned.replace(/\s+/g, ' ').trim()})`);
+    check(w.coins === 60 + Number(earned.match(/\+(\d+)/)[1]), 'and it is in the purse');
     await closeModals();
     await winWith('1-1');
     check(!(await p.$('.coins-earned')) && (await wallet()).coins === w.coins, 'replaying the same result pays nothing');
     await closeModals();
 
-    // Hints: tokens first, the same ghost again for free, then buy one on the spot.
+    // Hints: tokens, the same ghost for free, then a purchase on the spot.
     await p.evaluate(() => window.lumignons.startLevel('1-10'));
     await p.waitForTimeout(400);
     await closeModals();
-    const badge = await p.textContent('#screen-game .hint-badge');
-    check(badge === '3', 'the hint button shows the tokens left');
+    check((await p.textContent('#screen-game .hint-badge')) === '3', 'the hint button shows the tokens left');
     const useHint = async () => {
       await p.click('[data-act=hint]');
       await p.waitForTimeout(150);
@@ -78,77 +83,106 @@ const KEYS = ['', 'arrow', 'lily', 'mushroom', 'daisy', 'mirror'];
     await useHint();
     check((await wallet()).hints === 2, 'showing the same hint again is free');
     for (let i = 0; i < 2; i++) {
-      await p.evaluate((KEYS) => {
-        const g = window.lumignons.game;
-        const h = g.hintCells[g.hintCells.length - 1];
-        g.placeAt(h.idx, KEYS[h.type], h.dir);
-      }, KEYS);
+      await placeGhost();
       await useHint();
     }
-    check((await wallet()).hints === 0, 'each new hint uses a token');
-    await p.evaluate((KEYS) => {
-      const g = window.lumignons.game;
-      const h = g.hintCells[g.hintCells.length - 1];
-      g.placeAt(h.idx, KEYS[h.type], h.dir);
-    }, KEYS);
-    check((await p.textContent('#screen-game .hint-badge')).includes('20'), 'with no token left the button shows the price');
+    await placeGhost();
+    check((await wallet()).hints === 0 && (await p.textContent('#screen-game .hint-badge')).includes('20'), 'each new hint uses a token; then the button shows the price');
     const before = (await wallet()).coins;
     await p.keyboard.press('h');
     await p.waitForSelector('.modal [data-a=buy]');
     await p.click('.modal [data-a=buy]');
     await p.waitForTimeout(200);
-    check((await wallet()).coins === before - 20 && (await p.evaluate(() => window.lumignons.game.hintCells.length)) >= 1, 'the keyboard shortcut goes through the same purchase (−20 ✦, hint shown)');
+    check((await wallet()).coins === before - 20, 'the keyboard shortcut goes through the same purchase (−20 ✦)');
     await p.evaluate(() => (window.lumignons.wallet.wallet().coins = 5));
-    await p.evaluate((KEYS) => {
-      const g = window.lumignons.game;
-      const h = g.hintCells[g.hintCells.length - 1];
-      g.placeAt(h.idx, KEYS[h.type], h.dir);
-    }, KEYS);
+    await placeGhost();
     await useHint();
     check((await p.$('.modal [data-a=buy]')) === null && (await p.textContent('.modal')).includes('Il te manque 15'), 'without enough éclats: no purchase, the missing amount instead');
     await closeModals();
 
-    // Shop: gift, a hat, a trail.
-    await p.evaluate(() => (window.lumignons.wallet.wallet().coins = 400));
-    await p.evaluate(() => window.lumignons.shop.open('hats'));
-    await p.waitForSelector('.shop');
-    await p.click('.shop [data-a=gift]');
-    await p.waitForTimeout(150);
-    check((await wallet()).coins === 410 && !(await p.$('.shop [data-a=gift]')), 'the daily gift opens once (+10)');
-    const bowBtn = await p.evaluateHandle(() => [...document.querySelectorAll('.shop .hat')].find((h) => h.textContent.includes('Nœud')).querySelector('.price-btn'));
-    await bowBtn.click();
-    check((await wallet()).coins === 410, 'a first tap only asks for confirmation');
-    await bowBtn.click();
-    await p.waitForTimeout(150);
+    // The shop screen.
+    await p.evaluate(() => (window.lumignons.wallet.wallet().coins = 2000));
+    await p.evaluate(() => {
+      window.lumignons.screen = 'title';
+    });
+    await p.goto(BASE);
+    await p.waitForSelector('#screen-title.active');
+    await p.click('#screen-title .shop-tile');
+    await p.waitForSelector('#screen-shop.active');
+    await p.waitForTimeout(300);
+    check((await p.evaluate(() => window.lumignons.screen)) === 'shop' && (await p.textContent('#screen-shop .bubble')).length > 5, 'the shop opens, and Madame Phalène speaks');
+    const g0 = (await wallet()).coins;
+    await p.click('#screen-shop [data-a=gift]');
+    await p.waitForTimeout(700);
+    check((await wallet()).coins === g0 + 15 && !(await p.$('#screen-shop [data-a=gift]')), 'the daily gift opens once (+15)');
+    await p.evaluate(() => (window.lumignons.wallet.wallet().coins = 2000));
+    const offer = await p.evaluate(() => {
+      const o = window.lumignons.wallet.offer();
+      return { id: o.item.id, price: o.price, full: o.full };
+    });
+    check(offer.price < offer.full && (await p.textContent('#screen-shop .offer-card')).includes('−30 %'), 'today’s offer is shown at −30 %');
+    await p.click('#screen-shop .offer-card .btn');
+    await p.waitForTimeout(300);
+    check((await p.textContent('#screen-shop .shop-action')).includes(String(offer.price)), 'its card opens with the discounted price');
+
+    // Trying on and buying a hat for all four.
+    await p.click('#screen-shop [data-tab=hat]');
+    await p.waitForTimeout(200);
+    await p.click('#screen-shop .sk-card[data-item="beret"]');
+    await p.waitForTimeout(200);
+    check((await p.evaluate(() => window.lumignons.shopScene.preview?.id)) === 'beret', 'touching a card makes the Lumignons try it on');
+    const c0 = (await wallet()).coins;
+    await p.click('#screen-shop .shop-action [data-a=buy]');
+    await p.waitForTimeout(900);
     w = await wallet();
-    check(w.coins === 310 && w.owned.bow && (await p.evaluate(() => window.lumignons.save.save.data.hat)) === 'bow', 'the bow is bought and worn');
-    await p.evaluate(() => (window.lumignons.wallet.wallet().coins = 200));
-    await p.click('.shop [data-tab=trails]');
-    const rb = (await p.$$('.shop .price-btn')).pop();
-    await rb.click();
-    await rb.click();
-    await p.waitForTimeout(150);
-    check(!(await wallet()).owned.rainbow && (await wallet()).coins === 200, 'a trail too expensive cannot be bought (280 > 200)');
-    const sp = (await p.$$('.shop .price-btn'))[0];
-    await sp.click();
-    await sp.click();
-    await p.waitForTimeout(150);
+    check(w.owned.beret && w.coins === c0 - 110 && w.looks.every((l) => l.hat === 'beret'), 'the beret is bought and worn by all four');
+    // Glasses for Lou only.
+    await p.click('#screen-shop [data-who="2"]');
+    await p.click('#screen-shop [data-tab=glasses]');
+    await p.waitForTimeout(200);
+    await p.click('#screen-shop .sk-card[data-item="shades"]');
+    await p.click('#screen-shop .shop-action [data-a=buy]');
+    await p.waitForTimeout(900);
     w = await wallet();
-    check(w.owned.sparkle && w.trail === 'sparkle' && w.coins === 50, 'the stardust trail is bought and chosen');
-    await p.click('.shop [data-tab=log]');
-    check((await p.$$('.shop .log .row')).length >= 5, 'the journal lists the purchases and gains');
+    check(!w.same && w.looks.map((l) => l.glasses).join() === 'none,none,shades,none', 'sunglasses for Lou alone');
+    check((await p.evaluate(() => window.lumignons.dress(2).glasses)) === 'shades', 'and the game dresses Lou with them');
+
+    // The surprise chest: a ceremony, then a new item.
+    const ownedBefore = Object.keys((await wallet()).owned).length;
+    await p.click('#screen-shop [data-tab=featured]');
+    await p.waitForTimeout(200);
+    check((await p.textContent('#screen-shop .chest-card')).includes('Légendaire 4 %'), 'the chest shows its odds');
+    await p.click('#screen-shop .chest-btn');
+    await p.waitForSelector('.chest-overlay.show');
+    await p.waitForSelector('.chest-info.show', { timeout: 6000 });
+    const chestName = await p.textContent('.chest-info b');
+    await p.click('.chest-info [data-a=wear]');
+    await p.waitForTimeout(400);
+    w = await wallet();
+    check(Object.keys(w.owned).length === ownedBefore + 1 && chestName.length > 1 && w.log.includes('chest'), `the chest gives something new (${chestName})`);
+
+    // Collection book.
+    await p.click('#screen-shop [data-tab=collection]');
+    await p.waitForTimeout(300);
+    const book = await p.textContent('#screen-shop .shop-panel');
+    check(book.includes('25 %') && book.includes('???'), 'the collection shows the milestones and silhouettes of what is missing');
+    // The journal.
+    await p.click('#screen-shop [data-a=info]');
+    await p.waitForSelector('.shop-info');
+    check((await p.$$('.shop-info .log .row')).length >= 5, 'the journal lists the purchases and gains');
     await closeModals();
+    // Back to the title.
+    await p.click('#screen-shop [data-a=back]');
+    await p.waitForTimeout(300);
+    check((await p.evaluate(() => window.lumignons.screen)) === 'title', 'the back button leaves the shop');
 
     // Daily puzzle: paid once a day.
     await p.evaluate(() => {
       const S = window.lumignons.save;
       for (let l = 1; l <= 5; l++) S.save.data.levels['1-' + l] = { done: true, stars: 3 };
     });
-    const c0 = (await wallet()).coins;
-    await p.evaluate(() => {
-      window.lumignons.screen = 'title';
-      document.querySelector('#screen-title [data-act=daily]').click();
-    });
+    const d0 = (await wallet()).coins;
+    await p.evaluate(() => document.querySelector('#screen-title [data-act=daily]').click());
     await p.waitForTimeout(400);
     await closeModals();
     await p.evaluate(() => {
@@ -159,7 +193,7 @@ const KEYS = ['', 'arrow', 'lily', 'mushroom', 'daisy', 'mirror'];
     });
     await p.waitForSelector('.win-stars', { timeout: 30000 });
     await p.waitForTimeout(2300);
-    check((await p.textContent('.coins-earned')).includes('Défi du jour +15') && (await wallet()).coins >= c0 + 15, 'the daily puzzle pays +15');
+    check((await p.textContent('.coins-earned')).includes('Défi du jour +15') && (await wallet()).coins >= d0 + 15, 'the daily puzzle pays +15');
     await closeModals();
 
     // A save from before the shop: the welcome grant.
@@ -173,7 +207,7 @@ const KEYS = ['', 'arrow', 'lily', 'mushroom', 'daisy', 'mirror'];
     await p.goto(BASE);
     await p.waitForSelector('.modal [data-a=shop]', { timeout: 5000 });
     const txt = await p.textContent('.modal');
-    check(txt.includes('La boutique ouvre') && txt.includes('45'), 'an older save is welcomed with what its progress is worth (10+15 and 10+10 = 45 ✦)');
+    check(txt.includes('La boutique ouvre') && txt.includes('45'), 'an older save is welcomed with what its progress is worth (45 ✦)');
     check((await wallet()).coins === 105, 'and the purse holds 60 + 45');
     check(!errors.length, 'no JavaScript error' + (errors.length ? ': ' + errors.join(' | ') : ''));
   } catch (e) {

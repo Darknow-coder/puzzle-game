@@ -1,5 +1,6 @@
 // Notebook entries, hats and achievements.
 import { KIND, T } from '../engine/core.js';
+import { COSMETICS, COLLECTOR, FREE } from './cosmetics.js';
 
 /** Elements of the world, explained the first time they appear. */
 export const NOTEBOOK = [
@@ -200,24 +201,13 @@ export const HATS_INFO = [
   { id: 'crown', name: { fr: 'Couronne', en: 'Crown' }, need: { world: 5 } },
   { id: 'prism', name: { fr: 'Diadème de cristal', en: 'Crystal tiara' }, need: { world: 6 } },
   { id: 'halo', name: { fr: 'Auréole d’étoiles', en: 'Star halo' }, need: { perfect: true } },
-  // Sold in the shop (prices in economy.js).
-  { id: 'bow', name: { fr: 'Nœud', en: 'Bow' }, need: { shop: true } },
-  { id: 'beret', name: { fr: 'Béret', en: 'Beret' }, need: { shop: true } },
-  { id: 'pompom', name: { fr: 'Bonnet à pompon', en: 'Bobble hat' }, need: { shop: true } },
-  { id: 'chef', name: { fr: 'Toque', en: 'Chef’s hat' }, need: { shop: true } },
-  { id: 'headphones', name: { fr: 'Casque audio', en: 'Headphones' }, need: { shop: true } },
-  { id: 'tophat', name: { fr: 'Haut-de-forme', en: 'Top hat' }, need: { shop: true } },
+  // Sold in the shop (data/cosmetics.js), and the crown of a full collection.
+  ...COSMETICS.filter((c) => c.slot === 'hat').map((c) => ({ id: c.id, name: c.name, need: { shop: true } })),
+  { id: COLLECTOR.id, name: COLLECTOR.name, need: { collector: true } },
 ];
 
-/** Light trails behind the Lumignons; all but the first are sold in the shop. */
-export const TRAILS = [
-  { id: 'classic', name: { fr: 'Lueur', en: 'Glow' } },
-  { id: 'sparkle', name: { fr: 'Poussière d’étoiles', en: 'Stardust' } },
-  { id: 'petals', name: { fr: 'Pétales', en: 'Petals' } },
-  { id: 'notes', name: { fr: 'Mélodie', en: 'Melody' } },
-  { id: 'comet', name: { fr: 'Comète', en: 'Comet' } },
-  { id: 'rainbow', name: { fr: 'Arc-en-ciel', en: 'Rainbow' } },
-];
+/** Light trails behind the Lumignons (the shop sells all but the first). */
+export const TRAILS = [FREE.find((f) => f.slot === 'trail'), ...COSMETICS.filter((c) => c.slot === 'trail')];
 
 /** Achievements; `check(p)` receives the progress summary. */
 export const ACHIEVEMENTS = [

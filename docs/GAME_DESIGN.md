@@ -176,6 +176,31 @@ Principes :
 - **Achats en deux touchers** (« Confirmer ? ») pour éviter les achats accidentels ; journal des
   60 derniers mouvements ; la sauvegarde et les codes de sauvegarde incluent la bourse.
 
+## 7 quinquies. Version 3.2 : chez Madame Phalène
+
+La boutique est un **lieu**, pas un menu : un marché de nuit (auvent rayé, guirlandes, bocaux de
+lucioles, enseigne qui se balance) tenu par **Madame Phalène**, une phalène marchande, attirée par la
+lumière comme tous les papillons de nuit, avec lunettes rondes, antennes plumeuses et tablier. Elle
+accueille, commente ce qu’on essaie, félicite les achats, encourage quand la bourse est trop légère.
+
+- **Essayer avant d’acheter** : toucher un objet le fait porter aussitôt aux Lumignons sur l’estrade
+  (aux quatre, ou à celui qu’on habille). Une traînée se montre en courant, une fête se joue.
+- **Emplacements** : chapeau, lunettes, flamme (par Lumignon), traînée et fête de victoire (partagées).
+  Une flamme change de **forme**, jamais de couleur : la couleur dit quelle lanterne rejoindre.
+- **Raretés** commun, rare, épique, légendaire : prix croissants, cadres de couleur, reflet animé pour
+  les légendaires, fanfare plus riche à l’achat.
+- **Boucles qui donnent envie de revenir**, sans rien de punitif :
+  - la *vitrine du jour* (−30 %, un objet différent chaque jour) ;
+  - le *cadeau du jour* (de 15 à 80 ✦ sur une semaine, un indice le 7ᵉ jour) ;
+  - le *coffre à surprises* : la surprise, sans la frustration. **Jamais de doublon**, **chances
+    affichées** (50 / 32 / 14 / 4 %), un épique ou mieux **garanti** au moins tous les 6 coffres ;
+  - la *collection* : silhouettes de ce qui manque, paliers récompensés et une couronne exclusive
+    à 100 %.
+- **Récompense visible** : les pièces volent de la bourse vers l’estrade, la bourse décompte, les
+  Lumignons sautent de joie, confettis. Les fêtes achetées ont 2,4 s de scène après chaque victoire.
+- **Éthique** : tout se gagne en jouant, il n’y a pas d’argent réel, pas de publicité, pas de
+  doublon, et les chances sont affichées. Rien n’est retiré ni perdu : une offre manquée reviendra.
+
 ## 8. Conception et vérification des niveaux
 
 La campagne compte **77 niveaux** (7 mondes × 10 + 7 étoiles filantes). La liste complète, avec

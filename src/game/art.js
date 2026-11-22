@@ -185,7 +185,7 @@ export function roundRect(ctx, x, y, w, h, r) {
   ctx.closePath();
 }
 
-function ellipse(ctx, x, y, rx, ry) {
+export function ellipse(ctx, x, y, rx, ry) {
   ctx.beginPath();
   ctx.ellipse(x, y, Math.max(0.01, rx), Math.max(0.01, ry), 0, 0, TAU);
 }
@@ -1127,6 +1127,7 @@ export function drawLumi(g, x, y, S, o) {
       g.stroke();
     }
   }
+  if (o.glasses && o.glasses !== 'none' && !(dir === 0 && mood === 'idle')) drawGlasses(g, o.glasses, fx, fy, eyeDX, s, t);
   if (o.symbol && flame > 0) colorSymbol(g, o.color ?? 0, x, cy + bodyH * 0.62, s * 0.055, P.flame, '#ffffff');
   // Hat (cosmetic) sits on the head, behind the flame.
   const headY = cy - bodyH * 1.0;
@@ -1138,20 +1139,7 @@ export function drawLumi(g, x, y, S, o) {
     const fw = s * 0.12 * flame;
     const wob = Math.sin(t * 9 + y) * s * 0.02;
     const fy0 = headY + s * 0.02 - (o.hat ? s * 0.05 : 0);
-    g.fillStyle = P.flame;
-    g.beginPath();
-    g.moveTo(x - fw, fy0);
-    g.quadraticCurveTo(x - fw * 1.1, fy0 - fh * 0.55, x + wob, fy0 - fh);
-    g.quadraticCurveTo(x + fw * 1.1, fy0 - fh * 0.55, x + fw, fy0);
-    g.quadraticCurveTo(x, fy0 + fw * 0.6, x - fw, fy0);
-    g.fill();
-    g.fillStyle = P.core;
-    g.beginPath();
-    g.moveTo(x - fw * 0.5, fy0 - fh * 0.05);
-    g.quadraticCurveTo(x - fw * 0.5, fy0 - fh * 0.45, x + wob * 0.6, fy0 - fh * 0.68);
-    g.quadraticCurveTo(x + fw * 0.5, fy0 - fh * 0.45, x + fw * 0.5, fy0 - fh * 0.05);
-    g.quadraticCurveTo(x, fy0 + fw * 0.2, x - fw * 0.5, fy0 - fh * 0.05);
-    g.fill();
+    drawFlame(g, o.flameStyle || 'classic', x, fy0, fw, fh, wob, P, t, s);
   } else {
     // Smoke wisp of an extinguished wick.
     g.strokeStyle = 'rgba(80,70,90,0.8)';
@@ -1160,6 +1148,236 @@ export function drawLumi(g, x, y, S, o) {
     g.moveTo(x, headY);
     g.lineTo(x, headY - s * 0.06);
     g.stroke();
+  }
+  g.restore();
+}
+
+/** A classic flame (outer colour, then the bright core). */
+function flameDrop(g, x, y0, fw, fh, wob, P) {
+  g.fillStyle = P.flame;
+  g.beginPath();
+  g.moveTo(x - fw, y0);
+  g.quadraticCurveTo(x - fw * 1.1, y0 - fh * 0.55, x + wob, y0 - fh);
+  g.quadraticCurveTo(x + fw * 1.1, y0 - fh * 0.55, x + fw, y0);
+  g.quadraticCurveTo(x, y0 + fw * 0.6, x - fw, y0);
+  g.fill();
+  g.fillStyle = P.core;
+  g.beginPath();
+  g.moveTo(x - fw * 0.5, y0 - fh * 0.05);
+  g.quadraticCurveTo(x - fw * 0.5, y0 - fh * 0.45, x + wob * 0.6, y0 - fh * 0.68);
+  g.quadraticCurveTo(x + fw * 0.5, y0 - fh * 0.45, x + fw * 0.5, y0 - fh * 0.05);
+  g.quadraticCurveTo(x, y0 + fw * 0.2, x - fw * 0.5, y0 - fh * 0.05);
+  g.fill();
+}
+
+function heartPath(g, x, y, r) {
+  g.beginPath();
+  g.moveTo(x, y + r * 0.9);
+  g.bezierCurveTo(x - r * 1.5, y - r * 0.1, x - r * 0.8, y - r * 1.25, x, y - r * 0.45);
+  g.bezierCurveTo(x + r * 0.8, y - r * 1.25, x + r * 1.5, y - r * 0.1, x, y + r * 0.9);
+  g.closePath();
+}
+
+/** The Lumignon's flame, in the shape bought in the shop; its colour never changes. */
+export function drawFlame(g, style, x, y0, fw, fh, wob, P, t, s) {
+  switch (style) {
+    case 'flame-heart': {
+      const r = fw * (1.15 + 0.08 * Math.sin(t * 6));
+      g.fillStyle = P.flame;
+      heartPath(g, x + wob * 0.3, y0 - fh * 0.42, r);
+      g.fill();
+      g.fillStyle = P.core;
+      heartPath(g, x + wob * 0.3, y0 - fh * 0.38, r * 0.55);
+      g.fill();
+      break;
+    }
+    case 'flame-star': {
+      const cyS = y0 - fh * 0.45;
+      g.save();
+      g.translate(x + wob * 0.3, cyS);
+      g.rotate(Math.sin(t * 2) * 0.25);
+      g.fillStyle = P.flame;
+      star(g, 0, 0, fw * 1.55, 5, 0.48);
+      g.fillStyle = P.core;
+      star(g, 0, fw * 0.08, fw * 0.75, 5, 0.48);
+      g.restore();
+      break;
+    }
+    case 'flame-twin':
+      flameDrop(g, x - fw * 0.6, y0, fw * 0.62, fh * 0.85, wob * 0.8, P);
+      flameDrop(g, x + fw * 0.6, y0, fw * 0.62, fh * 0.95, -wob * 0.8, P);
+      break;
+    case 'flame-swirl': {
+      flameDrop(g, x, y0, fw, fh * 0.8, wob * 0.5, P);
+      // A curl of flame above, turning.
+      g.strokeStyle = P.flame;
+      g.lineCap = 'round';
+      g.lineWidth = fw * 0.55;
+      g.beginPath();
+      const a0 = t * 4;
+      for (let i = 0; i <= 14; i++) {
+        const k = i / 14;
+        const a = a0 + k * 4.5;
+        const r = fw * 0.7 * (1 - k * 0.6);
+        const px = x + Math.cos(a) * r;
+        const py = y0 - fh * (0.75 + k * 0.45) + Math.sin(a) * r * 0.4;
+        if (i) g.lineTo(px, py);
+        else g.moveTo(px, py);
+      }
+      g.stroke();
+      break;
+    }
+    case 'flame-sparkler': {
+      flameDrop(g, x, y0, fw * 0.9, fh * 0.9, wob, P);
+      // Sparks flying out, like a sparkler.
+      const tipY = y0 - fh * 0.75;
+      for (let i = 0; i < 9; i++) {
+        const ph = (t * 2.3 + i * 0.37) % 1;
+        const a = i * 2.39 + Math.floor(t * 2.3 + i * 0.37) * 1.7;
+        const d = s * (0.06 + ph * 0.28);
+        const px = x + Math.cos(a) * d;
+        const py = tipY + Math.sin(a) * d * 0.8 - ph * s * 0.04;
+        g.strokeStyle = `rgba(255,${230 - i * 6},${150 + i * 10},${1 - ph})`;
+        g.lineWidth = Math.max(1, s * 0.018);
+        g.beginPath();
+        g.moveTo(px, py);
+        g.lineTo(px - Math.cos(a) * s * 0.035, py - Math.sin(a) * s * 0.03);
+        g.stroke();
+      }
+      glow(g, x, tipY, s * 0.22, 'rgba(255,240,180,', 0.5);
+      break;
+    }
+    default:
+      flameDrop(g, x, y0, fw, fh, wob, P);
+  }
+}
+
+/** Glasses over the eyes at (fx ± dx, fy). */
+export function drawGlasses(g, style, fx, fy, dx, s, t = 0) {
+  g.save();
+  const r = s * 0.075;
+  const lw = Math.max(1, s * 0.018);
+  const both = (fn) => {
+    fn(fx - dx, -1);
+    fn(fx + dx, 1);
+  };
+  switch (style) {
+    case 'round':
+      g.strokeStyle = '#5a3a2a';
+      g.lineWidth = lw;
+      g.fillStyle = 'rgba(255,255,255,0.18)';
+      both((ex) => {
+        ellipse(g, ex, fy, r, r);
+        g.fill();
+        g.stroke();
+      });
+      g.beginPath();
+      g.moveTo(fx - dx + r, fy - r * 0.2);
+      g.quadraticCurveTo(fx, fy - r * 0.6, fx + dx - r, fy - r * 0.2);
+      g.stroke();
+      break;
+    case 'shades':
+      g.fillStyle = '#1e1830';
+      both((ex) => {
+        roundRect(g, ex - r * 1.15, fy - r * 0.8, r * 2.3, r * 1.6, r * 0.6);
+        g.fill();
+      });
+      g.fillRect(fx - dx + r, fy - r * 0.55, (dx - r) * 2, lw * 1.4);
+      g.strokeStyle = 'rgba(255,255,255,0.7)';
+      g.lineWidth = lw;
+      both((ex) => {
+        g.beginPath();
+        g.moveTo(ex - r * 0.7, fy - r * 0.2);
+        g.lineTo(ex - r * 0.2, fy - r * 0.55);
+        g.stroke();
+      });
+      break;
+    case 'lovely':
+      both((ex) => {
+        g.fillStyle = '#ff5d9e';
+        heartPath(g, ex, fy, r * 1.15);
+        g.fill();
+        g.fillStyle = 'rgba(255,255,255,0.65)';
+        ellipse(g, ex - r * 0.4, fy - r * 0.35, r * 0.22, r * 0.15);
+        g.fill();
+      });
+      g.strokeStyle = '#d63f7f';
+      g.lineWidth = lw;
+      g.beginPath();
+      g.moveTo(fx - dx + r * 0.9, fy - r * 0.2);
+      g.lineTo(fx + dx - r * 0.9, fy - r * 0.2);
+      g.stroke();
+      break;
+    case 'starry':
+      both((ex, sg) => {
+        g.save();
+        g.translate(ex, fy);
+        g.rotate(sg * 0.12 + Math.sin(t * 2) * 0.05);
+        g.fillStyle = '#ffd24a';
+        star(g, 0, 0, r * 1.45, 5, 0.5);
+        g.fillStyle = 'rgba(255,255,255,0.55)';
+        star(g, -r * 0.2, -r * 0.25, r * 0.4, 4, 0.4);
+        g.restore();
+      });
+      g.strokeStyle = '#e0a51c';
+      g.lineWidth = lw;
+      g.beginPath();
+      g.moveTo(fx - dx + r * 0.9, fy - r * 0.1);
+      g.lineTo(fx + dx - r * 0.9, fy - r * 0.1);
+      g.stroke();
+      break;
+    case 'monocle': {
+      const ex = fx + dx;
+      g.strokeStyle = '#e8b53a';
+      g.lineWidth = lw * 1.3;
+      g.fillStyle = 'rgba(220,240,255,0.25)';
+      ellipse(g, ex, fy, r * 1.05, r * 1.05);
+      g.fill();
+      g.stroke();
+      g.lineWidth = lw * 0.8;
+      g.beginPath();
+      g.moveTo(ex + r * 0.9, fy + r * 0.5);
+      g.quadraticCurveTo(ex + r * 2.2, fy + r * 2.5, ex + r * 0.6, fy + r * 4.2);
+      g.stroke();
+      g.fillStyle = 'rgba(255,255,255,0.7)';
+      ellipse(g, ex - r * 0.4, fy - r * 0.4, r * 0.2, r * 0.13);
+      g.fill();
+      break;
+    }
+    case 'mask':
+      g.fillStyle = '#5b2a8c';
+      g.beginPath();
+      roundRect(g, fx - dx - r * 1.9, fy - r * 1.05, (dx + r * 1.9) * 2, r * 2.1, r * 0.95);
+      both((ex) => {
+        g.moveTo(ex + r * 0.75, fy);
+        g.ellipse(ex, fy, r * 0.75, r * 0.6, 0, 0, TAU);
+      });
+      g.fill('evenodd');
+      g.fillStyle = 'rgba(255,255,255,0.25)';
+      g.fillRect(fx - dx - r * 1.3, fy - r * 0.8, (dx + r * 1.3) * 2, r * 0.18);
+      // Ribbon ends behind.
+      g.strokeStyle = '#5b2a8c';
+      g.lineWidth = lw * 1.5;
+      g.beginPath();
+      g.moveTo(fx - dx - r * 1.8, fy);
+      g.quadraticCurveTo(fx - dx - r * 2.6, fy + r * 0.5 + Math.sin(t * 5) * r * 0.3, fx - dx - r * 3.1, fy + r * 1.2);
+      g.stroke();
+      break;
+    case 'visor': {
+      const w = (dx + r * 1.4) * 2;
+      const grd = g.createLinearGradient(fx - w / 2, 0, fx + w / 2, 0);
+      for (let i = 0; i <= 6; i++) grd.addColorStop(i / 6, `hsla(${(i * 55 + t * 90) % 360},95%,68%,0.88)`);
+      glow(g, fx, fy, s * 0.22, 'rgba(200,180,255,', 0.45);
+      g.fillStyle = grd;
+      roundRect(g, fx - w / 2, fy - r * 0.85, w, r * 1.7, r * 0.85);
+      g.fill();
+      g.fillStyle = 'rgba(255,255,255,0.75)';
+      const sweep = ((t * 0.6) % 1) * w;
+      g.fillRect(fx - w / 2 + sweep * 0.9, fy - r * 0.75, r * 0.25, r * 1.5);
+      break;
+    }
+    default:
+      break;
   }
   g.restore();
 }
@@ -1409,6 +1627,212 @@ export function drawHat(g, x, y, s, hat, t = 0) {
       g.fillRect(x - s * 0.15, y - s * 0.06, s * 0.3, s * 0.05);
       g.fillStyle = 'rgba(255,255,255,0.18)';
       g.fillRect(x - s * 0.11, y - s * 0.28, s * 0.04, s * 0.2);
+      break;
+    }
+    case 'straw': {
+      g.fillStyle = '#e8c56a';
+      g.beginPath();
+      g.ellipse(x, y + s * 0.03, s * 0.34, s * 0.085, 0, 0, TAU);
+      g.fill();
+      g.fillStyle = '#f3d98c';
+      g.beginPath();
+      g.ellipse(x, y - s * 0.01, s * 0.17, s * 0.13, 0, Math.PI, TAU);
+      g.fill();
+      g.fillStyle = '#ff6b8b';
+      g.fillRect(x - s * 0.17, y - s * 0.03, s * 0.34, s * 0.045);
+      g.strokeStyle = 'rgba(150,110,40,0.4)';
+      g.lineWidth = Math.max(1, s * 0.01);
+      for (let i = -3; i <= 3; i++) {
+        g.beginPath();
+        g.moveTo(x + i * s * 0.085, y + s * 0.015);
+        g.lineTo(x + i * s * 0.105, y + s * 0.09);
+        g.stroke();
+      }
+      const fx = x + s * 0.14;
+      const fy = y - s * 0.01;
+      g.fillStyle = '#ffffff';
+      for (let k = 0; k < 5; k++) {
+        const a = (k * TAU) / 5 + t;
+        ellipse(g, fx + Math.cos(a) * s * 0.03, fy + Math.sin(a) * s * 0.03, s * 0.024, s * 0.024);
+        g.fill();
+      }
+      g.fillStyle = '#ffd24a';
+      ellipse(g, fx, fy, s * 0.022, s * 0.022);
+      g.fill();
+      break;
+    }
+    case 'partyhat': {
+      // A striped cone worn on the side, so the flame stays visible.
+      g.translate(x - s * 0.12, y + s * 0.03);
+      g.rotate(-0.45);
+      g.beginPath();
+      g.moveTo(-s * 0.13, 0);
+      g.lineTo(0, -s * 0.36);
+      g.lineTo(s * 0.13, 0);
+      g.closePath();
+      g.fillStyle = '#7a5cff';
+      g.fill();
+      g.save();
+      g.clip();
+      g.fillStyle = '#ffd24a';
+      for (let i = 0; i < 5; i++) {
+        g.save();
+        g.translate(0, -i * s * 0.085);
+        g.rotate(0.45);
+        g.fillRect(-s * 0.3, -s * 0.015, s * 0.6, s * 0.035);
+        g.restore();
+      }
+      g.restore();
+      g.fillStyle = '#ff6fa8';
+      ellipse(g, 0, -s * 0.37, s * 0.05, s * 0.05);
+      g.fill();
+      g.fillStyle = 'rgba(255,255,255,0.6)';
+      ellipse(g, -s * 0.015, -s * 0.385, s * 0.018, s * 0.014);
+      g.fill();
+      break;
+    }
+    case 'antlers': {
+      g.strokeStyle = '#8a5a35';
+      g.lineCap = 'round';
+      g.lineWidth = s * 0.035;
+      for (const sg of [-1, 1]) {
+        const bx = x + sg * s * 0.13;
+        g.beginPath();
+        g.moveTo(bx, y + s * 0.03);
+        g.quadraticCurveTo(bx + sg * s * 0.05, y - s * 0.15, bx + sg * s * 0.15, y - s * 0.28);
+        g.moveTo(bx + sg * s * 0.04, y - s * 0.09);
+        g.lineTo(bx + sg * s * 0.15, y - s * 0.13);
+        g.moveTo(bx + sg * s * 0.08, y - s * 0.19);
+        g.lineTo(bx + sg * s * 0.04, y - s * 0.3);
+        g.stroke();
+        // Fairy lights on the tips.
+        [[0.15, -0.28], [0.15, -0.13], [0.04, -0.3]].forEach(([dx, dy], i) => {
+          const a = 0.55 + 0.45 * Math.sin(t * 5 + i * 2 + sg);
+          const lx = bx + sg * dx * s;
+          const ly = y + dy * s;
+          glow(g, lx, ly, s * 0.1, i === 1 ? 'rgba(255,140,200,' : 'rgba(255,230,120,', a);
+          g.fillStyle = i === 1 ? '#ffd1ea' : '#fff6c2';
+          ellipse(g, lx, ly, s * 0.022, s * 0.022);
+          g.fill();
+        });
+      }
+      break;
+    }
+    case 'raincloud': {
+      // A little cloud floating above the flame, with a rainbow.
+      const cy = y - s * 0.5 + Math.sin(t * 2) * s * 0.02;
+      ['#ff7a8a', '#ffd24a', '#7eebb0', '#6cc8ff'].forEach((col, i) => {
+        g.strokeStyle = col;
+        g.lineWidth = s * 0.018;
+        g.beginPath();
+        g.arc(x + s * 0.15, cy + s * 0.12, s * (0.11 - i * 0.02), Math.PI, TAU);
+        g.stroke();
+      });
+      g.fillStyle = '#ffffff';
+      [[-0.1, 0.01, 0.07], [0, -0.03, 0.09], [0.1, 0.01, 0.07], [0.04, 0.035, 0.08], [-0.05, 0.035, 0.07]].forEach(([dx, dy, r]) => {
+        ellipse(g, x + dx * s, cy + dy * s, r * s, r * s * 0.85);
+        g.fill();
+      });
+      g.fillStyle = '#7a86a8';
+      ellipse(g, x - s * 0.03, cy + s * 0.005, s * 0.009, s * 0.013);
+      g.fill();
+      ellipse(g, x + s * 0.03, cy + s * 0.005, s * 0.009, s * 0.013);
+      g.fill();
+      g.fillStyle = 'rgba(255,140,160,0.5)';
+      ellipse(g, x - s * 0.055, cy + s * 0.03, s * 0.015, s * 0.009);
+      g.fill();
+      ellipse(g, x + s * 0.055, cy + s * 0.03, s * 0.015, s * 0.009);
+      g.fill();
+      break;
+    }
+    case 'aurora': {
+      // Ribbons of light waving above the head, like the northern lights.
+      glow(g, x, y - s * 0.16, s * 0.5, 'rgba(90,240,200,', 0.45);
+      g.lineCap = 'round';
+      ['40,215,165', '70,150,255', '235,90,200'].forEach((col, i) => {
+        g.strokeStyle = `rgba(${col},0.92)`;
+        g.lineWidth = s * 0.05;
+        g.beginPath();
+        for (let k = 0; k <= 12; k++) {
+          const u = k / 12;
+          const px = x - s * 0.24 + u * s * 0.48;
+          const py = y - s * 0.05 - Math.sin(u * Math.PI) * s * (0.13 + i * 0.07) + Math.sin(t * 3 + u * 6 + i * 1.7) * s * 0.025;
+          if (k) g.lineTo(px, py);
+          else g.moveTo(px, py);
+        }
+        g.stroke();
+      });
+      g.fillStyle = '#e9e4ff';
+      roundRect(g, x - s * 0.22, y - s * 0.03, s * 0.44, s * 0.05, s * 0.025);
+      g.fill();
+      for (let i = -1; i <= 1; i++) {
+        g.fillStyle = ['#7eebb0', '#6cc8ff', '#ff8fc1'][i + 1];
+        ellipse(g, x + i * s * 0.11, y - s * 0.005, s * 0.02, s * 0.02);
+        g.fill();
+      }
+      break;
+    }
+    case 'phoenix': {
+      // Fiery feathers fanning out behind the head, with rising embers.
+      glow(g, x, y - s * 0.15, s * 0.5, 'rgba(255,140,60,', 0.45);
+      for (let i = -3; i <= 3; i++) {
+        const a = -Math.PI / 2 + i * 0.3 + Math.sin(t * 4 + i) * 0.05;
+        const len = s * (0.34 - Math.abs(i) * 0.035);
+        const bx = x;
+        const by = y + s * 0.03;
+        const tx = bx + Math.cos(a) * len;
+        const ty = by + Math.sin(a) * len;
+        const nx = Math.cos(a + Math.PI / 2) * s * 0.045;
+        const ny = Math.sin(a + Math.PI / 2) * s * 0.045;
+        const grd = g.createLinearGradient(bx, by, tx, ty);
+        grd.addColorStop(0, '#ff4d2a');
+        grd.addColorStop(0.55, '#ffa52e');
+        grd.addColorStop(1, '#fff3a6');
+        g.fillStyle = grd;
+        g.beginPath();
+        g.moveTo(bx - nx * 0.4, by - ny * 0.4);
+        g.quadraticCurveTo(bx + Math.cos(a) * len * 0.6 + nx, by + Math.sin(a) * len * 0.6 + ny, tx, ty);
+        g.quadraticCurveTo(bx + Math.cos(a) * len * 0.6 - nx, by + Math.sin(a) * len * 0.6 - ny, bx + nx * 0.4, by + ny * 0.4);
+        g.fill();
+      }
+      for (let k = 0; k < 5; k++) {
+        const ph = (t * 0.8 + k * 0.2) % 1;
+        glow(g, x + Math.sin(k * 2.1 + t) * s * 0.2, y - s * 0.22 - ph * s * 0.3, s * 0.05, 'rgba(255,190,90,', 1 - ph);
+      }
+      break;
+    }
+    case 'collector': {
+      // The crown of a full collection: gold, three gems and a twinkle.
+      glow(g, x, y - s * 0.08, s * 0.42, 'rgba(255,215,110,', 0.55);
+      const grd = g.createLinearGradient(0, y - s * 0.24, 0, y + s * 0.05);
+      grd.addColorStop(0, '#fff4b0');
+      grd.addColorStop(1, '#e09a1c');
+      g.fillStyle = grd;
+      g.beginPath();
+      g.moveTo(x - s * 0.22, y + s * 0.05);
+      g.lineTo(x - s * 0.25, y - s * 0.15);
+      g.lineTo(x - s * 0.12, y - s * 0.06);
+      g.lineTo(x - s * 0.06, y - s * 0.23);
+      g.lineTo(x, y - s * 0.09);
+      g.lineTo(x + s * 0.06, y - s * 0.23);
+      g.lineTo(x + s * 0.12, y - s * 0.06);
+      g.lineTo(x + s * 0.25, y - s * 0.15);
+      g.lineTo(x + s * 0.22, y + s * 0.05);
+      g.closePath();
+      g.fill();
+      g.strokeStyle = '#b8701a';
+      g.lineWidth = Math.max(1, s * 0.012);
+      g.stroke();
+      [['#ff4f6a', -0.12], ['#5fb7ff', 0], ['#4fd98a', 0.12]].forEach(([col, dx]) => {
+        g.fillStyle = col;
+        ellipse(g, x + dx * s, y - s * 0.005, s * 0.028, s * 0.028);
+        g.fill();
+        g.fillStyle = 'rgba(255,255,255,0.7)';
+        ellipse(g, x + dx * s - s * 0.008, y - s * 0.014, s * 0.009, s * 0.007);
+        g.fill();
+      });
+      g.fillStyle = `rgba(255,255,255,${0.55 + 0.45 * Math.sin(t * 4)})`;
+      star(g, x + s * 0.06, y - s * 0.25, s * 0.045, 4, 0.3);
       break;
     }
     case 'prism': {
@@ -2216,6 +2640,51 @@ export function drawTrailDot(g, style, x, y, S, k, color, i, t) {
       break;
     case 'rainbow':
       glow(g, x, y, S * 0.24 * k, HUES[(i + Math.floor(t * 6)) % 12], 0.4 * k);
+      break;
+    case 'bubbles':
+      glow(g, x, y, S * 0.12 * k, color, 0.18 * k);
+      if (i % 2 === 0) {
+        const r = S * (0.045 + 0.025 * Math.abs(Math.sin(i * 1.7)));
+        const bx = x + Math.sin(i * 1.3 + (1 - k) * 4) * S * 0.12;
+        const by = y - (1 - k) * S * 0.45;
+        g.strokeStyle = `rgba(210,240,255,${0.85 * k})`;
+        g.lineWidth = Math.max(1, S * 0.012);
+        g.beginPath();
+        g.arc(bx, by, r, 0, TAU);
+        g.stroke();
+        g.fillStyle = `rgba(255,255,255,${0.6 * k})`;
+        ellipse(g, bx - r * 0.35, by - r * 0.35, r * 0.25, r * 0.17);
+        g.fill();
+      }
+      break;
+    case 'hearts':
+      glow(g, x, y, S * 0.14 * k, color, 0.2 * k);
+      if (i % 2 === 0) {
+        g.fillStyle = `rgba(255,${80 + (i % 4) * 25},${140 + (i % 3) * 20},${0.95 * k})`;
+        heartPath(g, x + Math.sin(i) * S * 0.12, y - (1 - k) * S * 0.45, S * 0.07 * (0.6 + k * 0.5));
+        g.fill();
+      }
+      break;
+    case 'snow':
+      glow(g, x, y, S * 0.14 * k, 'rgba(210,235,255,', 0.25 * k);
+      if (i % 2 === 0) {
+        g.save();
+        g.translate(x + Math.sin(i * 1.7) * S * 0.12, y + (1 - k) * S * 0.3);
+        g.rotate(i + (1 - k) * 2);
+        g.strokeStyle = `rgba(240,250,255,${0.95 * k})`;
+        g.lineWidth = Math.max(1, S * 0.012);
+        const r = S * 0.04;
+        for (let a = 0; a < 6; a++) {
+          g.rotate(Math.PI / 3);
+          g.beginPath();
+          g.moveTo(0, 0);
+          g.lineTo(r, 0);
+          g.moveTo(r * 0.55, 0);
+          g.lineTo(r * 0.75, r * 0.16);
+          g.stroke();
+        }
+        g.restore();
+      }
       break;
     default:
       glow(g, x, y, S * 0.22 * k, color, 0.35 * k);
