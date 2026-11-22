@@ -229,7 +229,8 @@ export class ShopScene {
     this.S = Math.max(34, Math.min(64, stage * 0.3, w * 0.15));
     if (this.skyKey !== `${w}|${h}|${A.gpu.epoch}`) {
       this.skyKey = `${w}|${h}|${A.gpu.epoch}`;
-      this.sky = A.renderSky(Math.ceil(w), Math.ceil(h), 'grove', { moon: { x: 0.12, y: 0.12, r: 0.035 } });
+      this.sky = A.renderSky(Math.ceil(w), Math.ceil(h), 'grove', { art: 'shop', moon: { x: 0.12, y: 0.12, r: 0.035 } });
+      this.painted = A.hasSkyArt('shop');
     }
   }
 
@@ -342,7 +343,15 @@ export class ShopScene {
     }
     g.fillStyle = 'rgba(20,10,40,0.18)';
     g.fillRect(0, aw - 2, W, 3);
-    // String of little lights under the awning, swinging.
+    // String of little lights under the awning, swinging (the painted market has its own).
+    if (!this.painted) this.drawLights(g, aw);
+    this.drawSign(g, aw);
+    if (!this.painted) this.drawShelves(g);
+    this.drawFront(g);
+  }
+
+  drawLights(g, aw) {
+    const { W, S, t } = this;
     g.strokeStyle = 'rgba(255,240,210,0.55)';
     g.lineWidth = 1.2;
     g.beginPath();
@@ -358,6 +367,10 @@ export class ShopScene {
       A.ellipse(g, x, y + S * 0.08, S * 0.07, S * 0.09);
       g.fill();
     });
+  }
+
+  drawSign(g, aw) {
+    const { W, S, t } = this;
     // The shop's sign, hanging from the awning.
     if (this.signText) {
       const sx = W * 0.24;
@@ -400,6 +413,10 @@ export class ShopScene {
       g.shadowBlur = 0;
       g.restore();
     }
+  }
+
+  drawShelves(g) {
+    const { W, S, t, top, bottom } = this;
     // Shelves with glowing jars, on the right.
     const shX = W * 0.62;
     for (let r = 0; r < 2; r++) {
@@ -423,17 +440,47 @@ export class ShopScene {
         }
       }
     }
+  }
+
+  drawFront(g) {
+    const { W, S, t, top, bottom } = this;
     // Madame Phalène behind her counter.
     const pmS = Math.min(S * 2.3, (bottom - top) * 0.6);
     drawPhalene(g, W * 0.82, bottom - pmS * 0.52, pmS, t, this.mood);
-    const cg = g.createLinearGradient(0, bottom - S * 0.45, 0, bottom + S * 0.2);
-    cg.addColorStop(0, '#9a6440');
-    cg.addColorStop(1, '#6e4028');
+    // The counter: a wooden top, a planked front, gold trim and a lantern glow.
+    const cx0 = W * 0.64;
+    const cw = W * 0.38;
+    const ct = bottom - S * 0.45;
+    const ch = S * 0.7;
+    g.fillStyle = 'rgba(10,5,25,0.35)';
+    g.fillRect(cx0 + 4, ct + 6, cw, ch);
+    const cg = g.createLinearGradient(0, ct, 0, ct + ch);
+    cg.addColorStop(0, '#8a5634');
+    cg.addColorStop(1, '#5a3220');
     g.fillStyle = cg;
-    A.roundRect(g, W * 0.64, bottom - S * 0.45, W * 0.38, S * 0.7, S * 0.08);
+    A.roundRect(g, cx0, ct, cw, ch, S * 0.08);
+    g.fill();
+    g.strokeStyle = 'rgba(40,20,10,0.45)';
+    g.lineWidth = Math.max(1, S * 0.025);
+    const planks = Math.max(3, Math.round(cw / (S * 0.55)));
+    for (let i = 1; i < planks; i++) {
+      const x = cx0 + (cw * i) / planks;
+      g.beginPath();
+      g.moveTo(x, ct + S * 0.16);
+      g.lineTo(x, ct + ch);
+      g.stroke();
+    }
+    g.fillStyle = 'rgba(255,200,120,0.12)';
+    g.fillRect(cx0, ct + S * 0.16, cw, S * 0.06);
+    const tg = g.createLinearGradient(0, ct - S * 0.02, 0, ct + S * 0.16);
+    tg.addColorStop(0, '#c98a55');
+    tg.addColorStop(1, '#94593a');
+    g.fillStyle = tg;
+    A.roundRect(g, cx0 - S * 0.08, ct - S * 0.04, cw + S * 0.16, S * 0.2, S * 0.06);
     g.fill();
     g.fillStyle = '#e8b53a';
-    g.fillRect(W * 0.64, bottom - S * 0.45, W * 0.38, S * 0.05);
+    g.fillRect(cx0 - S * 0.08, ct + S * 0.14, cw + S * 0.16, S * 0.035);
+    A.glow(g, cx0 + S * 0.35, ct - S * 0.1, S * 0.9, 'rgba(255,190,90,', 0.35 + 0.08 * Math.sin(t * 2.3));
     // Podium.
     const spots = this.spots();
     const px0 = spots[0][0] - S * 0.6;

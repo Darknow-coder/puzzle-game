@@ -295,10 +295,45 @@ export function glow(ctx, x, y, r, colorPrefix, alpha = 1) {
 // Sky
 
 /** Pre-renders the static part of a world's sky (gradient, moon, far hills). */
+// Painted backgrounds (assets/skies, made with tools/imagegen). Until one has
+// loaded, or if it cannot load, the procedural sky below is drawn instead.
+const SKY_ART = {};
+let artTimer = 0;
+export function loadSkyArt(base = 'assets/skies/', keys = ['meadow', 'pond', 'grove', 'ruins', 'gloom', 'peak', 'dawn', 'shop']) {
+  if (typeof Image === 'undefined') return;
+  for (const k of keys) {
+    const im = new Image();
+    im.onload = () => {
+      SKY_ART[k] = im;
+      // Scenes rebuild their cached sky (once for several images).
+      clearTimeout(artTimer);
+      artTimer = setTimeout(() => gpu.epoch++, 60);
+    };
+    im.src = base + k + '.webp';
+  }
+}
+export const hasSkyArt = (k) => !!SKY_ART[k];
+
+/** The painted background, covering w×h (anchored low, where the scenery is). */
+function drawSkyArt(g, im, w, h) {
+  const k = Math.max(w / im.width, h / im.height);
+  const dw = im.width * k;
+  const dh = im.height * k;
+  g.drawImage(im, (w - dw) / 2, (h - dh) * 0.7, dw, dh);
+  // A light veil keeps the island and its pieces in front.
+  g.fillStyle = 'rgba(12,6,30,0.14)';
+  g.fillRect(0, 0, w, h);
+}
+
 export function renderSky(w, h, worldKey, opts = {}) {
   const st = WORLD_STYLES[worldKey] || WORLD_STYLES.meadow;
   const c = makeCanvas(w, h);
   const g = c.getContext('2d');
+  const art = SKY_ART[opts.art || worldKey];
+  if (art) {
+    drawSkyArt(g, art, w, h);
+    return c;
+  }
   const grd = g.createLinearGradient(0, 0, 0, h);
   st.sky.forEach((col, i) => grd.addColorStop(i / (st.sky.length - 1), col));
   g.fillStyle = grd;

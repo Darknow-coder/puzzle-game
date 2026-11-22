@@ -10,8 +10,10 @@ const walk = (dir) => {
   for (const f of fs.readdirSync(path.join(root, dir))) {
     const rel = path.join(dir, f);
     const st = fs.statSync(path.join(root, rel));
-    if (st.isDirectory()) walk(rel);
-    else if (/\.(js|css|woff2|png|svg|txt)$/.test(f)) files.push(rel.split(path.sep).join('/'));
+    if (st.isDirectory()) {
+      if (rel.split(path.sep).join('/') !== 'assets/brand') walk(rel); // marketing images, not the game
+    }
+    else if (/\.(js|css|woff2|png|webp|svg|txt)$/.test(f)) files.push(rel.split(path.sep).join('/'));
   }
 };
 walk('src');

@@ -1911,6 +1911,7 @@ app.editor = editorScene;
 // ------------------------------------------------------------------- boot
 
 function boot() {
+  A.loadSkyArt();
   SV.loadSave();
   const s = SV.save.data.settings;
   setLang(s.lang || detectLang());
