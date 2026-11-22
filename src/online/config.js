@@ -3,6 +3,6 @@
 // firestore.rules decides what anyone may read or write.
 // Leave apiKey empty and the game stays entirely offline (pseudo kept locally).
 export const FIREBASE = {
-  apiKey: '',
-  projectId: '',
+  apiKey: 'AIzaSyBDXqWrQ4XZ_DiPGSFxTt4LariaFN7etN8',
+  projectId: 'lumignons-38b9c',
 };
