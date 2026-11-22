@@ -53,8 +53,8 @@ const STEPS = [
     sel: '[data-act=ranks]',
     title: { fr: 'Podium', en: 'Podium' },
     text: {
-      fr: 'Les classements : chaque niveau, le défi du jour et le général. Classés par étoiles, pièces, sans indice, puis essais et temps : réfléchir avant d’appuyer sur Go paie !',
-      en: 'The rankings: each level, the daily puzzle and overall. Ranked by stars, pieces, no hint, then tries and time: thinking before pressing Go pays off!',
+      fr: 'Compare-toi aux autres joueurs, niveau par niveau, au défi du jour et au général. Pour passer devant :<br>① plus d’<b>étoiles</b><br>② <b>sans indice</b><br>③ moins d’<b>essais</b> (chaque Go! compte)<br>④ plus <b>rapide</b><br>Conseil : réfléchis bien avant d’appuyer sur Go !',
+      en: 'Compare yourself with other players, level by level, on the daily puzzle and overall. To get ahead:<br>① more <b>stars</b><br>② <b>no hint</b><br>③ fewer <b>tries</b> (every Go! counts)<br>④ <b>faster</b><br>Tip: think it through before pressing Go!',
     },
   },
   {
