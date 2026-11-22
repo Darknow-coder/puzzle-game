@@ -11,6 +11,9 @@ const check = (ok, what) => {
 (async () => {
   const b = await chromium.launch();
   const ctx = await b.newContext({ ...devices['Pixel 7'], locale: 'fr-FR' });
+  await ctx.addInitScript(() => {
+    window.__LUMI_FIREBASE__ = { apiKey: '', projectId: '' }; // never the real rankings
+  });
   const p = await ctx.newPage();
   const errors = [];
   p.on('pageerror', (e) => errors.push(String(e)));
@@ -48,6 +51,7 @@ const check = (ok, what) => {
     check(titles.includes('Podium') && titles.includes('La boutique') && titles.includes('Défi du jour') && titles.includes('Ton profil'), `each part of the menu is shown (${titles.join(', ')})`);
     check(titles[titles.length - 1] === 'Bon à savoir', 'it ends with things worth knowing');
     await p.waitForFunction(() => window.lumignons.screen === 'game' && window.lumignons.game.L?.id === '1-2', null, { timeout: 5000 });
+    await p.waitForTimeout(400);
     check(!(await p.$('.tour')), 'then level 1-2 starts');
     await p.goto(BASE);
     await p.waitForSelector('#screen-title.active');

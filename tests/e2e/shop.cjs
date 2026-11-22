@@ -16,6 +16,7 @@ const KEYS = ['', 'arrow', 'lily', 'mushroom', 'daisy', 'mirror'];
   const ctx = await b.newContext({ ...devices['Pixel 7'], locale: 'fr-FR' });
   // These tests start past the first-launch pseudo screen (tests/e2e/ranks.cjs covers it).
   await ctx.addInitScript(() => {
+    window.__LUMI_FIREBASE__ = { apiKey: '', projectId: '' }; // never the real rankings
     const K = 'lumignons.save.v1';
     if (!localStorage.getItem(K)) localStorage.setItem(K, JSON.stringify({ v: 1, levels: {}, online: { asked: true } }));
   });
