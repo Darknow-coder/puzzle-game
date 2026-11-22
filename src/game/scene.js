@@ -90,6 +90,7 @@ export class GameScene {
   resize(w, h, dpr, top, bottom, right = 0) {
     this.W = w;
     this.H = h;
+    this.view = { top, bottom: h - bottom, right: w - right };
     this.dpr = dpr;
     const L = this.L;
     const areaW = w - 16 - right;
@@ -410,9 +411,28 @@ export class GameScene {
     else if (c.type === PIECE.MIRROR) this.picker = { idx, t: this.t, mirror: true, fresh: true };
   }
 
+  /** Where the radial picker is centred: on its cell, nudged so every choice stays on screen. */
+  pickerCenter() {
+    const pk = this.picker;
+    let [cx, cy] = this.cellCenter(pk.idx);
+    const S = this.S;
+    const r = Math.max(22, S * PICK_R);
+    const d = Math.max(r * 2.05, S * 0.98);
+    const reachX = d + r + 6;
+    const reachY = (pk.arrow ? d : d * 0.9) + r + 6;
+    const v = this.view || { top: 0, bottom: this.H, right: this.W };
+    const minX = reachX;
+    const maxX = Math.min(this.W, v.right + S) - reachX;
+    if (minX <= maxX) cx = Math.min(maxX, Math.max(minX, cx));
+    const minY = Math.max(0, v.top) + reachY;
+    const maxY = this.H - reachY;
+    if (minY <= maxY) cy = Math.min(maxY, Math.max(minY, cy));
+    return [cx, cy];
+  }
+
   pickerGeometry() {
     const pk = this.picker;
-    const [cx, cy] = this.cellCenter(pk.idx);
+    const [cx, cy] = this.pickerCenter();
     const S = this.S;
     const r = Math.max(22, S * PICK_R);
     const d = Math.max(r * 2.05, S * 0.98);
@@ -1380,7 +1400,7 @@ export class GameScene {
 
   drawPicker(g) {
     const pk = this.picker;
-    const [cx, cy] = this.cellCenter(pk.idx);
+    const [cx, cy] = this.pickerCenter();
     const S = this.S;
     const k = Math.min(1, (this.t - pk.t) * 7);
     const items = this.pickerGeometry();
