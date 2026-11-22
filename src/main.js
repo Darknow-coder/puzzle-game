@@ -23,6 +23,7 @@ import { ShopScene } from './ui/shop-scene.js';
 import { createOnline } from './online/online.js';
 import { levelBoard, dailyBoard } from './online/score.js';
 import { createRanks, PODIUM_SVG } from './ui/ranks.js';
+import { createTour } from './ui/tour.js';
 
 const VERSION = '3.3.0';
 const $ = (sel, root = document) => root.querySelector(sel);
@@ -1338,6 +1339,31 @@ function showVictory(stars, res, unlocks, gained, reward = null, ranked = null) 
   }
   const nb = box.querySelector('[data-a=next]');
   if (nb) nb.onclick = () => (click(), m.close(), startLevel(next));
+  // Right after the tutorial level, the main menu's guided tour, then level 1-2.
+  if (id === WORLDS[0].levels[0].id && !SV.save.data.tips.tour) {
+    const toTour = () => {
+      click();
+      m.close();
+      startTour(next);
+    };
+    if (nb) nb.onclick = toTour;
+    box.querySelector('[data-a=map]').onclick = toTour;
+  }
+}
+
+/** The guided tour of the title screen (then `next` level, if any). */
+function startTour(next = null) {
+  SV.save.data.tips.tour = 1;
+  SV.persist();
+  closeAllModals();
+  game.stop?.();
+  buildTitle();
+  showScreen('title');
+  setTimeout(() => {
+    tour.start((goOn) => {
+      if (goOn && next) startLevel(next);
+    });
+  }, 450);
 }
 
 /** A picture of the finished board (as it is on screen) to share or keep. */
@@ -1428,6 +1454,7 @@ function openSettings() {
       <div class="actions col">
         <button class="btn btn-ghost btn-small" data-a="profile">${ICONS.podium}${t('ranks.profile')} · ${online.me().name ? escapeHtml(online.me().name) : t('ranks.noName')}</button>
         <button class="btn btn-ghost btn-small" data-a="backup">${ICONS.download}${t('backup')}</button>
+        <button class="btn btn-ghost btn-small" data-a="tour">${getLang() === 'fr' ? 'Revoir la visite du menu' : 'Menu tour again'}</button>
         <button class="btn btn-ghost btn-small" data-a="credits">${t('credits')}</button>
         <button class="btn btn-danger btn-small" data-a="reset">${t('resetProgress')}</button>
       </div>`;
@@ -1465,6 +1492,7 @@ function openSettings() {
     });
     box.querySelector('[data-a=close]').onclick = () => (click(), m.close());
     box.querySelector('[data-a=credits]').onclick = () => (click(), openCredits());
+    box.querySelector('[data-a=tour]').onclick = () => (click(), startTour(null));
     box.querySelector('[data-a=backup]').onclick = () => (click(), openBackup());
     box.querySelector('[data-a=profile]').onclick = () => (click(), ranks.openProfile());
     box.querySelector('[data-a=reset]').onclick = () => {
@@ -1856,6 +1884,19 @@ const ranks = createRanks({
   },
   onProfileChange: () => refreshMe(),
 });
+
+const tour = createTour({
+  tr,
+  getLang,
+  click,
+  sound,
+  avatar: () => {
+    const me = online.me();
+    const d = app.dress(me.color);
+    return ranks.avatar({ color: me.color, hat: d.hat, glasses: d.glasses, flame: d.flameStyle }, 44, 'tour-lumi');
+  },
+});
+app.startTour = startTour;
 
 app.shop = shop;
 app.shopScene = shopScene;

@@ -19,6 +19,9 @@
   du parcours. La première place brille, le podium sonne la fanfare.
 - **Profil** (toucher ton nom en haut de l’écran titre) : ta place au général, changer de pseudo,
   couper l’envoi, ou supprimer toutes tes données en ligne.
+- **Visite du menu principal** juste après le premier niveau : un projecteur passe d’un bouton à l’autre
+  (jouer, défi du jour, atelier, éclats, boutique, podium, profil, succès, réglages) pendant que ton
+  Lumignon explique, puis « Bon à savoir », et le niveau 1-2 démarre. À revoir depuis les réglages.
 - **Signaler** un pseudo inapproprié depuis la carte d’un joueur ; les mots grossiers sont refusés.
 - **Hors ligne** : le pseudo est gardé et les résultats attendent, puis partent tout seuls quand le
   réseau revient. Tes résultats d’avant la 3.3 sont envoyés une fois (temps inconnu).
