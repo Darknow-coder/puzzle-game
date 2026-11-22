@@ -4,3 +4,11 @@ node_modules/
 test-results/
 /screenshots/
 dist/
+
+# Secrets: API keys stay on your machine, never on GitHub
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+secrets/

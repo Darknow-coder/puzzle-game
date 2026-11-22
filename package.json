@@ -14,7 +14,8 @@
     "e2e:update": "node tests/e2e/sw-update.cjs",
     "test:online": "npx --yes firebase-tools@13 emulators:exec --only auth,firestore --project demo-lumignons \"node --test --test-concurrency=1 tests/online/emulator.test.mjs\"",
     "rules": "node tools/build-rules.mjs",
-    "e2e:online": "npx --yes firebase-tools@13 emulators:exec --only auth,firestore --project demo-lumignons \"node tests/e2e/ranks.cjs\""
+    "e2e:online": "npx --yes firebase-tools@13 emulators:exec --only auth,firestore --project demo-lumignons \"node tests/e2e/ranks.cjs\"",
+    "image": "node tools/imagegen/gen-image.mjs"
   },
   "license": "SEE LICENSE IN LICENSE"
 }
