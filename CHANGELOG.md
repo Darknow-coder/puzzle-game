@@ -21,6 +21,8 @@
 - **Ambiances sonores** propres à chaque monde (grillons, gouttes et grenouilles, chouettes, carillons,
   vent), toujours synthétisées.
 - 3 nouveaux succès (défis du jour, série de 5 jours, premier niveau vérifié dans l’atelier).
+- **Mises à jour** : quand une nouvelle version est publiée, le jeu installé affiche « Nouvelle version
+  prête — Recharger » (sans jamais interrompre une partie) ; les fichiers sont toujours précachés frais.
 - Kit de publication : politique de confidentialité (`privacy.html`), fiche magasin FR/EN, captures
   1080×1920 et image de présentation (`store/`), guide `docs/PUBLISHING.md`.
 

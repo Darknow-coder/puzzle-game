@@ -51,6 +51,7 @@ npm start            # serveur local sur http://localhost:8080
 npm test             # tests du moteur et du solveur (Node ≥ 18)
 npm run verify       # prouve que chaque niveau est solvable et régénère src/data/solutions.js
 npm run e2e          # tests de bout en bout dans Chromium (Playwright requis, serveur lancé)
+npm run e2e:update   # mise à jour de l’app hors ligne : bandeau « Nouvelle version », nouveau cache
 ```
 
 Outils de conception (Node) :

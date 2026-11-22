@@ -24,7 +24,8 @@ const CACHE = 'lumignons-${version}';
 const FILES = ${JSON.stringify(['./', ...files.map((f) => './' + f)], null, 2)};
 
 self.addEventListener('install', (e) => {
-  e.waitUntil(caches.open(CACHE).then((c) => c.addAll(FILES)).then(() => self.skipWaiting()));
+  // cache: 'reload' skips the HTTP cache, so a release never precaches stale files.
+  e.waitUntil(caches.open(CACHE).then((c) => c.addAll(FILES.map((f) => new Request(f, { cache: 'reload' })))).then(() => self.skipWaiting()));
 });
 
 self.addEventListener('activate', (e) => {

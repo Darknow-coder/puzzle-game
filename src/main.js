@@ -1371,9 +1371,22 @@ function toast(msg, ms = 1800, big = false) {
     d.classList.remove('show');
     setTimeout(() => d.remove(), 300);
   }, ms);
-  while (root.children.length > 3) root.firstChild.remove();
+  const extra = [...root.children].filter((c) => !c.classList.contains('update'));
+  while (extra.length > 3) extra.shift().remove();
 }
 app.toast = toast;
+
+// A new release took over (service worker update): offer to reload, never force it mid-level.
+function showUpdate() {
+  if ($('#toast-root .toast.update')) return;
+  const d = el('div', 'toast update', `<span>${t('updateReady')}</span>`);
+  const b = el('button', 'btn btn-primary btn-small', t('reload'));
+  b.onclick = () => location.reload();
+  d.appendChild(b);
+  $('#toast-root').appendChild(d);
+  requestAnimationFrame(() => d.classList.add('show'));
+}
+app.showUpdate = showUpdate;
 
 let infoTimer = 0;
 app.showInfo = (info, x, y) => {
@@ -1437,7 +1450,20 @@ async function installApp() {
 window.addEventListener('load', () => {
   try {
     if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost') && !navigator.webdriver) {
-      navigator.serviceWorker.register('sw.js').catch(() => {});
+      const sw = navigator.serviceWorker;
+      const updating = !!sw.controller; // false on the very first install
+      sw.addEventListener('controllerchange', () => updating && showUpdate());
+      sw.register('sw.js')
+        .then((reg) => {
+          // An installed app is often resumed rather than reloaded: look for a release then.
+          let checked = Date.now();
+          document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState !== 'visible' || Date.now() - checked < 30 * 60e3) return;
+            checked = Date.now();
+            reg.update().catch(() => {});
+          });
+        })
+        .catch(() => {});
     }
   } catch {
     /* sandboxed frames forbid service workers: the game still works online */

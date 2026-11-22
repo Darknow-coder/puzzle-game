@@ -1178,6 +1178,13 @@ svg {
 .toast b {
   color: var(--gold);
 }
+.toast.update {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 6px 6px 18px;
+  pointer-events: auto;
+}
 #info-bubble {
   position: fixed;
   z-index: 15;
