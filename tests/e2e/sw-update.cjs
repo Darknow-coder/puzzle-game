@@ -15,6 +15,11 @@ const check = (ok, what) => {
   const original = fs.readFileSync(SW, 'utf8');
   const b = await chromium.launch();
   const ctx = await b.newContext({ viewport: { width: 400, height: 760 }, locale: 'fr-FR' });
+  // These tests start past the first-launch pseudo screen (tests/e2e/ranks.cjs covers it).
+  await ctx.addInitScript(() => {
+    const K = 'lumignons.save.v1';
+    if (!localStorage.getItem(K)) localStorage.setItem(K, JSON.stringify({ v: 1, levels: {}, online: { asked: true } }));
+  });
   await ctx.addInitScript(() => Object.defineProperty(Navigator.prototype, 'webdriver', { get: () => false }));
   const p = await ctx.newPage();
   const errors = [];

@@ -34,6 +34,11 @@ const isGreen = ([r, g, b, a]) => a > 200 && g > r + 20 && g > b + 20;
 (async () => {
   const b = await chromium.launch();
   const ctx = await b.newContext({ viewport: { width: 400, height: 800 }, deviceScaleFactor: 2, locale: 'fr-FR' });
+  // These tests start past the first-launch pseudo screen (tests/e2e/ranks.cjs covers it).
+  await ctx.addInitScript(() => {
+    const K = 'lumignons.save.v1';
+    if (!localStorage.getItem(K)) localStorage.setItem(K, JSON.stringify({ v: 1, levels: {}, online: { asked: true } }));
+  });
   // Keep a list of every canvas the page creates, to simulate a silent loss.
   await ctx.addInitScript(() => {
     const all = (window.__canvases = []);

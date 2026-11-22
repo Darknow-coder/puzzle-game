@@ -29,8 +29,10 @@ Coût : inscription unique au Google Play Console (25 $).
 4. Copier l’empreinte SHA-256 affichée dans `/.well-known/assetlinks.json` à la racine du domaine
    (Bubblewrap génère le fichier ; il permet d’afficher le jeu en plein écran, sans barre d’adresse).
 5. Dans la Play Console : créer l’application, téléverser le `.aab`, remplir la fiche avec
-   `store/listing.md`, ajouter les captures de `store/screenshots/`, déclarer « aucune donnée collectée »
-   dans le formulaire *Sécurité des données*, répondre au questionnaire de classification (tout public).
+   `store/listing.md`, ajouter les captures de `store/screenshots/`, remplir le formulaire
+   *Sécurité des données* avec les réponses de `store/listing.md` (classements en ligne facultatifs),
+   répondre au questionnaire de classification (tout public ; signaler que des pseudos choisis par les
+   joueurs sont visibles, sans messagerie).
 6. Publier d’abord en « test interne » pour l’essayer sur ton téléphone.
 
 Alternative sans ligne de commande : https://www.pwabuilder.com génère aussi le paquet Android.
@@ -48,7 +50,11 @@ Coût : programme développeur Apple (99 $/an) et un Mac avec Xcode.
 
 ## 4. Avant de publier
 
+- Configurer les classements en ligne (projet Firebase gratuit) : [`docs/FIREBASE.md`](FIREBASE.md).
+  Sans cela, le jeu reste jouable mais les classements annoncent « bientôt ».
+- Mettre une adresse de contact dans `privacy.html` (les magasins en demandent une pour la
+  confidentialité ; un lien vers le dépôt GitHub ne suffit pas toujours).
 - Vérifier la disponibilité du nom « Lumignons » (bases de marques INPI, EUIPO, USPTO).
-- Relancer les tests : `npm test`, `npm run verify`, `npm run e2e`.
+- Relancer les tests : `npm test`, `npm run verify`, `npm run e2e`, `npm run test:online`.
 - Mettre à jour le numéro de version dans `src/main.js` et la note de version dans `CHANGELOG.md`.
 - Choisir la licence du code : le dépôt est actuellement « tous droits réservés » (`LICENSE`).

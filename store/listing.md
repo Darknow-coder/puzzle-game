@@ -23,15 +23,23 @@ regarde ton plan se dérouler. Chaque pas joue une note : ta solution devient un
 • Trois étoiles par niveau : rentrer, attraper toutes les lucioles, le faire avec le minimum de pièces.
 • Pause, pas à pas et ralenti pour comprendre ce qui s’est passé.
 • Un défi du jour, chaque jour un nouveau puzzle.
+• Des classements pour chaque niveau, pour le défi du jour et au général, avec ton pseudo et ton
+  Lumignon habillé : qui trouve avec le moins d’essais ? (facultatif, sans compte ni e-mail)
 • L’atelier : crée tes propres niveaux, le jeu vérifie qu’ils sont faisables, et partage-les avec un code.
 • Des chapeaux à collectionner, des succès, un carnet illustré.
 • Une boutique où dépenser les éclats gagnés en jouant : indices, chapeaux, traînées de lumière.
   Un cadeau chaque jour, sans vies ni attente.
 • Une image souvenir de chaque niveau réussi à partager, et un code pour garder ta progression.
-• Jouable hors ligne, sans publicité, sans achat intégré, sans collecte de données.
+• Jouable hors ligne, sans publicité, sans achat intégré. Seuls ton pseudo et tes meilleurs résultats
+  partent vers les classements, si tu y participes.
 
 **Catégorie** : Jeux › Réflexion. **Classification** : tout public (aucune violence, aucun contenu
-sensible, aucune interaction entre joueurs, aucune donnée collectée).
+sensible ; les pseudos et résultats des autres joueurs sont visibles dans les classements, sans
+messagerie ni échange entre joueurs).
+
+**Nouveautés 3.3** : les classements ! Un pseudo à choisir dès le premier lancement (avec ton Lumignon
+préféré), un classement par niveau, un pour le défi du jour et un classement général, ta place sur
+l’écran de victoire, et les Lumignons habillés des autres joueurs.
 
 **Nouveautés 3.2** : la boutique de Madame Phalène, un marché de nuit où les Lumignons essaient
 37 objets (chapeaux, lunettes, flammes, traînées, fêtes de victoire), coffre à surprises sans doublon,
@@ -70,13 +78,28 @@ plays a note, so your solution becomes a tune.
 • A shop for the glimmers you earn by playing: hints, hats, trails of light. A gift every day,
   no lives, no waiting.
 • A keepsake picture of every solved level to share, and a code to keep your progress safe.
-• Works offline. No ads, no in-app purchases, no data collection.
+• Rankings for every level, the daily puzzle and overall, with your nickname and your dressed-up
+  Lumignon: who solves it in the fewest tries? (optional, no account, no e-mail)
+• Works offline. No ads, no in-app purchases. Only your nickname and best results go to the rankings,
+  if you take part.
 
 **Category**: Games › Puzzle. **Content rating**: everyone.
 
 ## Formulaire « Sécurité des données » (Google Play)
 
-- Données collectées : **aucune**. Données partagées : **aucune**.
+Réponses à donner depuis la version 3.3 (classements en ligne facultatifs, via Firebase) :
+
+- **Collecte de données : oui.** Toutes les données sont **chiffrées en transit** (HTTPS) et le joueur
+  peut **demander leur suppression** (dans le jeu : *Réglages → Mon profil → Supprimer mes données en ligne*).
+- **Données partagées : aucune** (Google/Firebase agit comme prestataire de service, ce qui n’est pas
+  un partage au sens de Google Play).
+- Types de données collectées, toutes **facultatives** (« les utilisateurs peuvent choisir »), pour la
+  finalité **Fonctionnalité de l’application** uniquement :
+  - *Informations personnelles → Nom* : le pseudo (un surnom) ;
+  - *Informations personnelles → ID utilisateur* : l’identifiant anonyme de Firebase Authentication ;
+  - *Activité dans l’application → Autres actions* : les résultats (étoiles, pièces, essais, temps)
+    et la tenue du Lumignon affiché à côté du pseudo.
+- Aucune donnée de localisation, de contact, de paiement, ni identifiant publicitaire.
 - Le jeu fonctionne sans compte et sans connexion après le premier chargement.
 - URL de la politique de confidentialité : `https://<ton-domaine>/privacy.html`
-  (fournie dans ce dépôt : `privacy.html`).
+  (fournie dans ce dépôt : `privacy.html`, à compléter avec une adresse de contact).

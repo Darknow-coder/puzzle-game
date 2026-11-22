@@ -201,6 +201,35 @@ accueille, commente ce qu’on essaie, félicite les achats, encourage quand la 
 - **Éthique** : tout se gagne en jouant, il n’y a pas d’argent réel, pas de publicité, pas de
   doublon, et les chances sont affichées. Rien n’est retiré ni perdu : une offre manquée reviendra.
 
+## 7 sexies. Version 3.3 : les classements
+
+- **Un pseudo avant le tutoriel** : au tout premier lancement, avant même l’écran titre, une pancarte en
+  bois attend un nom, tenue par le Lumignon préféré du joueur (Pip, Nim, Lou ou Bo, avec ce qu’il porte).
+  Un pseudo est proposé au hasard (« Comète Rusée », « Grillon Farceur »…) : un toucher suffit pour
+  partir. Puis le tutoriel commence et accueille le joueur par son nom. « Plus tard » reste possible :
+  les classements sont un plaisir, pas une obligation.
+- **Ce qui classe** un niveau, dans l’ordre : les étoiles, les pièces, sans indice, le nombre d’essais
+  (tous les « Go ! » jusqu’à ce résultat, toutes sessions confondues), puis le temps passé sur le niveau
+  jusqu’à ce résultat (fenêtres ouvertes et écran de victoire exclus). Rejouer un niveau déjà résolu ne
+  fait pas tricher : essais et temps s’additionnent, seul un résultat meilleur remplace l’ancien.
+  C’est l’esprit du jeu : réfléchir avant d’agir est récompensé.
+- **Trois classements** : chaque niveau (étoiles filantes comprises), le défi du jour (le même puzzle
+  pour tous ceux qui ont les mêmes mondes ouverts, seulement autour de sa date), et le classement
+  général (total d’étoiles ; à égalité, le premier arrivé).
+- **Sur la carte de victoire** : « Nouveau record ! 3ᵉ sur 128 », avec les essais et le temps du
+  parcours ; la première place brille, le podium sonne la fanfare.
+- **Les autres joueurs** apparaissent avec leur Lumignon habillé : les achats de la boutique se voient
+  enfin. Toucher un joueur montre sa carte (étoiles, place au général) et permet de signaler un pseudo.
+- **Pseudos** : 3 à 18 caractères (lettres accentuées, chiffres, espace, - _ ' .), uniques quelle que
+  soit l’écriture (« Lune-Rêveuse » = « lune reveuse »), mots grossiers refusés.
+- **Hors ligne d’abord** : sans réseau, tout est gardé et part plus tard ; sans projet Firebase, les
+  classements annoncent qu’ils ouvrent bientôt. Les résultats d’avant la 3.3 sont envoyés une fois,
+  temps inconnu.
+- **Vie privée** : connexion anonyme (ni e-mail ni mot de passe), envoi désactivable, suppression de
+  toutes ses données en ligne depuis le profil.
+- **Serveur** : Firebase (offre gratuite Spark) en REST, sans SDK. Les règles de sécurité vérifient
+  chaque écriture ; voir [`FIREBASE.md`](FIREBASE.md).
+
 ## 8. Conception et vérification des niveaux
 
 La campagne compte **77 niveaux** (7 mondes × 10 + 7 étoiles filantes). La liste complète, avec
@@ -221,8 +250,9 @@ l’intention de chaque niveau, est dans [`LEVELS.md`](LEVELS.md).
 
 ## 9. Technique
 
-- HTML + CSS + JavaScript (modules ES), Canvas 2D, Web Audio. **Aucune dépendance**, aucun serveur,
-  aucune étape de compilation. Poids total ≈ 0,4 Mo.
+- HTML + CSS + JavaScript (modules ES), Canvas 2D, Web Audio. **Aucune dépendance**, aucune étape de
+  compilation. Poids total ≈ 0,4 Mo. Seul service en ligne : Firebase pour les classements (facultatif,
+  appelé en REST).
 - **PWA** : manifeste, icônes, service worker (jeu complet hors ligne, installable sur l’écran
   d’accueil).
 - Sauvegarde locale (`localStorage`), robuste aux données corrompues.

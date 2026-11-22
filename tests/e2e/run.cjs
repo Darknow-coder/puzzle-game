@@ -19,6 +19,11 @@ function assert(cond, msg) {
 (async () => {
   const browser = await chromium.launch();
   const ctx = await browser.newContext({ ...devices['Pixel 7'], locale: 'fr-FR' });
+  // These tests start past the first-launch pseudo screen (tests/e2e/ranks.cjs covers it).
+  await ctx.addInitScript(() => {
+    const K = 'lumignons.save.v1';
+    if (!localStorage.getItem(K)) localStorage.setItem(K, JSON.stringify({ v: 1, levels: {}, online: { asked: true } }));
+  });
   const page = await ctx.newPage();
   const errors = [];
   page.on('pageerror', (e) => errors.push(e.message));

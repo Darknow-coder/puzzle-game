@@ -1,5 +1,32 @@
 # Journal des versions
 
+## 3.3.0
+
+**Nouveautés**
+
+- **Un pseudo dès le premier lancement** : avant le tutoriel, une pancarte en bois attend ton nom,
+  tenue par ton Lumignon préféré (Pip, Nim, Lou ou Bo, avec ce qu’il porte). Un pseudo est proposé au
+  hasard (le dé en donne d’autres), sa disponibilité est vérifiée pendant la frappe, et le tutoriel
+  t’accueille ensuite par ton nom. Les joueurs déjà en route le choisissent au lancement suivant
+  (« Plus tard » est possible, le titre le rappelle d’un petit bouton).
+- **Classements** (bouton *Podium* de l’écran titre, menu pause, objectifs du niveau) :
+  - un classement par niveau, étoiles filantes comprises : les étoiles d’abord, puis les pièces, sans
+    indice, le nombre d’essais et le temps passé sur le niveau pour arriver à ce résultat ;
+  - le défi du jour, autour de sa date ;
+  - le classement général, au total d’étoiles (à égalité, le premier arrivé) ;
+  - médailles d’or, d’argent et de bronze, et chaque joueur avec son Lumignon habillé de la boutique.
+- **Ta place sur l’écran de victoire** : « Nouveau record ! 3ᵉ sur 128 », avec les essais et le temps
+  du parcours. La première place brille, le podium sonne la fanfare.
+- **Profil** (toucher ton nom en haut de l’écran titre) : ta place au général, changer de pseudo,
+  couper l’envoi, ou supprimer toutes tes données en ligne.
+- **Signaler** un pseudo inapproprié depuis la carte d’un joueur ; les mots grossiers sont refusés.
+- **Hors ligne** : le pseudo est gardé et les résultats attendent, puis partent tout seuls quand le
+  réseau revient. Tes résultats d’avant la 3.3 sont envoyés une fois (temps inconnu).
+- **En coulisses** : Firebase (offre gratuite) appelé directement en REST, sans bibliothèque ; règles
+  de sécurité qui refusent les résultats impossibles, les pseudos en double et les totaux gonflés,
+  testées contre l’émulateur Firebase ; politique de confidentialité et fiche magasin mises à jour.
+  Mise en place : `docs/FIREBASE.md`.
+
 ## 3.2.0
 
 **Nouveautés**

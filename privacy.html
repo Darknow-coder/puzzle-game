@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Lumignons · Confidentialité</title>
-    <meta name="description" content="Politique de confidentialité du jeu Lumignons : aucune donnée personnelle n’est collectée." />
+    <meta name="description" content="Politique de confidentialité du jeu Lumignons : pas de publicité ni de traceur ; classements en ligne facultatifs (pseudo et résultats)." />
     <style>
       :root {
         color-scheme: dark;
@@ -58,25 +58,41 @@
     <main>
       <div class="eyebrow">Lumignons</div>
       <h1>Politique de confidentialité</h1>
-      <p>Dernière mise à jour : novembre 2026.</p>
+      <p>Dernière mise à jour : novembre 2026 (version 3.3, classements en ligne).</p>
       <h2>En bref</h2>
-      <p>Lumignons ne collecte, ne transmet et ne vend <strong>aucune donnée personnelle</strong>. Le jeu ne contient ni publicité, ni traceur, ni outil de mesure d’audience, et ne demande la création d’aucun compte.</p>
+      <p>Lumignons ne contient ni publicité, ni traceur, ni outil de mesure d’audience, et ne vend aucune donnée. Ta progression reste sur ton appareil. Une seule exception, <strong>facultative</strong> : les <strong>classements en ligne</strong>. Si tu y participes, ton pseudo et tes meilleurs résultats sont envoyés à Firebase, un service de Google, pour être montrés aux autres joueurs.</p>
       <h2>Ce qui reste sur ton appareil</h2>
-      <p>Ta progression (niveaux terminés, étoiles, chapeaux, réglages, niveaux créés dans l’atelier, défis du jour réussis) est enregistrée uniquement dans le stockage local de ton navigateur ou de l’application, sur ton appareil. Elle n’est jamais envoyée sur internet. Tu peux l’effacer à tout moment depuis <em>Réglages → Effacer la progression</em>, ou en supprimant les données du site ou de l’application.</p>
+      <p>Ta progression (niveaux terminés, étoiles, chapeaux, éclats, réglages, niveaux créés dans l’atelier, défis du jour réussis) est enregistrée uniquement dans le stockage local de ton navigateur ou de l’application, sur ton appareil. Tu peux l’effacer à tout moment depuis <em>Réglages → Effacer la progression</em>, ou en supprimant les données du site ou de l’application.</p>
+      <h2>Les classements en ligne (facultatifs)</h2>
+      <p><strong>Ce qui est envoyé</strong>, seulement si tu as choisi un pseudo et laissé les classements activés :</p>
+      <ul>
+        <li>le <strong>pseudo</strong> que tu as choisi ;</li>
+        <li>ton Lumignon préféré et ce qu’il porte (chapeau, lunettes, forme de flamme) ;</li>
+        <li>pour chaque niveau réussi et chaque défi du jour, ton <strong>meilleur résultat</strong> : étoiles, nombre de pièces, indice utilisé ou non, nombre d’essais et temps passé sur le niveau ; ton total d’étoiles ; la date de ces envois ;</li>
+        <li>un <strong>identifiant anonyme</strong> créé par Firebase Authentication (connexion anonyme : ni e-mail, ni nom, ni numéro de téléphone), qui relie tes résultats à ton pseudo ;</li>
+        <li>si tu signales un pseudo : le pseudo signalé, le niveau, ton identifiant anonyme et la date, pour la modération.</li>
+      </ul>
+      <p><strong>Qui le voit</strong> : le pseudo, l’apparence du Lumignon, les résultats et le total d’étoiles sont <strong>publics</strong>, visibles par tous les joueurs dans les classements. Il n’y a aucune messagerie entre joueurs.</p>
+      <p><strong>Où</strong> : dans Cloud Firestore et Firebase Authentication, services de Google, sur des serveurs situés en Europe. Comme tout service en ligne, Google traite aussi l’adresse IP de l’appareil pour acheminer les échanges (voir <a href="https://firebase.google.com/support/privacy">la confidentialité de Firebase</a>).</p>
+      <p><strong>Pourquoi</strong> : uniquement pour afficher les classements. Rien n’est utilisé pour de la publicité ou du profilage. La participation repose sur ton choix, que tu peux changer à tout moment.</p>
+      <p><strong>Combien de temps</strong> : tant que tu participes. Tout est effacé quand tu le demandes.</p>
+      <p><strong>Tes choix</strong> : tu peux jouer sans pseudo (« Plus tard »), désactiver l’envoi (<em>Réglages → Mon profil → Classements en ligne</em>), changer de pseudo, ou <strong>supprimer tes données en ligne</strong> (pseudo, résultats et identifiant anonyme) depuis <em>Réglages → Mon profil → Supprimer mes données en ligne</em>. Pour toute autre demande (accès, rectification), utilise le contact ci-dessous. N’utilise pas ton vrai nom comme pseudo.</p>
       <h2>Réseau</h2>
-      <p>Le jeu se télécharge une fois, puis fonctionne hors ligne. Il n’effectue aucun autre échange réseau. Les codes de partage de niveaux ne contiennent que la description du niveau, les images souvenir que le plateau du niveau, et les codes de sauvegarde que ta progression dans le jeu : tous sont créés sur ton appareil et transmis uniquement par toi, par le moyen de ton choix.</p>
+      <p>Le jeu se télécharge une fois, puis fonctionne hors ligne. En dehors des classements, il n’effectue aucun autre échange réseau. Les codes de partage de niveaux ne contiennent que la description du niveau, les images souvenir que le plateau du niveau. Les codes de sauvegarde contiennent ta progression et ton pseudo des classements (avec la clé de ton identifiant anonyme) : garde-les pour toi. Tous sont créés sur ton appareil et transmis uniquement par toi, par le moyen de ton choix.</p>
       <h2>Enfants</h2>
-      <p>Le jeu convient à tous les âges et ne recueille aucune information, y compris auprès des enfants.</p>
+      <p>Le jeu convient à tous les âges. Les classements ne demandent aucune information d’identité ; nous conseillons aux plus jeunes de choisir un pseudo qui ne permet pas de les reconnaître, ou de jouer sans classement.</p>
       <h2>Contact</h2>
-      <p>Pour toute question, ouvre une discussion sur le dépôt du projet : <a href="https://github.com/Darknow-coder/puzzle-game/issues">github.com/Darknow-coder/puzzle-game</a>.</p>
+      <p>Pour toute question ou demande, ouvre une discussion sur le dépôt du projet : <a href="https://github.com/Darknow-coder/puzzle-game/issues">github.com/Darknow-coder/puzzle-game</a>.</p>
       <hr />
       <div class="eyebrow">Lumignons</div>
       <h1 lang="en">Privacy policy</h1>
       <div lang="en">
-        <p><strong>Lumignons collects, transmits and sells no personal data.</strong> There are no ads, no trackers, no analytics and no account.</p>
-        <p>Your progress (levels, stars, hats, settings, workshop levels, daily puzzles) is stored only in your browser’s or app’s local storage, on your device, and is never sent anywhere. You can erase it at any time in <em>Settings → Erase progress</em>, or by clearing the site’s or app’s data.</p>
-        <p>The game is downloaded once and then works offline; it makes no other network request. Level share codes only describe a level, keepsake pictures only show the board, and backup codes only hold your progress in the game: they are all made on your device and sent by you, however you choose.</p>
-        <p>Questions: open a discussion on the project’s repository, linked above.</p>
+        <p>Last updated: November 2026 (version 3.3, online rankings).</p>
+        <p><strong>No ads, no trackers, no analytics, no data sold.</strong> Your progress (levels, stars, hats, glimmers, settings, workshop levels, daily puzzles) is stored only in your browser’s or app’s local storage, on your device. You can erase it in <em>Settings → Erase progress</em>, or by clearing the site’s or app’s data.</p>
+        <p><strong>Online rankings (optional).</strong> If you pick a nickname and keep the rankings on, the game sends to Firebase (Cloud Firestore and Firebase Authentication, Google services, servers in Europe): your <strong>nickname</strong>; your favourite Lumignon and what it wears; for each solved level and daily puzzle, your <strong>best result</strong> (stars, pieces, whether a hint was used, tries, time spent on the level), your total of stars and when they were sent; an <strong>anonymous identifier</strong> from Firebase Authentication (no e-mail, name or phone number); and, if you report a nickname, the report (reported nickname, level, your anonymous identifier, date). Google also processes the device’s IP address to route requests (see <a href="https://firebase.google.com/support/privacy">Firebase privacy</a>).</p>
+        <p>Nicknames, looks, results and totals are <strong>public</strong>: every player can see them in the rankings. There is no chat. They are used only to show the rankings, kept while you take part, and erased when you ask: play without a nickname (“Later”), turn sending off (<em>Settings → My profile → Online rankings</em>), change nickname, or <strong>delete your online data</strong> (nickname, results and anonymous identifier) in <em>Settings → My profile → Delete my online data</em>. Do not use your real name as a nickname.</p>
+        <p>Apart from the rankings, the game makes no network request once downloaded. Level share codes only describe a level and keepsake pictures only show the board. Backup codes hold your progress and your rankings nickname (with your anonymous identifier’s key): keep them to yourself. Children: no identity information is asked; younger players should pick a nickname that does not identify them, or play without rankings.</p>
+        <p>Questions or requests: open a discussion on the project’s repository, linked above.</p>
       </div>
     </main>
   </body>

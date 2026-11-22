@@ -20,9 +20,15 @@ puis appuie sur **Go !** et regarde ton plan se dérouler… en musique.
   mondes, succès, défi et cadeau du jour), dépensée chez **Madame Phalène** : indices et 37 objets
   (chapeaux, lunettes, flammes, traînées, fêtes de victoire) en 4 raretés, essayés en direct par les
   Lumignons ; coffre à surprises sans doublon (chances affichées), vitrine du jour, collection.
+- **Classements en ligne** : un pseudo choisi dès le premier lancement (avant le tutoriel), avec son
+  Lumignon préféré habillé de la boutique ; un classement par niveau, un pour le défi du jour et un
+  général ; la place s’affiche sur l’écran de victoire. Classés par étoiles, pièces, sans indice,
+  essais puis temps. Firebase (offre gratuite) en REST, règles de sécurité testées, tout fonctionne
+  hors ligne et attend le réseau. Mise en place : [`docs/FIREBASE.md`](docs/FIREBASE.md).
 - Pensé pour le tactile (toucher, glisser, appui long), jouable à la souris et au clavier.
 - Installable comme une application (PWA) et jouable **hors ligne**. Français / anglais.
 - Zéro dépendance : HTML, CSS, JavaScript, Canvas 2D et Web Audio. Aucune image ni aucun son externe.
+  Seul service en ligne, facultatif : Firebase pour les classements.
 
 📖 Conception : [`docs/GAME_DESIGN.md`](docs/GAME_DESIGN.md) · Liste des niveaux : [`docs/LEVELS.md`](docs/LEVELS.md) ·
 Nouveautés : [`CHANGELOG.md`](CHANGELOG.md) · Publication : [`docs/PUBLISHING.md`](docs/PUBLISHING.md)
@@ -65,6 +71,9 @@ npm run e2e          # tous les tests de bout en bout dans Chromium (Playwright 
                      #   et tests/e2e/shop.cjs : gains, jetons d’indice, achats, cadeau du jour
 npm run e2e:canvas   # dessins perdus (plantage réel du GPU) : tout est redessiné
 npm run e2e:update   # mise à jour de l’app hors ligne : bandeau « Nouvelle version », nouveau cache
+npm run test:online  # classements : règles Firestore et client contre les émulateurs Firebase (Java 11+)
+npm run e2e:online   # classements de bout en bout : pseudo, rangs, signalement, hors ligne (serveur lancé)
+npm run rules        # régénère les tables de firestore.rules après un changement de niveaux
 ```
 
 Outils de conception (Node) :
@@ -99,6 +108,13 @@ src/data/cosmetics.js    les 37 objets de la boutique (emplacement, rareté, pri
 src/ui/shop.js           la boutique (onglets, essayage, achats, coffre, vitrine, collection)
 src/ui/shop-scene.js     la scène de la boutique : le marché de nuit, Madame Phalène, l’estrade
 tools/preview/skins.html planche de tous les objets (à ouvrir avec le serveur local)
+src/online/config.js     projet Firebase des classements (vide = classements fermés, jeu hors ligne)
+src/online/firebase.js   client REST de Firebase (connexion anonyme, Firestore), sans SDK
+src/online/online.js     pseudo, résultats en attente, envoi, lecture des classements
+src/online/names.js      pseudos : forme permise, unicité, mots refusés, suggestions
+src/online/score.js      clé de classement (étoiles, pièces, indice, essais, temps)
+src/ui/ranks.js          écran du pseudo, profil, fenêtre des classements, place sur la victoire
+firestore.rules          règles de sécurité de Firestore (à publier dans la console Firebase)
 src/editor/              atelier : modèle, codes de partage, vérification (Web Worker), interface
 src/game/art.js          tout le dessin procédural (îles, personnages, pièces, décors)
 src/game/scene.js        écran de jeu : saisie tactile, préparation, animation des parcours

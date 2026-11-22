@@ -11,7 +11,10 @@
     "solve": "node tools/solve.mjs",
     "e2e": "node tests/e2e/run.cjs && node tests/e2e/v3.cjs && node tests/e2e/shop.cjs && node tests/e2e/canvas-loss.cjs && node tests/e2e/sw-update.cjs",
     "e2e:canvas": "node tests/e2e/canvas-loss.cjs",
-    "e2e:update": "node tests/e2e/sw-update.cjs"
+    "e2e:update": "node tests/e2e/sw-update.cjs",
+    "test:online": "npx --yes firebase-tools@13 emulators:exec --only auth,firestore --project demo-lumignons \"node --test --test-concurrency=1 tests/online/emulator.test.mjs\"",
+    "rules": "node tools/build-rules.mjs",
+    "e2e:online": "npx --yes firebase-tools@13 emulators:exec --only auth,firestore --project demo-lumignons \"node tests/e2e/ranks.cjs\""
   },
   "license": "SEE LICENSE IN LICENSE"
 }

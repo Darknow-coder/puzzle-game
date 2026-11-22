@@ -13,15 +13,18 @@ import { EditorScene } from './editor/editor-scene.js';
 import { createAtelier } from './editor/ui.js';
 import { verifyAsync } from './editor/verify.js';
 import { THEMES } from './editor/model.js';
-import { dailyFor, recordDaily, liveStreak, dayKey } from './daily.js';
+import { dailyFor, recordDaily, liveStreak, dayKey, dailyInfo } from './daily.js';
 import { exportBackup, importBackup } from './backup.js';
 import { makeShareCard, shareImage } from './share.js';
 import * as Wallet from './wallet.js';
 import { winReward, dailyReward, REWARD, HINT_PRICE } from './economy.js';
 import { createShop, COIN_SVG } from './ui/shop.js';
 import { ShopScene } from './ui/shop-scene.js';
+import { createOnline } from './online/online.js';
+import { levelBoard, dailyBoard } from './online/score.js';
+import { createRanks, PODIUM_SVG } from './ui/ranks.js';
 
-const VERSION = '3.2.0';
+const VERSION = '3.3.0';
 const $ = (sel, root = document) => root.querySelector(sel);
 const el = (tag, cls, html) => {
   const e = document.createElement(tag);
@@ -29,6 +32,7 @@ const el = (tag, cls, html) => {
   if (html !== undefined) e.innerHTML = html;
   return e;
 };
+const escapeHtml = (v) => String(v ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 const STAR_SVG = '<svg viewBox="0 0 24 24"><path d="M12 2.6l2.9 6 6.6.8-4.9 4.6 1.3 6.5L12 17.3l-5.9 3.2 1.3-6.5L2.5 9.4l6.6-.8z"/></svg>';
 const ICONS = {
   back: '<svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg>',
@@ -55,6 +59,7 @@ const ICONS = {
   check: '<svg viewBox="0 0 24 24"><path d="m5 12 5 5 9-10"/></svg>',
   pencil: '<svg viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16zM13 7l4 4"/></svg>',
   sun: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5 19 19M5 19l1.5-1.5M17.5 6.5 19 5"/></svg>',
+  podium: PODIUM_SVG,
 };
 
 // ---------------------------------------------------------------------------
@@ -150,9 +155,23 @@ function layoutGame() {
 }
 
 let last = performance.now();
+let sinceSave = 0;
 function frame(now) {
-  const dt = Math.min(0.05, (now - last) / 1000);
+  const real = Math.min(1000, now - last);
+  const dt = Math.min(0.05, real / 1000);
   last = now;
+  // Time spent on a level counts for its ranking (not behind a window, not after the win).
+  if (app.screen === 'game' && current && !document.hidden && !app.modalStack.length && game.mode !== 'result-win') {
+    const bid = boardOf(current);
+    if (bid) {
+      online.tick(bid, real);
+      sinceSave += real;
+      if (sinceSave > 15000) {
+        sinceSave = 0;
+        SV.persist();
+      }
+    }
+  }
   active.update(dt);
   ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
   // Scenes paint an opaque sky, but if its pixels were lost the previous frames
@@ -213,7 +232,7 @@ window.addEventListener('popstate', () => {
 function showScreen(name) {
   app.screen = name;
   for (const s of document.querySelectorAll('.screen')) s.classList.toggle('active', s.id === 'screen-' + name);
-  active = name === 'title' ? title : name === 'map' || name === 'atelier' ? mapBg : name === 'editor' ? editorScene : name === 'shop' ? shopScene : game;
+  active = name === 'title' || name === 'hello' ? title : name === 'map' || name === 'atelier' ? mapBg : name === 'editor' ? editorScene : name === 'shop' ? shopScene : game;
   if (name !== 'game') hideInfo();
   if (name === 'atelier') mapBg.setWorld('meadow');
   sound.startMusic(name === 'game' ? game.worldKey : name === 'map' ? mapBg.key : name === 'editor' ? editorScene.model?.theme || 'meadow' : name === 'shop' ? 'shop' : 'title');
@@ -224,6 +243,7 @@ function buildTitle() {
   const root = $('#screen-title');
   const started = s.completed > 0;
   root.innerHTML = `
+    <div class="title-me"></div>
     <div class="title-top">${shop.pill()}</div>
     <div class="logo"><h1>Lumignons</h1><p>${t('tagline')}</p></div>
     <div class="title-actions">
@@ -234,6 +254,7 @@ function buildTitle() {
       </div>
       <div class="title-row">
         <button class="tile-btn shop-tile" data-act="shop">${ICONS.bag}<span>${t('shop')}</span>${Wallet.giftState().available ? '<i class="gift-dot"></i>' : ''}</button>
+        <button class="tile-btn" data-act="ranks">${ICONS.podium}<span>${t('podium')}</span></button>
         <button class="tile-btn" data-act="achievements">${ICONS.trophy}<span>${t('achievements')}</span></button>
         <button class="tile-btn" data-act="notebook">${ICONS.book}<span>${t('notebook')}</span></button>
         <button class="tile-btn" data-act="settings">${ICONS.gear}<span>${t('settings')}</span></button>
@@ -261,6 +282,9 @@ function buildTitle() {
   };
   root.querySelectorAll('[data-act=shop]').forEach((b) => (b.onclick = () => (click(), shop.open('featured'))));
   root.querySelector('[data-act=achievements]').onclick = () => (click(), openAchievements());
+  root.querySelector('[data-act=ranks]').onclick = () => (click(), ranks.openRanks());
+  const me = root.querySelector('.title-me');
+  if (online.me().name || !online.me().optOut) me.appendChild(ranks.chip());
   root.querySelector('[data-act=notebook]').onclick = () => (click(), openNotebook());
   root.querySelector('[data-act=settings]').onclick = () => (click(), openSettings());
   const ib = root.querySelector('[data-act=install]');
@@ -440,6 +464,7 @@ function startDaily() {
   const wi = Math.max(0, THEMES.indexOf(d.theme));
   const world = WORLDS[wi] || { id: d.theme };
   current = { daily: d, def: d.def, world, wi, li: 0, bonus: false };
+  online.track(dailyBoard(d));
   closeAllModals();
   hideFail();
   game.load({ def: d.def, world, wi, li: 0, bonus: false, solution: d.solution });
@@ -505,6 +530,7 @@ function startLevel(id) {
   if (!f) return;
   current = f;
   SV.save.data.last = id;
+  online.track(id, SV.levelRecord(id));
   SV.persist();
   closeAllModals();
   hideFail();
@@ -677,14 +703,24 @@ app.pulseTray = (k) => {
   b.classList.add('pulse');
 };
 
+/** The ranking a level belongs to (campaign level or today's puzzle), or null. */
+function boardOf(f) {
+  if (!f || f.custom) return null;
+  return f.daily ? dailyBoard(f.daily) : levelBoard(f.def.id);
+}
+
 app.onHint = () => {
   if (!current.custom && !current.daily) SV.recordHint(current.def.id);
+  const bid = boardOf(current);
+  if (bid) online.addHint(bid);
 };
 
 app.onRunStart = () => {
   hideFail();
   hideInfo();
   if (!current.custom && !current.daily) SV.recordTry(current.def.id);
+  const bid = boardOf(current);
+  if (bid) online.addTry(bid);
 };
 
 app.onFail = (cause, name, replayed = false) => {
@@ -723,8 +759,9 @@ app.onWin = (res) => {
     SV.save.data.daily = recordDaily(SV.save.data.daily, current.daily.key, stars);
     const unlocks = SV.collectUnlocks();
     const reward = payReward(first ? dailyReward(SV.save.data.daily.streak) : { total: 0, lines: [] }, unlocks, 'daily', current.daily.key);
+    const ranked = online.win(boardOf(current), { stars, pieces: res.pieces });
     SV.persistNow();
-    showVictory(stars, res, unlocks, 0, reward);
+    showVictory(stars, res, unlocks, 0, reward, ranked);
     app.hudChanged();
     return;
   }
@@ -746,8 +783,9 @@ app.onWin = (res) => {
   const unlocks = SV.collectUnlocks();
   const worldDone = !wasComplete && SV.worldComplete(current.world);
   const reward = payReward(winReward({ firstClear, bonus: !!current.bonus, prevStars, stars, worldDone }), unlocks, 'win', id);
+  const ranked = levelBoard(id) ? online.win(id, { stars, pieces: res.pieces }) : null;
   SV.persistNow();
-  showVictory(stars, res, unlocks, gained, reward);
+  showVictory(stars, res, unlocks, gained, reward, ranked);
   app.hudChanged();
 };
 
@@ -773,6 +811,7 @@ function askHint() {
 
 /** Refreshes every coin counter on screen (after a purchase, a gift, a win). */
 function refreshCoins() {
+  online.lookChanged();
   const w = Wallet.wallet();
   const gift = shop.attention();
   document.querySelectorAll('.coin-pill[data-act=shop], .shop-tile').forEach((p) => {
@@ -1056,7 +1095,8 @@ function showIntroCard(c, done) {
   let text;
   let illu;
   if (c.kind === 'welcome') {
-    title = { fr: 'Bienvenue, gardien des chemins !', en: 'Welcome, keeper of the paths!' };
+    const who = online.me().name;
+    title = who ? { fr: `Bienvenue, ${escapeHtml(who)} !`, en: `Welcome, ${escapeHtml(who)}!` } : { fr: 'Bienvenue, gardien des chemins !', en: 'Welcome, keeper of the paths!' };
     text = {
       fr: 'Les Lumignons sont de petites lueurs têtues : ils marchent <b>tout droit</b> sans regarder où ils vont. Pose des <b>flèches</b> pour les guider jusqu’à leur <b>lanterne</b>, puis appuie sur <b>Go !</b> Rien ne presse : tu peux réessayer autant que tu veux.',
       en: 'Lumignons are stubborn little lights: they walk <b>straight ahead</b> without looking. Place <b>arrows</b> to guide them to their <b>lantern</b>, then press <b>Go!</b> No rush: you can retry as often as you like.',
@@ -1095,9 +1135,11 @@ function openGoals() {
       ${L.fireflies.length ? `<li class="${rec?.stars >= 2 ? 'ok' : ''}"><span class="mark">${rec?.stars >= 2 ? '✓' : '2'}</span>${t('goal2')}<span class="stars-req">★★</span></li>` : ''}
       ${game.solution ? `<li class="${rec?.stars >= 3 ? 'ok' : ''}"><span class="mark">${rec?.stars >= 3 ? '✓' : '3'}</span>${t('goal3', game.par)}<span class="stars-req">★★★</span></li>` : ''}
     </ul>
-    <div class="actions"><button class="btn btn-primary" data-ok>${t('ok')}</button></div>`;
+    <div class="actions">${boardOf(current) ? `<button class="btn btn-ghost" data-a="ranks">${ICONS.podium}${t('ranks.title')}</button>` : ''}<button class="btn btn-primary" data-ok>${t('ok')}</button></div>`;
   const m = openModal(box);
   box.querySelector('[data-ok]').onclick = () => (click(), m.close());
+  const rb = box.querySelector('[data-a=ranks]');
+  if (rb) rb.onclick = () => (click(), ranks.openRanks({ board: boardOf(current) }));
 }
 
 function openPause() {
@@ -1108,6 +1150,7 @@ function openPause() {
     <div class="actions col">
       <button class="btn btn-primary" data-a="resume">${ICONS.play}${t('resume')}</button>
       <button class="btn" data-a="restart">${ICONS.retry}${t('restart')}</button>
+      ${boardOf(current) ? `<button class="btn btn-ghost" data-a="ranks">${ICONS.podium}${t('ranks.title')}</button>` : ''}
       <button class="btn btn-ghost" data-a="settings">${ICONS.gear}${t('settings')}</button>
       <button class="btn btn-ghost" data-a="map">${current.custom ? ICONS.pencil + t('atelier') : current.daily ? ICONS.back + t('home') : ICONS.map + t('map')}</button>
     </div>`;
@@ -1121,6 +1164,8 @@ function openPause() {
     game.clearAll();
   };
   box.querySelector('[data-a=settings]').onclick = () => (click(), openSettings());
+  const rb = box.querySelector('[data-a=ranks]');
+  if (rb) rb.onclick = () => (click(), ranks.openRanks({ board: boardOf(current) }));
   box.querySelector('[data-a=map]').onclick = () => {
     click();
     m.close();
@@ -1137,7 +1182,7 @@ function openPause() {
 
 const rewardLabel = (l) => (l.key === 'stars' || l.key === 'streak' ? t('reward.' + l.key, l.count) : t('reward.' + l.key));
 
-function showVictory(stars, res, unlocks, gained, reward = null) {
+function showVictory(stars, res, unlocks, gained, reward = null, ranked = null) {
   const L = game.L;
   const id = current.def.id;
   const custom = !!current.custom;
@@ -1162,6 +1207,7 @@ function showVictory(stars, res, unlocks, gained, reward = null) {
     ${reward && reward.total ? `<div class="coins-earned"><span class="coin-pill big">${COIN_SVG}<b class="earned-count">+0</b></span><small>${reward.lines.map((l) => `${rewardLabel(l)} +${l.n}`).join(' · ')}</small></div>` : ''}
     ${worldDone ? `<canvas class="world-sky" width="560" height="300"></canvas><p><b>${t('worldDone')}</b>${lastWorld ? '<br>' + t('ending') : current.world.outro ? '<br>' + tr(current.world.outro) : ''}</p>` : ''}
     ${daily ? `<p class="streak-line">🔥 ${t('streak', liveStreak(SV.save.data.daily))}<br><small>${t('dailyCome')}</small></p>` : ''}
+    <div class="rank-line"></div>
     <div class="unlock-list"></div>
     <div class="actions col">
       ${next ? `<button class="btn btn-primary" data-a="next">${t('next')}${ICONS.next}</button>` : ''}
@@ -1233,6 +1279,7 @@ function showVictory(stars, res, unlocks, gained, reward = null) {
   });
   const sky = box.querySelector('.world-sky');
   if (sky) lightConstellation(sky, current.wi);
+  ranks.victory(box.querySelector('.rank-line'), custom ? null : boardOf(current), ranked);
   // The éclats won count up once the stars are in.
   const ec = box.querySelector('.earned-count');
   if (ec) {
@@ -1379,6 +1426,7 @@ function openSettings() {
         <div class="row"><span class="grow">${t('defaultSpeed')}</span><div class="seg">${[1, 2, 3].map((v) => `<button data-speed="${v}" class="${s.speed === v ? 'on' : ''}">×${v}</button>`).join('')}</div></div>
       </div>
       <div class="actions col">
+        <button class="btn btn-ghost btn-small" data-a="profile">${ICONS.podium}${t('ranks.profile')} · ${online.me().name ? escapeHtml(online.me().name) : t('ranks.noName')}</button>
         <button class="btn btn-ghost btn-small" data-a="backup">${ICONS.download}${t('backup')}</button>
         <button class="btn btn-ghost btn-small" data-a="credits">${t('credits')}</button>
         <button class="btn btn-danger btn-small" data-a="reset">${t('resetProgress')}</button>
@@ -1418,6 +1466,7 @@ function openSettings() {
     box.querySelector('[data-a=close]').onclick = () => (click(), m.close());
     box.querySelector('[data-a=credits]').onclick = () => (click(), openCredits());
     box.querySelector('[data-a=backup]').onclick = () => (click(), openBackup());
+    box.querySelector('[data-a=profile]').onclick = () => (click(), ranks.openProfile());
     box.querySelector('[data-a=reset]').onclick = () => {
       click();
       confirmBox(t('resetConfirm'), () => {
@@ -1478,7 +1527,10 @@ function restoreDialog() {
       return;
     }
     confirmBox(t('backupConfirm'), () => {
+      if (!data.online && SV.save.data.online) data.online = SV.save.data.online;
+      if (!data.boards && SV.save.data.boards) data.boards = SV.save.data.boards;
       SV.replaceSave(data);
+      online.reset();
       setLang(SV.save.data.settings.lang || detectLang());
       applySettings();
       refreshTexts();
@@ -1508,7 +1560,7 @@ function openCredits() {
       <p><b>Lumignons</b> ${VERSION} — ${fr ? 'conception, programmation, illustrations, musique et niveaux originaux.' : 'original design, code, art, music and levels.'}</p>
       <p>${fr ? 'Toutes les images sont dessinées par le code (Canvas 2D) et tous les sons sont synthétisés en direct (Web Audio) : le jeu n’embarque aucune ressource tierce hormis la police.' : 'Every picture is drawn by code (Canvas 2D) and every sound is synthesised live (Web Audio): the game ships no third-party asset except the font.'}</p>
       <p>${fr ? 'Police' : 'Font'} : <b>Fredoka</b> — © The Fredoka Project Authors, SIL Open Font License 1.1.</p>
-      <p>${fr ? 'Aucune bibliothèque externe, aucun traceur, aucune publicité. La progression reste sur cet appareil.' : 'No external library, no tracker, no ads. Your progress stays on this device.'}</p>
+      <p>${fr ? 'Aucune bibliothèque externe, aucun traceur, aucune publicité. La progression reste sur cet appareil ; seuls ton pseudo et tes meilleurs résultats partent vers les classements en ligne (Firebase, de Google), si tu y participes.' : 'No external library, no tracker, no ads. Your progress stays on this device; only your nickname and best results go to the online rankings (Firebase, by Google), if you take part.'}</p>
     </div>
     <div class="actions"><button class="btn btn-primary" data-a="ok">${t('ok')}</button></div>`;
   const m = openModal(box);
@@ -1751,8 +1803,64 @@ const shop = createShop({
   },
   layout: () => layoutShop(),
 });
+const LEVEL_IDS = WORLDS.flatMap((w) => [...w.levels, w.bonus].map((l) => l.id));
+const online = createOnline({
+  save: SV.save,
+  persist: SV.persist,
+  info: (bid) => {
+    if (SOLUTIONS[bid]) return { min: SOLUTIONS[bid].min, par: SOLUTIONS[bid].par };
+    const m = /^d-\d{4}-\d{2}-\d{2}-([a-z]+)-(\d+)$/.exec(bid);
+    return m ? dailyInfo(m[1], +m[2]) : null;
+  },
+  look: (c) => Wallet.look(c),
+  levelBoards: () => LEVEL_IDS,
+  onChange: (what) => {
+    if (['name', 'taken', 'deleted', 'optout'].includes(what)) refreshMe();
+  },
+});
+
+/** The player's chip on the title screen. */
+function refreshMe() {
+  const slot = $('#screen-title .title-me');
+  if (!slot || app.screen !== 'title') return;
+  slot.innerHTML = '';
+  if (online.me().name || !online.me().optOut) slot.appendChild(ranks.chip());
+}
+
+const ranks = createRanks({
+  el,
+  t,
+  getLang,
+  click,
+  sound,
+  openModal,
+  toast,
+  confirmBox,
+  ICONS,
+  online,
+  dress: (c) => app.dress(c),
+  showScreen,
+  worlds: () => WORLDS,
+  isDone: (id) => SV.isDone(id),
+  levelTitle: (id) => {
+    const f = SV.findLevel(id);
+    return f ? `${levelLabel(f)} · ${tr(f.def.name)}` : id;
+  },
+  lastLevel: () => (current && !current.custom && !current.daily ? current.def.id : SV.continueTarget()),
+  dailyToday: () => {
+    if (!SV.isDone('1-5')) return null;
+    const d = dailyFor(WORLDS.filter((w, i) => SV.worldUnlocked(i)).map((w) => w.id));
+    if (!d) return null;
+    const date = new Date().toLocaleDateString(getLang() === 'fr' ? 'fr-FR' : 'en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
+    return { bid: dailyBoard(d), label: `☀ ${date}` };
+  },
+  onProfileChange: () => refreshMe(),
+});
+
 app.shop = shop;
 app.shopScene = shopScene;
+app.online = online;
+app.ranks = ranks;
 app.wallet = Wallet;
 app.trail = () => Wallet.wallet().trail;
 app.editorPaint = (idx, repeat) => atelier.paint(idx, repeat);
@@ -1785,10 +1893,39 @@ function boot() {
   window.addEventListener('pageshow', (e) => e.persisted && A.checkCanvases());
   A.watchCanvas(canvas);
   A.checkCanvases();
-  buildTitle();
-  showScreen('title');
+  online.migrate(SV.save.data.levels, SOLUTIONS);
   const welcome = Wallet.takeWelcome();
-  if (welcome && !location.hash) setTimeout(() => shop.welcome(welcome), 700);
+  const showWelcome = (ms) => welcome && !location.hash && setTimeout(() => shop.welcome(welcome), ms);
+  if (online.needsName() && !online.me().asked && !location.hash) {
+    // First launch: the pseudo first, then straight into the tutorial.
+    const fresh = SV.summary().completed === 0;
+    ranks.hello({
+      returning: !fresh,
+      onDone: ({ name }) => {
+        buildTitle();
+        showScreen('title');
+        if (fresh) startLevel(WORLDS[0].levels[0].id);
+        else {
+          if (name) toast(t('ranks.welcomeBack', escapeHtml(name)), 2400);
+          showWelcome(600);
+        }
+      },
+    });
+  } else {
+    buildTitle();
+    showScreen('title');
+    showWelcome(700);
+  }
+  // Results waiting to be sent go when the game starts, comes back, or finds the network.
+  let lastSync = 0;
+  const syncSoon = () => {
+    if (Date.now() - lastSync < 60000) return;
+    lastSync = Date.now();
+    online.sync().catch(() => {});
+  };
+  setTimeout(syncSoon, 2500);
+  window.addEventListener('online', () => ((lastSync = 0), syncSoon()));
+  document.addEventListener('visibilitychange', () => document.visibilityState === 'visible' && syncSoon());
   const unlockAudio = () => sound.unlock();
   window.addEventListener('pointerdown', unlockAudio, { passive: true });
   requestAnimationFrame(frame);

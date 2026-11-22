@@ -69,10 +69,13 @@ export function persistNow() {
   }
 }
 
+/** Starts the adventure over. Settings, the pseudo and the rankings' history stay. */
 export function resetSave() {
-  const settings = save.data.settings;
+  const { settings, online, boards } = save.data;
   save.data = defaults();
   save.data.settings = settings;
+  if (online) save.data.online = online;
+  if (boards) save.data.boards = boards;
   persistNow();
 }
 

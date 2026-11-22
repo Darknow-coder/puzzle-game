@@ -22,7 +22,7 @@ function keyForDay(n) {
 }
 
 /** Decodes a pool entry into a level definition + solver data. */
-export function decodeEntry(e, theme, key) {
+export function decodeEntry(e, theme, key, idx = 0) {
   const [rows, dirsStr, vanes, inv, par, min, sol] = e;
   const dirs = {};
   for (const part of dirsStr.split(' ').filter(Boolean)) dirs[part[0]] = part.slice(1);
@@ -35,7 +35,13 @@ export function decodeEntry(e, theme, key) {
   };
   if (vanes) def.vanes = vanes;
   const solution = { par, min, sol: sol.split(',').map((p) => p.split('.').map(Number)) };
-  return { def, theme, solution, key };
+  return { def, theme, solution, key, idx };
+}
+
+/** Fewest pieces to win and for ★★★ of a pool puzzle (for the online rankings). */
+export function dailyInfo(theme, idx) {
+  const e = DAILY[theme]?.[idx];
+  return e ? { min: e[5], par: e[4] } : null;
 }
 
 /** The puzzle of `date`, drawn from the themes the player can play. */
@@ -47,7 +53,7 @@ export function dailyFor(themes, date = new Date()) {
   const theme = usable[k];
   const pool = DAILY[theme];
   const idx = ((Math.floor(n / usable.length) % pool.length) + pool.length) % pool.length;
-  return decodeEntry(pool[idx], theme, dayKey(date));
+  return decodeEntry(pool[idx], theme, dayKey(date), idx);
 }
 
 /** Records a win; returns the updated streak information. */

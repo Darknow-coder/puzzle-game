@@ -14,6 +14,11 @@ const KEYS = ['', 'arrow', 'lily', 'mushroom', 'daisy', 'mirror'];
 (async () => {
   const b = await chromium.launch();
   const ctx = await b.newContext({ ...devices['Pixel 7'], locale: 'fr-FR' });
+  // These tests start past the first-launch pseudo screen (tests/e2e/ranks.cjs covers it).
+  await ctx.addInitScript(() => {
+    const K = 'lumignons.save.v1';
+    if (!localStorage.getItem(K)) localStorage.setItem(K, JSON.stringify({ v: 1, levels: {}, online: { asked: true } }));
+  });
   const p = await ctx.newPage();
   const errors = [];
   p.on('pageerror', (e) => errors.push(String(e)));
