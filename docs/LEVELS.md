@@ -1,4 +1,4 @@
-# Les 66 niveaux
+# Les 77 niveaux
 
 Généré par `node tools/levels-doc.mjs` à partir de `src/data/levels.js` et des résultats du solveur.
 « ★ » = nombre minimal de pièces pour terminer, « ★★★ » = nombre minimal pour un parcours parfait
@@ -111,4 +111,22 @@ Tout en haut, les girouettes tournent et les nuages ne portent qu’une fois.
 | 6-9 | La rose des vents | 6×8 | 7 flèches | 4 | 6 | 1 | Two vanes, two clouds, two Lumignons: four visits to the vanes must happen in the right order. |
 | 6-10 | Le dernier pont | 6×7 | 6 flèches, 1 champignon | 5 | 6 | 1 | Pip and Nim walk the same road and leap from the same mushroom; Nim alone comes back to leap a second time. |
 | 6-B | La Grande Lanterne | 7×7 | 8 flèches, 1 nénuphar | 5 | 8 | 1 | Lou joins Pip and Nim for the finale: Nim crosses a cloud, Lou slips home, and Pip must visit the same weathervane three times. |
+
+## Monde 7 — L’Aube de Cristal
+
+La nuit s’achève. Sur l’île de cristal, chaque miroir renvoie les Lumignons comme des rayons de lumière.
+
+| Niveau | Nom | Taille | Pièces | ★ | ★★★ | sol. | Intention |
+|---|---|---|---|---|---|---|---|
+| 7-1 | Premier reflet | 7×4 | 2 miroirs | 1 | 2 | 1 | A mirror turns a Lumignon by a quarter, like a ray of light: one mirror brings Pip home, two in a staircase catch the firefly. |
+| 7-2 | Deux faces | 5×5 | 2 miroirs | 1 | 1 | 1 | One mirror, two Lumignons arriving from two sides: the same mirror sends Pip down and Nim to the right. |
+| 7-3 | Le chemin du retour | 6×5 | 2 miroirs | 1 | 1 | 1 | The lantern is behind Pip: a mirror sends him up a dead end, he turns back, and the same mirror now sends him home. |
+| 7-4 | Reflet d’ombre | 6×5 | 3 miroirs | 1 | 3 | 1 | Gloomnibs obey mirrors too: the same mirror first throws the Gloomnib into the void, then sends Pip up to his lantern. |
+| 7-5 | Le grand tour | 5×6 | 5 miroirs | 1 | 4 | 1 | One mirror by the start sends Pip straight home; turned the other way, it sends him around the island off the engraved mirrors and a rock, and brings him home from below. |
+| 7-6 | L’ombre qui suit | 5×6 | 5 miroirs | 2 | 4 | 1 | A Gloomnib walks one step behind Pip through every mirror; Pip must never turn back, and only the lantern stops the shadow. |
+| 7-7 | Arches et reflets | 6×7 | 5 miroirs | 1 | 4 | 1 | Mirrors and moon gates: Pip goes through the same gates again and again, each time reflected somewhere new. |
+| 7-8 | Nénuphars de cristal | 6×6 | 2 nénuphars, 4 miroirs | 3 | 5 | 1 | The engraved mirror sends Pip home and Nim on a loop across the pond, over the same lily twice in two directions. |
+| 7-9 | Flèches et miroirs | 5×7 | 2 flèches, 3 miroirs | 3 | 5 | 1 | Only an arrow can turn a Lumignon back: Nim retraces Pip’s mirrors twice, and Pip’s lantern finally turns him towards his own. |
+| 7-10 | Lever du jour | 7×8 | 7 miroirs | 5 | 6 | 1 | Three Lumignons share six mirrors: Pip and Nim run the same loop a few steps apart while Lou slips around them. |
+| 7-B | Le Prisme | 7×8 | 2 flèches, 1 nénuphar, 5 miroirs | 4 | 8 | 1 | The grand finale: both Lumignons cross the moon gates, bounce back off an arrow by the pond and return the whole way, thirty-four turns of light. |
 

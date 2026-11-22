@@ -1,5 +1,34 @@
 # Journal des versions
 
+## 3.0.0
+
+**Nouveautés**
+
+- **L’Aube de Cristal**, un septième monde : la nuit s’achève, le ciel rosit et le soleil se lève sur
+  une île de cristal. 10 niveaux et une étoile filante, chacun prouvé par le solveur (une seule
+  disposition parfaite), un diadème de cristal à gagner et un nouveau succès. La fin de la Cime des
+  Vents annonce désormais l’aube.
+- **Miroirs de cristal** : une nouvelle pièce, posée `/` ou `\` (deux pétales au toucher, une
+  pichenette la retourne), et des miroirs gravés dans le sol. Un Lumignon est une lumière : le miroir le
+  renvoie d’un quart de tour, et dans un sens différent selon le côté d’arrivée. Les Grignombres y
+  obéissent aussi. Musique, oiseaux du matin et petit carillon à chaque reflet.
+- **Défi du jour** : 61 puzzles avec miroirs rejoignent la réserve (427 au total) ; les puzzles des
+  autres mondes ne changent pas.
+- **Image souvenir** : depuis l’écran de victoire, partage une image du plateau réussi avec la
+  constellation du parcours (ou enregistre-la).
+- **Sauvegarde** : *Réglages → Sauvegarde* donne toute ta progression sous forme d’un code
+  (~400 caractères) à garder ou à coller sur un autre appareil.
+- **Ouvrir tous les niveaux** (réglages) : tous les mondes deviennent jouables, les étoiles restent à gagner.
+- **Atelier** : miroirs gravés, miroirs à donner au joueur, décor de l’aube.
+
+**Corrections**
+
+- Sur téléphone, après être revenu dans le jeu (changement d’application, capture d’écran…), l’île,
+  le ciel, les rochers ou les icônes pouvaient disparaître, et la carte gardait des traînées du niveau
+  précédent. Android libère parfois la mémoire graphique des applications en arrière-plan : le jeu
+  redessine maintenant tout ce qui a été perdu, et efface l’écran à chaque image. Un test reproduit le
+  problème en faisant réellement planter le processus graphique du navigateur.
+
 ## 2.0.0
 
 **Nouveautés**

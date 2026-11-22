@@ -4,7 +4,8 @@ import { WORLDS } from '../src/data/levels.js';
 import { SOLUTIONS } from '../src/data/solutions.js';
 import { parseLevel } from '../src/engine/core.js';
 
-let out = `# Les 66 niveaux
+const count = WORLDS.reduce((n, w) => n + w.levels.length + 1, 0);
+let out = `# Les ${count} niveaux
 
 Généré par \`node tools/levels-doc.mjs\` à partir de \`src/data/levels.js\` et des résultats du solveur.
 « ★ » = nombre minimal de pièces pour terminer, « ★★★ » = nombre minimal pour un parcours parfait
@@ -16,7 +17,7 @@ WORLDS.forEach((w, wi) => {
   for (const lv of [...w.levels, w.bonus]) {
     const L = parseLevel(lv);
     const s = SOLUTIONS[lv.id];
-    const inv = Object.entries(L.inventory).filter(([, v]) => v).map(([k, v]) => `${v} ${({ arrow: 'flèche', lily: 'nénuphar', mushroom: 'champignon', daisy: 'pâquerette' })[k]}${v > 1 ? 's' : ''}`).join(', ');
+    const inv = Object.entries(L.inventory).filter(([, v]) => v).map(([k, v]) => `${v} ${({ arrow: 'flèche', lily: 'nénuphar', mushroom: 'champignon', daisy: 'pâquerette', mirror: 'miroir' })[k]}${v > 1 ? 's' : ''}`).join(', ');
     out += `| ${lv.id} | ${lv.name.fr} | ${L.w}×${L.h} | ${inv} | ${s.min} | ${s.par} | ${s.n} | ${lv.intent} |\n`;
   }
   out += '\n';

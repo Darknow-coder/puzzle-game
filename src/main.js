@@ -17,7 +17,7 @@ import { dailyFor, recordDaily, liveStreak, dayKey } from './daily.js';
 import { exportBackup, importBackup } from './backup.js';
 import { makeShareCard, shareImage } from './share.js';
 
-const VERSION = '2.0.0';
+const VERSION = '3.0.0';
 const $ = (sel, root = document) => root.querySelector(sel);
 const el = (tag, cls, html) => {
   const e = document.createElement(tag);

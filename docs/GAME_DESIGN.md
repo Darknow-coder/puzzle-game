@@ -64,6 +64,8 @@ Le jeu se déroule en tours. À chaque tour, tous les marcheurs (Lumignons et Gr
    - **Dalle-lune** : chaque passage bascule les ronces de sa couleur (dressées ⇄ couchées).
    - **Girouette** : donne sa direction puis tourne d’un quart de tour dans le sens horaire.
    - **Nuage** : il se dissipe dès qu’on le quitte ; qui se tient encore dessus tombe.
+   - **Miroir** (posé ou gravé, `/` ou `\`) : renvoie le marcheur d’un quart de tour, comme un rayon
+     de lumière ; le sens dépend du côté par lequel on arrive (`/` : nord ⇄ est, sud ⇄ ouest).
 4. Les Lumignons **se traversent** sans se gêner. Un Grignombre **attrape** un Lumignon s’ils
    partagent une case ou se croisent. Les Grignombres suivent exactement les mêmes règles
    (flèches, chutes, noyade…).
@@ -83,6 +85,7 @@ résultat, toujours.
 | 4. Les Ruines de Lune | Arches de lune, dalles et ronces | Téléportation, interrupteurs à bascule, ordre et parité des passages |
 | 5. La Forêt des Grignombres | Grignombres (rôdeurs, endormis), pâquerette | Timing ; dévier les ombres avec ses propres flèches pour les faire tomber |
 | 6. La Cime des Vents | Girouettes, nuages | Directions qui changent à chaque passage, chemins à usage unique |
+| 7. L’Aube de Cristal | Miroirs (posés et gravés) | Un même miroir sert à plusieurs Lumignons venant de côtés différents, renvoie une ombre, ramène un Lumignon qui revient sur ses pas |
 
 ## 6. Notation
 
@@ -100,9 +103,9 @@ réussissable avec moins d’étoiles : les lucioles sont un défi facultatif.
   réunissant quelques étoiles (12, 25, 40, 55, 70) — des seuils volontairement bas.
 - **Étoiles filantes** : un 11ᵉ niveau-défi par monde, révélé quand toutes ses lucioles sont
   attrapées (2 étoiles partout).
-- **Garde-robe** : 11 chapeaux à débloquer (étoiles, mondes terminés, étoile filante, 3 étoiles
+- **Garde-robe** : 12 chapeaux à débloquer (étoiles, mondes terminés, étoile filante, 3 étoiles
   partout) portés par tous les Lumignons.
-- **Succès** : 12 objectifs secondaires (persévérance, perfectionnisme, sans indice…).
+- **Succès** : 16 objectifs secondaires (persévérance, perfectionnisme, sans indice…).
 - **Carnet** : chaque élément rencontré y est expliqué avec son illustration.
 - **Rejouabilité** : les records (étoiles, pièces) sont conservés ; revenir chercher la 3ᵉ étoile.
 - **Indices** illimités et gratuits : ils révèlent pas à pas une solution parfaite et signalent les
@@ -120,9 +123,23 @@ réussissable avec moins d’étoiles : les lucioles sont un défi facultatif.
   tourne parmi ceux que le joueur a déjà ouverts, pour ne jamais présenter une mécanique inconnue.
 - **Lisibilité** : pause, pas à pas, ralenti des échecs ; une main animée enseigne les gestes.
 
+## 7 ter. Version 3
+
+- **Miroirs de cristal** et un **septième monde**, *L’Aube de Cristal* : la nuit s’achève, le ciel rosit,
+  le soleil se lève derrière les collines. Un miroir ne choisit pas une direction comme une flèche : il
+  *dévie*, et différemment selon le côté d’arrivée. D’où des idées nouvelles : un miroir pour deux
+  Lumignons perpendiculaires (7-2), le chemin du retour par le même miroir (7-3), un miroir qui jette
+  le Grignombre dans le vide puis guide Pip (7-4), une ombre qui suit Pip pas à pas (7-6).
+- Les quatre premiers niveaux sont dessinés à la main ; les suivants sont choisis parmi des milliers de
+  candidats du générateur, pour leur « histoire » (le trajet de chaque Lumignon est relu), puis prouvés.
+- 61 **défis du jour** avec miroirs rejoignent la réserve (427 puzzles), sans changer ceux des autres mondes.
+- **Image souvenir** à partager, **codes de sauvegarde**, option **Ouvrir tous les niveaux**.
+- Robustesse mobile : quand le système libère la mémoire graphique (application en arrière-plan),
+  tout ce qui était dessiné une fois pour toutes est redessiné.
+
 ## 8. Conception et vérification des niveaux
 
-La campagne compte **66 niveaux** (6 mondes × 10 + 6 étoiles filantes). La liste complète, avec
+La campagne compte **77 niveaux** (7 mondes × 10 + 7 étoiles filantes). La liste complète, avec
 l’intention de chaque niveau, est dans [`LEVELS.md`](LEVELS.md).
 
 - Les niveaux d’introduction de chaque mécanique sont **dessinés à la main** pour enseigner une idée
@@ -154,7 +171,7 @@ l’intention de chaque niveau, est dans [`LEVELS.md`](LEVELS.md).
 Le principe général « préparer des pièces puis observer des personnages qui avancent seuls » est un
 genre ancien et répandu. Lumignons n’en reprend **aucun élément protégé** : pas de personnages, noms,
 niveaux, interface, sons ou visuels issus d’autres jeux. L’univers (Lumignons, Grignombres, lanternes,
-archipel nocturne), les règles détaillées, les 66 niveaux, les graphismes et la musique sont originaux.
+archipel nocturne), les règles détaillées, les 77 niveaux, les graphismes et la musique sont originaux.
 Les seules ressources tierces sont listées dans [`THIRD_PARTY.md`](../THIRD_PARTY.md).
 
 Avant une publication commerciale, il reste recommandé de vérifier la disponibilité du nom

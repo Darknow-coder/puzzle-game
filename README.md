@@ -4,11 +4,16 @@ Un jeu de réflexion mobile, original et entièrement gratuit à faire tourner :
 place des flèches (et bien plus) pour guider de petites lueurs têtues jusqu’à leurs lanternes,
 puis appuie sur **Go !** et regarde ton plan se dérouler… en musique.
 
-- **66 niveaux** répartis en 6 mondes + 6 « étoiles filantes », tous **prouvés solvables** par un solveur.
+- **77 niveaux** répartis en 7 mondes + 7 « étoiles filantes », tous **prouvés solvables** par un solveur.
+- **Miroirs de cristal** (monde 7, *L’Aube de Cristal*) : posés ou gravés, ils renvoient les Lumignons
+  comme des rayons de lumière.
 - 3 étoiles par niveau : rentrer, attraper toutes les lucioles, le faire avec le minimum de pièces.
 - **Atelier** : crée tes niveaux, le jeu vérifie qu’ils sont faisables et calcule le nombre de pièces
   parfait, puis partage-les avec un code ou un lien.
-- **Défi du jour** : un puzzle vérifié chaque jour (366 en réserve) et une série de jours d’affilée.
+- **Défi du jour** : un puzzle vérifié chaque jour (427 en réserve) et une série de jours d’affilée.
+- **Partage** : une image souvenir du niveau réussi (le plateau et la constellation du parcours).
+- **Sauvegarde** : toute la progression tient dans un code de ~400 caractères, à garder ou à coller
+  sur un autre appareil. Option « Ouvrir tous les niveaux » dans les réglages.
 - Pause, pas à pas et ralenti des échecs pour comprendre chaque parcours ; tutoriel animé.
 - Carte des constellations, chapeaux à collectionner, succès, carnet des éléments, indices illimités.
 - Pensé pour le tactile (toucher, glisser, appui long), jouable à la souris et au clavier.
@@ -21,8 +26,8 @@ Nouveautés : [`CHANGELOG.md`](CHANGELOG.md) · Publication : [`docs/PUBLISHING.
 ## Jouer
 
 Version en ligne (GitHub Pages) : **https://darknow-coder.github.io/puzzle-game/**
-(publiée automatiquement à chaque push par `.github/workflows/pages.yml` — voir *Publication* ci-dessous
-pour l’unique réglage à faire dans GitHub).
+(publiée automatiquement à chaque push par `.github/workflows/pages.yml`). Quand une nouvelle version
+est publiée, le jeu installé propose « Nouvelle version prête — Recharger ».
 
 Sur smartphone, ouvrir le lien puis « Ajouter à l’écran d’accueil » (ou le bouton *Installer le jeu*
 sur l’écran titre) : le jeu se lance alors en plein écran et fonctionne sans connexion.
@@ -35,7 +40,8 @@ Aperçu immédiat sans réglage, servi depuis un commit précis du dépôt :
 
 1. Les Lumignons avancent **tout droit**. Contre un obstacle, ils tournent **à droite**.
 2. Touche une case d’herbe pour y poser une flèche, puis choisis sa direction
-   (ou glisse le doigt sur la case pour poser la flèche d’un geste).
+   (ou glisse le doigt sur la case pour poser la flèche d’un geste). Un miroir se pose de la même
+   façon et se choisit `/` ou `\` ; une pichenette sur un miroir posé le retourne.
 3. Touche une pièce posée pour la tourner ou la retirer ; fais-la glisser pour la déplacer.
 4. Appui long sur une case : explication de ce qu’elle contient.
 5. **Go !** lance la simulation ; **Stop** revient à la préparation sans rien perdre.
@@ -51,6 +57,7 @@ npm start            # serveur local sur http://localhost:8080
 npm test             # tests du moteur et du solveur (Node ≥ 18)
 npm run verify       # prouve que chaque niveau est solvable et régénère src/data/solutions.js
 npm run e2e          # tous les tests de bout en bout dans Chromium (Playwright requis, serveur lancé)
+                     #   dont tests/e2e/v3.cjs : miroir posé au doigt, image souvenir, sauvegarde
 npm run e2e:canvas   # dessins perdus (plantage réel du GPU) : tout est redessiné
 npm run e2e:update   # mise à jour de l’app hors ligne : bandeau « Nouvelle version », nouveau cache
 ```
@@ -60,11 +67,11 @@ Outils de conception (Node) :
 ```bash
 node tools/solve.mjs 2-4              # analyse d'un niveau (minimum de pièces, solutions)
 node tools/explore-fireflies.mjs ...  # où placer les lucioles pour un bon défi ★★★
-node tools/generate.mjs pond 2000     # candidats de niveaux pour un thème (à trier et retoucher)
+node tools/generate.mjs pond 2000     # candidats de niveaux pour un thème (à trier et retoucher ; dawn… pour les miroirs)
 node tools/build-sw.mjs               # régénère la liste des fichiers mis en cache hors ligne
 node tools/levels-doc.mjs             # régénère docs/LEVELS.md
 node tools/build-artifact.mjs         # page autonome (CSS et police intégrées) pour un aperçu hébergé
-node tools/build-daily.mjs <dossiers> # réserve du défi du jour (candidats issus de generate.mjs)
+node tools/build-daily.mjs <dossiers> # réserve du défi du jour (--only dawn : un seul monde, les autres inchangés)
 node tools/store-shots.cjs            # captures 1080×1920 et image de présentation (store/screenshots)
 ```
 
@@ -74,11 +81,13 @@ node tools/store-shots.cjs            # captures 1080×1920 et image de présent
 index.html, manifest.webmanifest, sw.js   coquille de l'application, PWA
 src/engine/core.js       règles du jeu (moteur déterministe, sans DOM)
 src/engine/solver.js     solveur exhaustif (preuve de solvabilité, par, indices)
-src/data/levels.js       les 6 mondes et 66 niveaux (cartes en texte)
+src/data/levels.js       les 7 mondes et 77 niveaux (cartes en texte)
 src/data/solutions.js    généré : par et solution parfaite de chaque niveau
 src/data/meta.js         carnet, chapeaux, succès
-src/data/daily.js        généré : les 366 puzzles du défi du jour (solution parfaite unique prouvée)
+src/data/daily.js        généré : les 427 puzzles du défi du jour (solution parfaite unique prouvée)
 src/daily.js             choix du puzzle du jour et série de jours
+src/share.js             image souvenir d’un niveau réussi
+src/backup.js            codes de sauvegarde de la progression
 src/editor/              atelier : modèle, codes de partage, vérification (Web Worker), interface
 src/game/art.js          tout le dessin procédural (îles, personnages, pièces, décors)
 src/game/scene.js        écran de jeu : saisie tactile, préparation, animation des parcours
@@ -90,7 +99,7 @@ tools/                   solveur en ligne de commande, générateur, vérificati
 
 ## Publication
 
-- **GitHub Pages** : le workflow `.github/workflows/pages.yml` lance les tests, vérifie les 66 niveaux,
+- **GitHub Pages** : le workflow `.github/workflows/pages.yml` lance les tests, vérifie les 77 niveaux,
   puis publie le jeu à chaque push sur `main` ou sur la branche de développement.
   1. *Settings → Pages → Build and deployment → Source* : **GitHub Actions**.
   2. *Settings → Environments → github-pages → Deployment branches and tags* : autoriser la branche

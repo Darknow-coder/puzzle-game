@@ -67,11 +67,25 @@ function seed(lang) {
     await p.waitForTimeout(700);
     await clean();
     await shot('5-gloom');
+    // Crystal Dawn: three Lumignons among the mirrors, mid-run.
+    await p.evaluate(() => window.lumignons.startLevel('7-10'));
+    await p.waitForTimeout(500);
+    await clean();
+    await p.evaluate(() => {
+      const app = window.lumignons;
+      const g = app.game;
+      for (const [i, t, d] of app.solutions['7-10'].sol) g.placeAt(i, ['', 'arrow', 'lily', 'mushroom', 'daisy', 'mirror'][t], d);
+      g.picker = null;
+      g.timeScale = 1;
+      g.go();
+    });
+    await p.waitForTimeout(3400);
+    await shot('6-dawn');
     // Workshop editor.
     await p.evaluate(() => window.lumignons.atelier.openEditor(null));
     await p.waitForTimeout(800);
     await clean();
-    await shot('6-atelier');
+    await shot('7-atelier');
     await ctx.close();
   }
   // Feature graphic 1024×500.
