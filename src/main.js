@@ -16,8 +16,11 @@ import { THEMES } from './editor/model.js';
 import { dailyFor, recordDaily, liveStreak, dayKey } from './daily.js';
 import { exportBackup, importBackup } from './backup.js';
 import { makeShareCard, shareImage } from './share.js';
+import * as Wallet from './wallet.js';
+import { winReward, dailyReward, REWARD, HINT_PRICE } from './economy.js';
+import { createShop, COIN_SVG } from './ui/shop.js';
 
-const VERSION = '3.0.0';
+const VERSION = '3.1.0';
 const $ = (sel, root = document) => root.querySelector(sel);
 const el = (tag, cls, html) => {
   const e = document.createElement(tag);
@@ -31,6 +34,7 @@ const ICONS = {
   close: '<svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg>',
   lock: '<svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>',
   hat: '<svg viewBox="0 0 24 24"><path d="M4 17h16M7 17l2-9 3 3 3-3 2 9"/></svg>',
+  bag: '<svg viewBox="0 0 24 24"><path d="M5 8h14l-1.2 12H6.2L5 8Z"/><path d="M9 10V6.5a3 3 0 0 1 6 0V10"/></svg>',
   trophy: '<svg viewBox="0 0 24 24"><path d="M8 4h8v5a4 4 0 0 1-8 0zM8 6H5a3 3 0 0 0 3 4M16 6h3a3 3 0 0 1-3 4M12 13v4M8 21h8M9 17h6"/></svg>',
   book: '<svg viewBox="0 0 24 24"><path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2zM4 21V5M8 7h7"/></svg>',
   gear: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1 7 17M17 7l2.1-2.1"/></svg>',
@@ -183,6 +187,7 @@ function buildTitle() {
   const root = $('#screen-title');
   const started = s.completed > 0;
   root.innerHTML = `
+    <div class="title-top">${shop.pill()}</div>
     <div class="logo"><h1>Lumignons</h1><p>${t('tagline')}</p></div>
     <div class="title-actions">
       <button class="btn btn-primary" data-act="play">${ICONS.play}${started ? t('continue') : t('play')}</button>
@@ -191,7 +196,7 @@ function buildTitle() {
         <button class="btn btn-ghost" data-act="atelier">${ICONS.pencil}${t('atelier')}</button>
       </div>
       <div class="title-row">
-        <button class="tile-btn" data-act="wardrobe">${ICONS.hat}<span>${t('collection')}</span></button>
+        <button class="tile-btn shop-tile" data-act="shop">${ICONS.bag}<span>${t('shop')}</span>${Wallet.giftState().available ? '<i class="gift-dot"></i>' : ''}</button>
         <button class="tile-btn" data-act="achievements">${ICONS.trophy}<span>${t('achievements')}</span></button>
         <button class="tile-btn" data-act="notebook">${ICONS.book}<span>${t('notebook')}</span></button>
         <button class="tile-btn" data-act="settings">${ICONS.gear}<span>${t('settings')}</span></button>
@@ -217,7 +222,7 @@ function buildTitle() {
     pushNav('atelier');
     atelier.openList();
   };
-  root.querySelector('[data-act=wardrobe]').onclick = () => (click(), openWardrobe());
+  root.querySelectorAll('[data-act=shop]').forEach((b) => (b.onclick = () => (click(), shop.open(Wallet.giftState().available ? 'hints' : 'hats'))));
   root.querySelector('[data-act=achievements]').onclick = () => (click(), openAchievements());
   root.querySelector('[data-act=notebook]').onclick = () => (click(), openNotebook());
   root.querySelector('[data-act=settings]').onclick = () => (click(), openSettings());
@@ -270,9 +275,11 @@ function buildMap() {
     <div class="map-head">
       <button class="icon-btn" data-act="back" aria-label="${t('back')}">${ICONS.back}</button>
       <h2>${t('map')}</h2>
+      ${shop.pill()}
       <div class="star-total"><span class="st">★</span>${SV.totalStars()}</div>
     </div>
     <div class="map-scroll"></div>`;
+  root.querySelector('[data-act=shop]').onclick = () => (click(), shop.open());
   root.querySelector('[data-act=back]').onclick = () => {
     click();
     if (navDepth > 0) history.back();
@@ -612,6 +619,12 @@ app.hudChanged = () => {
   gs.querySelector('[data-act=undo]').disabled = !game.history.length;
   gs.querySelector('[data-act=reset]').disabled = !game.placements.size;
   gs.querySelector('.go-lbl').textContent = running ? t('stop') : t('go');
+  const hb = gs.querySelector('.hint-badge');
+  if (hb) {
+    const w = Wallet.wallet();
+    hb.innerHTML = w.hints > 0 ? String(w.hints) : `${HINT_PRICE}${COIN_SVG}`;
+    hb.classList.toggle('price', w.hints <= 0);
+  }
   gs.querySelector('.go-btn').classList.toggle('glow', !running && used > 0 && current?.def.id === '1-1');
   if (used > 0 && current?.def.tip === 'place' && !SV.save.data.tips.placeDone) {
     SV.save.data.tips.placeDone = 1;
@@ -655,13 +668,26 @@ function hideFail() {
   $('#screen-game .fail-banner').classList.remove('show');
 }
 
+/** Pays a win (and the achievements it unlocked) into the wallet; returns the lines to show. */
+function payReward(reward, unlocks, kind, id) {
+  Wallet.earn(reward.total, kind, id);
+  for (const a of unlocks.achievements) {
+    Wallet.earn(REWARD.achievement, 'achievement', a.id);
+    reward.lines.push({ key: 'achievement', n: REWARD.achievement });
+    reward.total += REWARD.achievement;
+  }
+  return reward;
+}
+
 app.onWin = (res) => {
   if (current.daily) {
     const stars = 1 + (res.allFireflies ? 1 : 0) + (res.allFireflies && res.pieces <= game.par ? 1 : 0);
+    const first = !SV.save.data.daily?.results?.[current.daily.key];
     SV.save.data.daily = recordDaily(SV.save.data.daily, current.daily.key, stars);
     const unlocks = SV.collectUnlocks();
+    const reward = payReward(first ? dailyReward(SV.save.data.daily.streak) : { total: 0, lines: [] }, unlocks, 'daily', current.daily.key);
     SV.persistNow();
-    showVictory(stars, res, unlocks, 0);
+    showVictory(stars, res, unlocks, 0, reward);
     app.hudChanged();
     return;
   }
@@ -678,12 +704,49 @@ app.onWin = (res) => {
   const stars = 1 + (res.allFireflies ? 1 : 0) + (res.allFireflies && res.pieces <= game.par ? 1 : 0);
   const rec = SV.levelRecord(id);
   if ((rec?.tries || 0) >= 10) SV.save.data.stats.stubborn = true;
-  const { gained } = SV.recordWin(id, { stars, pieces: res.pieces, fireflies: res.fireflies, usedHint: res.hintsUsed > 0 });
+  const wasComplete = SV.worldComplete(current.world);
+  const { gained, firstClear, prevStars } = SV.recordWin(id, { stars, pieces: res.pieces, fireflies: res.fireflies, usedHint: res.hintsUsed > 0 });
   const unlocks = SV.collectUnlocks();
+  const worldDone = !wasComplete && SV.worldComplete(current.world);
+  const reward = payReward(winReward({ firstClear, bonus: !!current.bonus, prevStars, stars, worldDone }), unlocks, 'win', id);
   SV.persistNow();
-  showVictory(stars, res, unlocks, gained);
+  showVictory(stars, res, unlocks, gained, reward);
   app.hudChanged();
 };
+
+function askHint() {
+  if (game.mode !== 'plan') return;
+  if (!game.solution) {
+    toast(t('hintNeedsCheck'), 2600);
+    return;
+  }
+  const h = game.nextHint();
+  if (!h.next || game.hintShown(h)) {
+    game.showHint(h);
+    return;
+  }
+  if (Wallet.useHint()) {
+    game.showHint(h);
+    app.hudChanged();
+    return;
+  }
+  sound.sfx('invalid');
+  shop.quickBuyHint(() => game.showHint(h));
+}
+
+/** Refreshes every coin counter on screen (after a purchase, a gift, a win). */
+function refreshCoins() {
+  const w = Wallet.wallet();
+  const gift = Wallet.giftState().available;
+  document.querySelectorAll('.coin-pill[data-act=shop], .shop-tile').forEach((p) => {
+    const b = p.querySelector('b');
+    if (b) b.textContent = w.coins;
+    const dot = p.querySelector('.gift-dot');
+    if (gift && !dot) p.insertAdjacentHTML('beforeend', '<i class="gift-dot"></i>');
+    if (!gift && dot) dot.remove();
+  });
+  app.hudChanged();
+}
 
 function retry() {
   click();
@@ -719,8 +782,7 @@ function bindGameHud() {
         game.clearAll();
         break;
       case 'hint':
-        if (!game.solution) toast(t('hintNeedsCheck'), 2600);
-        else game.hint();
+        askHint();
         break;
       case 'speed':
         game.setSpeed(game.speed >= 3 ? 1 : game.speed + 1);
@@ -1032,7 +1094,9 @@ function openPause() {
   };
 }
 
-function showVictory(stars, res, unlocks, gained) {
+const rewardLabel = (l) => (l.key === 'stars' || l.key === 'streak' ? t('reward.' + l.key, l.count) : t('reward.' + l.key));
+
+function showVictory(stars, res, unlocks, gained, reward = null) {
   const L = game.L;
   const id = current.def.id;
   const custom = !!current.custom;
@@ -1054,6 +1118,7 @@ function showVictory(stars, res, unlocks, gained) {
       ${L.fireflies.length ? `<li class="${ffOk ? 'ok' : ''}"><span class="mark">${ffOk ? '✓' : '✗'}</span>${t('goal2')} (${res.fireflies}/${L.fireflies.length})<span class="stars-req">★★</span></li>` : ''}
       ${parKnown ? `<li class="${ffOk && parOk ? 'ok' : ''}"><span class="mark">${ffOk && parOk ? '✓' : '✗'}</span>${t('goal3', game.par)} (${res.pieces})<span class="stars-req">★★★</span></li>` : ''}
     </ul>
+    ${reward && reward.total ? `<div class="coins-earned"><span class="coin-pill big">${COIN_SVG}<b class="earned-count">+0</b></span><small>${reward.lines.map((l) => `${rewardLabel(l)} +${l.n}`).join(' · ')}</small></div>` : ''}
     ${worldDone ? `<canvas class="world-sky" width="560" height="300"></canvas><p><b>${t('worldDone')}</b>${lastWorld ? '<br>' + t('ending') : current.world.outro ? '<br>' + tr(current.world.outro) : ''}</p>` : ''}
     ${daily ? `<p class="streak-line">🔥 ${t('streak', liveStreak(SV.save.data.daily))}<br><small>${t('dailyCome')}</small></p>` : ''}
     <div class="unlock-list"></div>
@@ -1127,6 +1192,25 @@ function showVictory(stars, res, unlocks, gained) {
   });
   const sky = box.querySelector('.world-sky');
   if (sky) lightConstellation(sky, current.wi);
+  // The éclats won count up once the stars are in.
+  const ec = box.querySelector('.earned-count');
+  if (ec) {
+    const total = reward.total;
+    const t0 = performance.now() + 1000;
+    let shown = 0;
+    const tick = (now) => {
+      if (!ec.isConnected) return;
+      const k = Math.min(1, Math.max(0, (now - t0) / 700));
+      const v = Math.round(total * k);
+      if (v !== shown) {
+        if (Math.floor(v / 6) !== Math.floor(shown / 6) || v === total) sound.sfx('coin');
+        shown = v;
+        ec.textContent = '+' + v;
+      }
+      if (k < 1) requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+  }
   const starsEls = box.querySelectorAll('.win-star');
   starsEls.forEach((s, i) => {
     setTimeout(() => {
@@ -1391,53 +1475,6 @@ function openCredits() {
   box.querySelector('[data-a=ok]').onclick = () => (click(), m.close());
 }
 
-function openWardrobe() {
-  const box = el('div');
-  const sum = SV.summary();
-  const render = () => {
-    box.innerHTML = `<button class="close-x" data-a="close" aria-label="${t('close')}">${ICONS.close}</button><h2>${t('collection')}</h2><p>★ ${sum.stars}</p><div class="hat-grid"></div>`;
-    const grid = box.querySelector('.hat-grid');
-    for (const h of HATS_INFO) {
-      const un = SV.hatUnlocked(h, sum);
-      const b = el('button', 'hat' + (un ? '' : ' locked') + (SV.save.data.hat === h.id ? ' sel' : ''));
-      const cv = document.createElement('canvas');
-      cv.width = 140;
-      cv.height = 140;
-      cv.style.width = '70px';
-      cv.style.height = '70px';
-      A.paint(cv, (g) => {
-        g.scale(2, 2);
-        A.drawLumi(g, 35, 58, 46, { color: 0, dir: 2, t: 1.3, hat: h.id, mood: un ? 'happy' : 'idle', alpha: un ? 1 : 0.45 });
-      });
-      b.appendChild(cv);
-      let req = '';
-      if (!un) {
-        const n = h.need;
-        if (n.stars !== undefined) req = t('unlockAt', n.stars);
-        else if (n.world !== undefined) req = `${t('world')} ${n.world + 1} ✓`;
-        else if (n.bonus !== undefined) req = `☄ ${t('bonus')}`;
-        else if (n.perfect) req = '★★★ ×' + sum.totalLevels;
-      }
-      b.insertAdjacentHTML('beforeend', `<span>${tr(h.name)}</span>${un ? '' : `<span class="req">${ICONS.lock.replace('<svg', '<svg style="width:12px;height:12px;vertical-align:-1px"')} ${req}</span>`}`);
-      b.onclick = () => {
-        if (!un) {
-          sound.unlock();
-          sound.sfx('invalid');
-          return;
-        }
-        click();
-        SV.save.data.hat = h.id;
-        SV.persist();
-        render();
-      };
-      grid.appendChild(b);
-    }
-    box.querySelector('[data-a=close]').onclick = () => (click(), m.close());
-  };
-  render();
-  const m = openModal(box);
-}
-
 function openAchievements() {
   const box = el('div');
   const sum = SV.summary();
@@ -1446,7 +1483,7 @@ function openAchievements() {
     <div class="list">${ACHIEVEMENTS.map((a) => {
       const pr = a.progress ? a.progress(sum) : null;
       const has = !!got[a.id];
-      return `<div class="row ach ${has ? 'got' : ''}"><span class="ach-ico">${a.icon}</span><span class="grow">${tr(a.name)}<small>${tr(a.desc)}</small>${pr && !has ? `<div class="bar"><i style="width:${Math.min(100, (pr[0] / pr[1]) * 100)}%"></i></div>` : ''}</span></div>`;
+      return `<div class="row ach ${has ? 'got' : ''}"><span class="ach-ico">${a.icon}</span><span class="grow">${tr(a.name)}<small>${tr(a.desc)}</small>${pr && !has ? `<div class="bar"><i style="width:${Math.min(100, (pr[0] / pr[1]) * 100)}%"></i></div>` : ''}</span><b class="ach-pay">${has ? '✓' : `+${REWARD.achievement}`} ✦</b></div>`;
     }).join('')}</div>`;
   const m = openModal(box);
   box.querySelector('[data-a=close]').onclick = () => (click(), m.close());
@@ -1609,7 +1646,7 @@ window.addEventListener('keydown', (e) => {
   else if (k === '.' || k === 'n' || k === 'N') {
     if (game.paused) game.stepOnce();
   } else if ((k === 'z' || k === 'Z') && !e.altKey) game.undo();
-  else if (k === 'h' || k === 'H') game.hint();
+  else if (k === 'h' || k === 'H') askHint();
   else if (k.startsWith('Arrow')) {
     e.preventDefault();
     game.keyDir({ ArrowUp: 0, ArrowRight: 1, ArrowDown: 2, ArrowLeft: 3 }[k]);
@@ -1643,6 +1680,25 @@ const atelier = createAtelier({
     }
   },
 });
+const shop = createShop({
+  el,
+  t,
+  tr,
+  getLang,
+  click,
+  sound,
+  openModal,
+  toast,
+  ICONS,
+  save: SV.save,
+  persist: SV.persist,
+  hatUnlocked: SV.hatUnlocked,
+  summary: SV.summary,
+  onChange: () => refreshCoins(),
+});
+app.shop = shop;
+app.wallet = Wallet;
+app.trail = () => Wallet.wallet().trail;
 app.editorPaint = (idx, repeat) => atelier.paint(idx, repeat);
 app.atelier = atelier;
 app.editor = editorScene;
@@ -1675,6 +1731,8 @@ function boot() {
   A.checkCanvases();
   buildTitle();
   showScreen('title');
+  const welcome = Wallet.takeWelcome();
+  if (welcome && !location.hash) setTimeout(() => shop.welcome(welcome), 700);
   const unlockAudio = () => sound.unlock();
   window.addEventListener('pointerdown', unlockAudio, { passive: true });
   requestAnimationFrame(frame);

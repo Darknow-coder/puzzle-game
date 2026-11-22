@@ -1,5 +1,29 @@
 # Journal des versions
 
+## 3.1.0
+
+**Nouveautés**
+
+- **Éclats ✦**, la monnaie du jeu, gagnée uniquement en jouant (jamais avec de l’argent réel) :
+  premier passage d’un niveau (+10), chaque nouvelle étoile (+5), étoile filante (+40), monde terminé
+  (+60), succès (+30), défi du jour (+15, plus jusqu’à +25 avec la série). Rejouer un niveau avec le
+  même résultat ne rapporte rien : seules les premières fois paient.
+- **Boutique** (sur l’écran titre, ou en touchant la bourse en haut de l’écran titre et de la carte) :
+  - **Indices** à l’unité (20 ✦) ou en lots de 5 et de 12 (−15 % et −25 %) ;
+  - **6 chapeaux** à acheter (nœud, béret, bonnet à pompon, toque, casque audio, haut-de-forme), à côté
+    des chapeaux gagnés en progressant (l’ancienne garde-robe est devenue un onglet de la boutique) ;
+  - **5 traînées de lumière** derrière les Lumignons : poussière d’étoiles, pétales, mélodie, comète,
+    arc-en-ciel ;
+  - **Cadeau du jour**, de plus en plus gros sur 7 jours d’affilée (de 10 à 60 ✦, et un indice le 7ᵉ jour) ;
+  - **Gagner** : d’où viennent les éclats ; **Journal** : les 60 derniers gains et dépenses.
+- **Indices** : chaque nouvel indice utilise un jeton ; le bouton affiche les jetons restants, ou le
+  prix quand il n’en reste plus (achat sur place en un geste). Revoir un indice déjà affiché est
+  gratuit. On commence avec 60 ✦ et 3 indices.
+- L’écran de victoire compte les éclats gagnés et en détaille l’origine ; la liste des succès indique
+  ce que chacun rapporte. Achats en deux touchers (« Confirmer ? »).
+- Les joueurs d’avant la boutique reçoivent ce que leur progression aurait rapporté (même règles,
+  appliquées au passé), annoncé une fois à l’ouverture.
+
 ## 3.0.0
 
 **Nouveautés**

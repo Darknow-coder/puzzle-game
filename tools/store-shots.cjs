@@ -17,7 +17,7 @@ function seed(lang) {
     ids.push(`${w}-B`);
   }
   ids.slice(0, 38).forEach((id, i) => (levels[id] = { done: true, stars: i % 4 === 0 ? 2 : 3, fireflies: 2, best: 4, tries: 1 }));
-  return JSON.stringify({ v: 1, levels, settings: { music: false, sound: false, vibration: false, lang, speed: 1, dots: true }, hat: 'flowers', seen: SEEN, tips: { stars: 1, two: 1, loop: 1, place: 1, placeDone: 1, swipe: 1, long: 1, editor: 1 }, achievements: {}, hatsSeen: { none: 1, leaf: 1, acorn: 1, flowers: 1, lily: 1, mushroom: 1 }, worldsSeen: { meadow: 1, pond: 1, grove: 1, ruins: 1 }, stats: {}, daily: { results: {}, streak: 3, best: 3, last: null } });
+  return JSON.stringify({ v: 1, levels, settings: { music: false, sound: false, vibration: false, lang, speed: 1, dots: true }, hat: 'flowers', seen: SEEN, tips: { stars: 1, two: 1, loop: 1, place: 1, placeDone: 1, swipe: 1, long: 1, editor: 1 }, achievements: {}, hatsSeen: { none: 1, leaf: 1, acorn: 1, flowers: 1, lily: 1, mushroom: 1 }, worldsSeen: { meadow: 1, pond: 1, grove: 1, ruins: 1 }, stats: {}, daily: { results: {}, streak: 3, best: 3, last: null }, wallet: { coins: 640, hints: 4, earned: 900, spent: 260, hintsUsed: 3, log: [], gift: { day: null, streak: 0 }, owned: { sparkle: 1 }, trail: 'sparkle', welcome: 0 } });
 }
 
 (async () => {

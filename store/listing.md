@@ -25,12 +25,16 @@ regarde ton plan se dérouler. Chaque pas joue une note : ta solution devient un
 • Un défi du jour, chaque jour un nouveau puzzle.
 • L’atelier : crée tes propres niveaux, le jeu vérifie qu’ils sont faisables, et partage-les avec un code.
 • Des chapeaux à collectionner, des succès, un carnet illustré.
-• Indices illimités et gratuits, sans vies ni attente.
+• Une boutique où dépenser les éclats gagnés en jouant : indices, chapeaux, traînées de lumière.
+  Un cadeau chaque jour, sans vies ni attente.
 • Une image souvenir de chaque niveau réussi à partager, et un code pour garder ta progression.
 • Jouable hors ligne, sans publicité, sans achat intégré, sans collecte de données.
 
 **Catégorie** : Jeux › Réflexion. **Classification** : tout public (aucune violence, aucun contenu
 sensible, aucune interaction entre joueurs, aucune donnée collectée).
+
+**Nouveautés 3.1** : les éclats, une monnaie gagnée en jouant, et la boutique : indices, chapeaux,
+traînées de lumière, cadeau du jour, journal des gains.
 
 **Nouveautés 3.0** : un septième monde, l’Aube de Cristal, et ses miroirs (11 niveaux et 61 défis
 du jour), image souvenir à partager, code de sauvegarde, option pour ouvrir tous les niveaux, dessins
@@ -59,7 +63,8 @@ plays a note, so your solution becomes a tune.
 • A new daily puzzle every day.
 • The workshop: build your own levels, the game proves they can be solved, share them with a code.
 • Hats to collect, achievements, an illustrated notebook.
-• Free, unlimited hints. No lives, no waiting.
+• A shop for the glimmers you earn by playing: hints, hats, trails of light. A gift every day,
+  no lives, no waiting.
 • A keepsake picture of every solved level to share, and a code to keep your progress safe.
 • Works offline. No ads, no in-app purchases, no data collection.
 

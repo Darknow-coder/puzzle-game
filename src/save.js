@@ -221,6 +221,7 @@ export function hatUnlocked(h, sum = summary()) {
   if (n.world !== undefined) return worldComplete(WORLDS[n.world]);
   if (n.bonus !== undefined) return sum.bonusDone >= n.bonus;
   if (n.perfect) return sum.allPerfect;
+  if (n.shop) return !!save.data.wallet?.owned?.[h.id];
   return false;
 }
 

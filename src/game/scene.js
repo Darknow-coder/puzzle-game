@@ -62,6 +62,7 @@ export class GameScene {
     this.run = null;
     this.failInfo = null;
     this.trails = [];
+    this.trailSeq = 0;
     this.winPaths = null;
     this.mirrorFlash = new Map();
     this.melody = null;
@@ -213,8 +214,8 @@ export class GameScene {
 
   // ---------------------------------------------------------------- hints
 
-  hint() {
-    if (this.mode !== 'plan' || !this.solution) return;
+  /** What the next hint would reveal ({next, wrong}), without showing anything yet. */
+  nextHint() {
     // Follow the perfect layout that shares the most pieces with the player's.
     const layouts = [this.solution.sol, ...(this.solution.alt || [])].map((l) => l.map(([idx, type, dir]) => ({ idx, type, dir })));
     const matches = (s) => {
@@ -233,17 +234,36 @@ export class GameScene {
     const good = new Set();
     for (const s of sol) if (matches(s)) good.add(s.idx);
     const wrong = [...this.placements.keys()].filter((i) => !good.has(i));
-    this.wrongCells = wrong;
-    const next = sol.find((s) => !good.has(s.idx));
-    if (!next) {
+    return { next: sol.find((s) => !good.has(s.idx)) || null, wrong };
+  }
+
+  /** True when that piece already waits on the board as a ghost: showing it again is free. */
+  hintShown(h) {
+    const n = h.next;
+    return !!n && this.hintCells.some((c) => c.idx === n.idx && c.type === n.type && (!ORIENTED[n.type] || c.dir === n.dir));
+  }
+
+  showHint(h) {
+    this.wrongCells = h.wrong;
+    if (!h.next) {
       this.app.toast(this.app.t('hintNone'), 2000);
       return;
     }
-    if (!this.hintCells.some((h) => h.idx === next.idx)) this.hintCells.push({ ...next, t: this.t });
-    this.hintsUsed++;
-    this.app.onHint();
+    if (this.hintShown(h)) {
+      for (const c of this.hintCells) if (c.idx === h.next.idx) c.t = this.t; // pulse it again
+    } else {
+      this.hintCells = this.hintCells.filter((c) => c.idx !== h.next.idx);
+      this.hintCells.push({ ...h.next, t: this.t });
+      this.hintsUsed++;
+      this.app.onHint();
+    }
     sound.sfx('hint');
-    if (wrong.length) this.app.toast(this.app.t('hintClear'), 2600);
+    if (h.wrong.length) this.app.toast(this.app.t('hintClear'), 2600);
+  }
+
+  hint() {
+    if (this.mode !== 'plan' || !this.solution) return;
+    this.showHint(this.nextHint());
   }
 
   // ---------------------------------------------------------------- input
@@ -1288,11 +1308,12 @@ export class GameScene {
       const tr = this.trails[id];
       if (!tr || !tr.length || wk.kind !== KIND.LUMI) return;
       const col = A.LUMI[wk.color].glow;
+      const style = this.app.trail ? this.app.trail() : 'classic';
       while (tr.length && now - tr[0].t > 1.6) tr.shift();
-      for (const pt of tr) {
+      tr.forEach((pt, i) => {
         const k = 1 - (now - pt.t) / 1.6;
-        A.glow(g, pt.x, pt.y + this.S * 0.2, this.S * 0.22 * k, col, 0.35 * k);
-      }
+        A.drawTrailDot(g, style, pt.x, pt.y + this.S * 0.2, this.S, k, col, (pt.n ??= this.trailSeq++), now);
+      });
     });
   }
 

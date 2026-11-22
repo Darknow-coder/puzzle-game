@@ -1296,6 +1296,121 @@ export function drawHat(g, x, y, s, hat, t = 0) {
       ellipse(g, x, y - s * 0.02, s * 0.025, s * 0.025);
       g.fill();
       break;
+    case 'bow': {
+      // A ribbon bow on the side of the head.
+      const bx = x + s * 0.15;
+      const by = y + s * 0.04;
+      g.fillStyle = '#ff6fa8';
+      for (const sg of [-1, 1]) {
+        g.beginPath();
+        g.moveTo(bx, by);
+        g.quadraticCurveTo(bx + sg * s * 0.13, by - s * 0.14, bx + sg * s * 0.19, by - s * 0.02);
+        g.quadraticCurveTo(bx + sg * s * 0.15, by + s * 0.1, bx, by);
+        g.fill();
+      }
+      g.fillStyle = '#e04787';
+      ellipse(g, bx, by, s * 0.032, s * 0.032);
+      g.fill();
+      g.fillStyle = 'rgba(255,255,255,0.5)';
+      ellipse(g, bx - s * 0.08, by - s * 0.04, s * 0.025, s * 0.012);
+      g.fill();
+      break;
+    }
+    case 'beret': {
+      g.translate(x - s * 0.02, y + s * 0.01);
+      g.rotate(-0.18);
+      g.fillStyle = '#2f3f7a';
+      g.beginPath();
+      g.ellipse(0, 0, s * 0.25, s * 0.09, 0, 0, TAU);
+      g.fill();
+      g.fillStyle = '#41539a';
+      g.beginPath();
+      g.ellipse(-s * 0.03, -s * 0.025, s * 0.18, s * 0.05, 0, 0, TAU);
+      g.fill();
+      g.strokeStyle = '#2f3f7a';
+      g.lineWidth = s * 0.025;
+      g.lineCap = 'round';
+      g.beginPath();
+      g.moveTo(0, -s * 0.07);
+      g.lineTo(s * 0.015, -s * 0.12);
+      g.stroke();
+      break;
+    }
+    case 'pompom': {
+      // Knitted beanie, worn a little sideways so the pompom clears the flame.
+      g.translate(x, y + s * 0.03);
+      g.rotate(-0.22);
+      g.fillStyle = '#ff6b6b';
+      g.beginPath();
+      g.ellipse(0, 0, s * 0.23, s * 0.21, 0, Math.PI, TAU);
+      g.fill();
+      g.fillStyle = '#ffd1d1';
+      for (let i = -2; i <= 2; i++) g.fillRect(i * s * 0.08 - s * 0.012, -s * 0.15 + Math.abs(i) * s * 0.04, s * 0.024, s * 0.15 - Math.abs(i) * s * 0.04);
+      g.fillStyle = '#e04f55';
+      roundRect(g, -s * 0.25, -s * 0.04, s * 0.5, s * 0.08, s * 0.035);
+      g.fill();
+      g.fillStyle = '#ffffff';
+      ellipse(g, -s * 0.2, -s * 0.17, s * 0.075, s * 0.075);
+      g.fill();
+      g.fillStyle = 'rgba(220,225,240,0.8)';
+      ellipse(g, -s * 0.18, -s * 0.15, s * 0.04, s * 0.03);
+      g.fill();
+      break;
+    }
+    case 'chef': {
+      g.fillStyle = '#ffffff';
+      for (const [dx, dy, r] of [[-0.12, -0.12, 0.1], [0.12, -0.12, 0.1], [0, -0.18, 0.12]]) {
+        ellipse(g, x + dx * s, y + dy * s, r * s, r * s);
+        g.fill();
+      }
+      g.fillRect(x - s * 0.17, y - s * 0.13, s * 0.34, s * 0.12);
+      g.fillStyle = '#e9edf5';
+      roundRect(g, x - s * 0.2, y - s * 0.03, s * 0.4, s * 0.08, s * 0.02);
+      g.fill();
+      g.strokeStyle = 'rgba(150,160,190,0.6)';
+      g.lineWidth = s * 0.012;
+      g.beginPath();
+      g.moveTo(x - s * 0.06, y - s * 0.12);
+      g.lineTo(x - s * 0.05, y - s * 0.03);
+      g.moveTo(x + s * 0.06, y - s * 0.12);
+      g.lineTo(x + s * 0.05, y - s * 0.03);
+      g.stroke();
+      break;
+    }
+    case 'headphones': {
+      g.strokeStyle = '#4a4f6e';
+      g.lineWidth = s * 0.035;
+      g.beginPath();
+      g.ellipse(x, y + s * 0.2, s * 0.31, s * 0.3, 0, Math.PI * 1.12, Math.PI * 1.88);
+      g.stroke();
+      for (const sg of [-1, 1]) {
+        const cx = x + sg * s * 0.31;
+        g.fillStyle = '#3a3f58';
+        roundRect(g, cx - s * 0.07, y + s * 0.1, s * 0.14, s * 0.22, s * 0.06);
+        g.fill();
+        g.fillStyle = '#ff8fc1';
+        roundRect(g, cx - s * 0.045, y + s * 0.135, s * 0.09, s * 0.15, s * 0.04);
+        g.fill();
+      }
+      g.fillStyle = '#8be0ff';
+      g.font = `${Math.round(s * 0.18)}px sans-serif`;
+      g.textAlign = 'center';
+      g.fillText('♪', x + s * 0.42, y - s * 0.02 + Math.sin(t * 3) * s * 0.02);
+      break;
+    }
+    case 'tophat': {
+      g.fillStyle = '#25213a';
+      g.beginPath();
+      g.ellipse(x, y + s * 0.03, s * 0.25, s * 0.06, 0, 0, TAU);
+      g.fill();
+      roundRect(g, x - s * 0.15, y - s * 0.3, s * 0.3, s * 0.33, s * 0.03);
+      g.fill();
+      g.fillStyle = '#ffcf5a';
+      g.fillRect(x - s * 0.15, y - s * 0.06, s * 0.3, s * 0.05);
+      g.fillStyle = 'rgba(255,255,255,0.18)';
+      g.fillRect(x - s * 0.11, y - s * 0.28, s * 0.04, s * 0.2);
+      break;
+    }
     case 'prism': {
       // Crystal tiara: a silver band and three dawn-coloured shards.
       g.strokeStyle = '#e9e4ff';
@@ -2045,6 +2160,65 @@ export function drawPieceIcon(g, kind, x, y, S, t = 0) {
       break;
     default:
       break;
+  }
+}
+
+const HUES = Array.from({ length: 12 }, (_, i) => {
+  // Twelve fixed colours, so that the glow cache stays small.
+  const h = (i / 12) * 6;
+  const c = (v) => Math.round(255 * Math.min(1, Math.max(0, v)));
+  const r = c(Math.abs(h - 3) - 1);
+  const gr = c(2 - Math.abs(h - 2));
+  const b = c(2 - Math.abs(h - 4));
+  return `rgba(${r},${gr},${b},`;
+});
+
+/**
+ * One point of a Lumignon's light trail. k: 1 (fresh) → 0 (fading), i: index along
+ * the trail, color: the Lumignon's glow prefix, style: classic, sparkle, petals,
+ * notes, comet or rainbow (bought in the shop).
+ */
+export function drawTrailDot(g, style, x, y, S, k, color, i, t) {
+  switch (style) {
+    case 'sparkle':
+      glow(g, x, y, S * 0.16 * k, color, 0.25 * k);
+      if (i % 3 === 0) {
+        g.fillStyle = `rgba(255,250,220,${0.9 * k})`;
+        star(g, x + Math.sin(i * 2.3) * S * 0.12, y + Math.cos(i * 1.7) * S * 0.1, S * 0.06 * (0.6 + 0.4 * Math.sin(t * 9 + i)) * (0.4 + k), 4, 0.3);
+      }
+      break;
+    case 'petals': {
+      glow(g, x, y, S * 0.14 * k, color, 0.2 * k);
+      if (i % 2 === 0) {
+        const fall = (1 - k) * S * 0.35;
+        g.save();
+        g.translate(x + Math.sin(i * 1.9 + (1 - k) * 3) * S * 0.15, y + fall);
+        g.rotate(i * 0.9 + (1 - k) * 2);
+        g.fillStyle = `rgba(255,${150 + (i % 3) * 25},${190 + (i % 2) * 30},${0.85 * k})`;
+        ellipse(g, 0, 0, S * 0.07, S * 0.035);
+        g.fill();
+        g.restore();
+      }
+      break;
+    }
+    case 'notes':
+      glow(g, x, y, S * 0.16 * k, color, 0.25 * k);
+      if (i % 4 === 0) {
+        g.fillStyle = color + (0.95 * k) + ')';
+        g.font = `600 ${Math.round(S * 0.3)}px Fredoka, sans-serif`;
+        g.textAlign = 'center';
+        g.fillText(i % 8 === 0 ? '♪' : '♫', x + Math.sin(i) * S * 0.1, y - (1 - k) * S * 0.5);
+      }
+      break;
+    case 'comet':
+      glow(g, x, y, S * 0.34 * k * k, color, 0.6 * k * k);
+      if (k > 0.75) glow(g, x, y, S * 0.14, 'rgba(255,255,255,', 0.5 * k);
+      break;
+    case 'rainbow':
+      glow(g, x, y, S * 0.24 * k, HUES[(i + Math.floor(t * 6)) % 12], 0.4 * k);
+      break;
+    default:
+      glow(g, x, y, S * 0.22 * k, color, 0.35 * k);
   }
 }
 

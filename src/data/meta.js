@@ -200,6 +200,23 @@ export const HATS_INFO = [
   { id: 'crown', name: { fr: 'Couronne', en: 'Crown' }, need: { world: 5 } },
   { id: 'prism', name: { fr: 'Diadème de cristal', en: 'Crystal tiara' }, need: { world: 6 } },
   { id: 'halo', name: { fr: 'Auréole d’étoiles', en: 'Star halo' }, need: { perfect: true } },
+  // Sold in the shop (prices in economy.js).
+  { id: 'bow', name: { fr: 'Nœud', en: 'Bow' }, need: { shop: true } },
+  { id: 'beret', name: { fr: 'Béret', en: 'Beret' }, need: { shop: true } },
+  { id: 'pompom', name: { fr: 'Bonnet à pompon', en: 'Bobble hat' }, need: { shop: true } },
+  { id: 'chef', name: { fr: 'Toque', en: 'Chef’s hat' }, need: { shop: true } },
+  { id: 'headphones', name: { fr: 'Casque audio', en: 'Headphones' }, need: { shop: true } },
+  { id: 'tophat', name: { fr: 'Haut-de-forme', en: 'Top hat' }, need: { shop: true } },
+];
+
+/** Light trails behind the Lumignons; all but the first are sold in the shop. */
+export const TRAILS = [
+  { id: 'classic', name: { fr: 'Lueur', en: 'Glow' } },
+  { id: 'sparkle', name: { fr: 'Poussière d’étoiles', en: 'Stardust' } },
+  { id: 'petals', name: { fr: 'Pétales', en: 'Petals' } },
+  { id: 'notes', name: { fr: 'Mélodie', en: 'Melody' } },
+  { id: 'comet', name: { fr: 'Comète', en: 'Comet' } },
+  { id: 'rainbow', name: { fr: 'Arc-en-ciel', en: 'Rainbow' } },
 ];
 
 /** Achievements; `check(p)` receives the progress summary. */

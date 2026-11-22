@@ -245,6 +245,18 @@ class Sound {
         this.tone({ freq: f * 2.01, type: 'sine', at: 0.01, decay: 0.12, gain: 0.02 });
         break;
       }
+      case 'coin':
+        this.tone({ freq: midi(96 + Math.floor(Math.random() * 3) * 2), type: 'triangle', decay: 0.05, gain: 0.035 });
+        break;
+      case 'buy':
+        [0, 4, 7, 12].forEach((st, i) => this.tone({ freq: midi(84 + st), type: 'triangle', at: i * 0.06, decay: 0.18, gain: 0.06 }));
+        this.hiss({ at: 0.1, dur: 0.3, gain: 0.03, from: 6000, to: 9000 });
+        this.vibrate([12, 30, 12]);
+        break;
+      case 'gift':
+        [0, 7, 12, 16, 19, 24].forEach((st, i) => this.tone({ freq: midi(79 + st), type: 'sine', at: i * 0.07, decay: 0.35, gain: 0.06 }));
+        this.vibrate([20, 40, 20]);
+        break;
       case 'portal':
         this.tone({ freq: 300, type: 'sine', decay: 0.35, gain: 0.1, glide: 1400 });
         this.hiss({ dur: 0.35, gain: 0.06, from: 500, to: 5000 });

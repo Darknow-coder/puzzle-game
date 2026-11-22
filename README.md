@@ -15,7 +15,9 @@ puis appuie sur **Go !** et regarde ton plan se dérouler… en musique.
 - **Sauvegarde** : toute la progression tient dans un code de ~400 caractères, à garder ou à coller
   sur un autre appareil. Option « Ouvrir tous les niveaux » dans les réglages.
 - Pause, pas à pas et ralenti des échecs pour comprendre chaque parcours ; tutoriel animé.
-- Carte des constellations, chapeaux à collectionner, succès, carnet des éléments, indices illimités.
+- Carte des constellations, chapeaux à collectionner, succès, carnet des éléments.
+- **Boutique et éclats** : une monnaie gagnée uniquement en jouant (premiers passages, étoiles,
+  mondes, succès, défi et cadeau du jour), dépensée en indices, chapeaux et traînées de lumière.
 - Pensé pour le tactile (toucher, glisser, appui long), jouable à la souris et au clavier.
 - Installable comme une application (PWA) et jouable **hors ligne**. Français / anglais.
 - Zéro dépendance : HTML, CSS, JavaScript, Canvas 2D et Web Audio. Aucune image ni aucun son externe.
@@ -58,6 +60,7 @@ npm test             # tests du moteur et du solveur (Node ≥ 18)
 npm run verify       # prouve que chaque niveau est solvable et régénère src/data/solutions.js
 npm run e2e          # tous les tests de bout en bout dans Chromium (Playwright requis, serveur lancé)
                      #   dont tests/e2e/v3.cjs : miroir posé au doigt, image souvenir, sauvegarde
+                     #   et tests/e2e/shop.cjs : gains, jetons d’indice, achats, cadeau du jour
 npm run e2e:canvas   # dessins perdus (plantage réel du GPU) : tout est redessiné
 npm run e2e:update   # mise à jour de l’app hors ligne : bandeau « Nouvelle version », nouveau cache
 ```
@@ -88,6 +91,9 @@ src/data/daily.js        généré : les 427 puzzles du défi du jour (solution 
 src/daily.js             choix du puzzle du jour et série de jours
 src/share.js             image souvenir d’un niveau réussi
 src/backup.js            codes de sauvegarde de la progression
+src/economy.js           tous les montants de l’économie (gains, prix, cadeau du jour)
+src/wallet.js            la bourse : éclats, jetons d’indice, achats, cadeau du jour, journal
+src/ui/shop.js           la boutique
 src/editor/              atelier : modèle, codes de partage, vérification (Web Worker), interface
 src/game/art.js          tout le dessin procédural (îles, personnages, pièces, décors)
 src/game/scene.js        écran de jeu : saisie tactile, préparation, animation des parcours

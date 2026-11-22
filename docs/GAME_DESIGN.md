@@ -108,8 +108,10 @@ réussissable avec moins d’étoiles : les lucioles sont un défi facultatif.
 - **Succès** : 16 objectifs secondaires (persévérance, perfectionnisme, sans indice…).
 - **Carnet** : chaque élément rencontré y est expliqué avec son illustration.
 - **Rejouabilité** : les records (étoiles, pièces) sont conservés ; revenir chercher la 3ᵉ étoile.
-- **Indices** illimités et gratuits : ils révèlent pas à pas une solution parfaite et signalent les
-  pièces mal placées. Le jeu n’est jamais bloquant ni punitif (pas de vies, pas d’attente).
+- **Indices** : ils révèlent pas à pas une solution parfaite et signalent les pièces mal placées.
+  Depuis la version 3.1, chaque nouvel indice utilise un jeton (voir *Économie* plus bas). Le jeu
+  reste non punitif : pas de vies, pas d’attente, un niveau peut être sauté, et l’option « Ouvrir tous
+  les niveaux » existe pour qui reste bloqué.
 
 ## 7 bis. Version 2
 
@@ -136,6 +138,43 @@ réussissable avec moins d’étoiles : les lucioles sont un défi facultatif.
 - **Image souvenir** à partager, **codes de sauvegarde**, option **Ouvrir tous les niveaux**.
 - Robustesse mobile : quand le système libère la mémoire graphique (application en arrière-plan),
   tout ce qui était dessiné une fois pour toutes est redessiné.
+
+## 7 quater. Version 3.1 : l’économie des éclats
+
+Les **éclats** (✦) sont la monnaie du jeu. Ils se gagnent **uniquement en jouant**, jamais avec de
+l’argent réel, et se dépensent dans la **boutique**. Tous les montants sont réunis dans
+`src/economy.js`, pour pouvoir lire et ajuster l’équilibre d’un coup d’œil.
+
+| Gagner | Éclats |
+|---|---|
+| Finir un niveau pour la première fois | +10 |
+| Chaque étoile obtenue pour la première fois sur un niveau | +5 |
+| Finir une étoile filante | +40 |
+| Terminer un monde (ses 10 niveaux) | +60 |
+| Chaque succès | +30 |
+| Défi du jour (une fois par jour) | +15, puis +5 par jour d’affilée (jusqu’à +25) |
+| Cadeau du jour | 10, 15, 20, 25, 30, 40, 60 sur 7 jours d’affilée, + 1 indice le 7ᵉ jour |
+
+| Dépenser | Prix |
+|---|---|
+| 1 indice (aussi acheté sur place quand il n’en reste plus) | 20 |
+| 5 indices / 12 indices | 85 (−15 %) / 180 (−25 %) |
+| 6 chapeaux (nœud, béret, bonnet à pompon, toque, casque audio, haut-de-forme) | 100 à 260 |
+| 5 traînées de lumière (poussière d’étoiles, pétales, mélodie, comète, arc-en-ciel) | 150 à 280 |
+
+Principes :
+
+- **Seules les premières fois paient** : rejouer un niveau avec le même résultat ne rapporte rien,
+  améliorer ses étoiles rapporte les étoiles nouvelles. Impossible de « farmer ».
+- **Équilibre** : toute la campagne bien jouée rapporte environ 3 000 éclats (sans compter le défi et
+  le cadeau du jour) ; les cosmétiques valent 2 150 en tout ; un indice 15 à 20. Les indices restent à
+  portée, les cosmétiques sont un objectif.
+- **Un indice n’est payé qu’une fois** : revoir un indice déjà affiché (ou constater qu’il n’y a plus
+  rien à révéler) est gratuit. Plus de jeton : achat sur place en un geste, ou le montant manquant.
+- **Départ** : 60 éclats et 3 indices. Les joueurs d’avant la boutique reçoivent ce que leur progression
+  aurait rapporté (mêmes règles, appliquées au passé), annoncé une fois.
+- **Achats en deux touchers** (« Confirmer ? ») pour éviter les achats accidentels ; journal des
+  60 derniers mouvements ; la sauvegarde et les codes de sauvegarde incluent la bourse.
 
 ## 8. Conception et vérification des niveaux
 
