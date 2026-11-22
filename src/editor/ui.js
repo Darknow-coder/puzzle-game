@@ -157,7 +157,10 @@ export function createAtelier(api) {
   // ------------------------------------------------------------------- list
 
   function drawPreview(cv, e) {
-    const g = cv.getContext('2d');
+    A.paint(cv, (g) => previewInto(g, cv, e));
+  }
+
+  function previewInto(g, cv, e) {
     let Lv;
     try {
       Lv = parseLevel(e.def);
@@ -409,101 +412,101 @@ export function createAtelier(api) {
     const cv = document.createElement('canvas');
     cv.width = 88;
     cv.height = 88;
-    const g = cv.getContext('2d');
-    g.scale(2, 2);
-    const S = 30;
-    const st = A.WORLD_STYLES[model.theme];
-    const tile = (col) => {
-      g.fillStyle = col;
-      g.beginPath();
-      A.roundRect(g, 7, 7, 30, 30, 7);
-      g.fill();
-    };
-    switch (k) {
-      case '.':
-        tile(st.grass[0]);
-        break;
-      case ' ':
-        g.strokeStyle = 'rgba(255,255,255,0.6)';
-        g.setLineDash([3, 3]);
-        g.lineWidth = 1.5;
+    return A.paint(cv, (g) => {
+      g.scale(2, 2);
+      const S = 30;
+      const st = A.WORLD_STYLES[model.theme];
+      const tile = (col) => {
+        g.fillStyle = col;
         g.beginPath();
-        A.roundRect(g, 8, 8, 28, 28, 7);
-        g.stroke();
-        break;
-      case '#': {
-        const spr = A.propSprite(st.props[0], 26, model.theme, 1, 2);
-        g.drawImage(spr.canvas, 22 - spr.ax, 36 - spr.ay, spr.w, spr.h);
-        break;
+        A.roundRect(g, 7, 7, 30, 30, 7);
+        g.fill();
+      };
+      switch (k) {
+        case '.':
+          tile(st.grass[0]);
+          break;
+        case ' ':
+          g.strokeStyle = 'rgba(255,255,255,0.6)';
+          g.setLineDash([3, 3]);
+          g.lineWidth = 1.5;
+          g.beginPath();
+          A.roundRect(g, 8, 8, 28, 28, 7);
+          g.stroke();
+          break;
+        case '#': {
+          const spr = A.propSprite(st.props[0], 26, model.theme, 1, 2);
+          g.drawImage(spr.canvas, 22 - spr.ax, 36 - spr.ay, spr.w, spr.h);
+          break;
+        }
+        case '~':
+          tile(st.water[0]);
+          break;
+        case 'o':
+          A.drawCloud(g, 22, 20, 30, 1);
+          break;
+        case 'a':
+        case 'b':
+        case 'c':
+        case 'd':
+          A.drawLumi(g, 22, 38, 30, { color: k.charCodeAt(0) - 97, dir: 2, t: 1, noShadow: true });
+          break;
+        case 'G':
+          A.drawGloomnib(g, 22, 38, 30, { t: 1 });
+          break;
+        case 'Z':
+          A.drawGloomnib(g, 22, 38, 30, { t: 1, sleeping: true });
+          break;
+        case 'A':
+        case 'B':
+        case 'C':
+        case 'D':
+          A.drawLantern(g, 22, 39, 30, k.charCodeAt(0) - 65, { lit: 0.8, t: 1 });
+          break;
+        case '1':
+        case '2':
+        case '3':
+        case '4':
+          A.drawSpark(g, 22, 34, 30, k.charCodeAt(0) - 49, 1);
+          break;
+        case '*':
+          A.drawFirefly(g, 22, 34, 30, 1);
+          break;
+        case 'arrow':
+          A.drawArrowStone(g, 22, 22, 30, 1, { fixed: true });
+          break;
+        case 'm':
+          A.drawMushroom(g, 22, 36, 30, { fixed: true });
+          break;
+        case 'f':
+          A.drawDaisy(g, 22, 38, 30, { fixed: true, t: 1 });
+          break;
+        case '@':
+          A.drawPortal(g, 22, 22, 30, 0, 1);
+          break;
+        case '%':
+          A.drawPortal(g, 22, 22, 30, 1, 1);
+          break;
+        case 'P':
+          A.drawPlate(g, 22, 23, 30, 0, { lit: true });
+          break;
+        case 'Q':
+          A.drawPlate(g, 22, 23, 30, 1, { lit: true });
+          break;
+        case 'H':
+          A.drawBrambles(g, 22, 22, 30, 0, model.gateOpen[0] ? 1 : 0, 1);
+          break;
+        case 'K':
+          A.drawBrambles(g, 22, 22, 30, 1, model.gateOpen[1] ? 1 : 0, 1);
+          break;
+        case 'R':
+          A.drawVane(g, 22, 23, 30, 0.6, 1);
+          break;
+        default:
+          if (k.startsWith('piece-')) A.drawPieceIcon(g, k.slice(6), 22, 22, 30, 0);
+          break;
       }
-      case '~':
-        tile(st.water[0]);
-        break;
-      case 'o':
-        A.drawCloud(g, 22, 20, 30, 1);
-        break;
-      case 'a':
-      case 'b':
-      case 'c':
-      case 'd':
-        A.drawLumi(g, 22, 38, 30, { color: k.charCodeAt(0) - 97, dir: 2, t: 1, noShadow: true });
-        break;
-      case 'G':
-        A.drawGloomnib(g, 22, 38, 30, { t: 1 });
-        break;
-      case 'Z':
-        A.drawGloomnib(g, 22, 38, 30, { t: 1, sleeping: true });
-        break;
-      case 'A':
-      case 'B':
-      case 'C':
-      case 'D':
-        A.drawLantern(g, 22, 39, 30, k.charCodeAt(0) - 65, { lit: 0.8, t: 1 });
-        break;
-      case '1':
-      case '2':
-      case '3':
-      case '4':
-        A.drawSpark(g, 22, 34, 30, k.charCodeAt(0) - 49, 1);
-        break;
-      case '*':
-        A.drawFirefly(g, 22, 34, 30, 1);
-        break;
-      case 'arrow':
-        A.drawArrowStone(g, 22, 22, 30, 1, { fixed: true });
-        break;
-      case 'm':
-        A.drawMushroom(g, 22, 36, 30, { fixed: true });
-        break;
-      case 'f':
-        A.drawDaisy(g, 22, 38, 30, { fixed: true, t: 1 });
-        break;
-      case '@':
-        A.drawPortal(g, 22, 22, 30, 0, 1);
-        break;
-      case '%':
-        A.drawPortal(g, 22, 22, 30, 1, 1);
-        break;
-      case 'P':
-        A.drawPlate(g, 22, 23, 30, 0, { lit: true });
-        break;
-      case 'Q':
-        A.drawPlate(g, 22, 23, 30, 1, { lit: true });
-        break;
-      case 'H':
-        A.drawBrambles(g, 22, 22, 30, 0, model.gateOpen[0] ? 1 : 0, 1);
-        break;
-      case 'K':
-        A.drawBrambles(g, 22, 22, 30, 1, model.gateOpen[1] ? 1 : 0, 1);
-        break;
-      case 'R':
-        A.drawVane(g, 22, 23, 30, 0.6, 1);
-        break;
-      default:
-        if (k.startsWith('piece-')) A.drawPieceIcon(g, k.slice(6), 22, 22, 30, 0);
-        break;
-    }
-    return cv;
+    });
   }
 
   function snapshot() {

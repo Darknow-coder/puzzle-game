@@ -50,7 +50,8 @@ Aucune installation n’est nécessaire pour jouer en local : il suffit d’un s
 npm start            # serveur local sur http://localhost:8080
 npm test             # tests du moteur et du solveur (Node ≥ 18)
 npm run verify       # prouve que chaque niveau est solvable et régénère src/data/solutions.js
-npm run e2e          # tests de bout en bout dans Chromium (Playwright requis, serveur lancé)
+npm run e2e          # tous les tests de bout en bout dans Chromium (Playwright requis, serveur lancé)
+npm run e2e:canvas   # dessins perdus (plantage réel du GPU) : tout est redessiné
 npm run e2e:update   # mise à jour de l’app hors ligne : bandeau « Nouvelle version », nouveau cache
 ```
 

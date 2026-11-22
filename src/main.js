@@ -114,6 +114,9 @@ function frame(now) {
   last = now;
   active.update(dt);
   ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  // Scenes paint an opaque sky, but if its pixels were lost the previous frames
+  // must not stay on screen.
+  ctx.clearRect(0, 0, W, H);
   active.render(ctx);
   requestAnimationFrame(frame);
 }
@@ -561,9 +564,10 @@ function buildTray() {
     const cv = document.createElement('canvas');
     cv.width = 128;
     cv.height = 128;
-    const g = cv.getContext('2d');
-    g.scale(2, 2);
-    A.drawPieceIcon(g, k, 32, 32, 50, 0);
+    A.paint(cv, (g) => {
+      g.scale(2, 2);
+      A.drawPieceIcon(g, k, 32, 32, 50, 0);
+    });
     b.appendChild(cv);
     b.appendChild(el('span', 'count', '0'));
     b.onclick = () => {
@@ -821,107 +825,107 @@ function illustration(kind, w = 140, h = 120) {
   cv.height = h * 2;
   cv.style.width = w + 'px';
   cv.style.height = h + 'px';
-  const g = cv.getContext('2d');
-  g.scale(2, 2);
-  const S = 64;
-  const cx = w / 2;
-  const by = h * 0.78;
-  const tile = (x, y, col = '#8fd18a') => {
-    g.fillStyle = col;
-    g.beginPath();
-    A.roundRect(g, x - S / 2, y - S / 2, S, S, 12);
-    g.fill();
-  };
-  switch (kind) {
-    case 'welcome':
-      tile(cx - 34, by - 30);
-      tile(cx + 30, by - 30, '#82c77e');
-      A.drawLumi(g, cx - 34, by - 8, S, { color: 0, dir: 1, t: 1 });
-      A.drawLantern(g, cx + 30, by - 8, S, 0, { lit: 0.8, t: 1 });
-      break;
-    case 'stars':
-      g.fillStyle = '#ffcf5a';
-      for (let i = 0; i < 3; i++) A.star(g, cx + (i - 1) * 40, h / 2 - (i === 1 ? 8 : 0), i === 1 ? 24 : 19, 5, 0.45);
-      break;
-    case 'two':
-      A.drawLumi(g, cx - 28, by, S, { color: 0, dir: 1, t: 1, mood: 'happy' });
-      A.drawLumi(g, cx + 28, by, S, { color: 1, dir: 3, t: 2, mood: 'happy' });
-      break;
-    case 'loop':
-      g.strokeStyle = 'rgba(255,200,100,0.8)';
-      g.lineWidth = 4;
-      g.setLineDash([6, 8]);
+  return A.paint(cv, (g) => {
+    g.scale(2, 2);
+    const S = 64;
+    const cx = w / 2;
+    const by = h * 0.78;
+    const tile = (x, y, col = '#8fd18a') => {
+      g.fillStyle = col;
       g.beginPath();
-      g.ellipse(cx, h / 2 + 6, 46, 34, 0, 0, A.TAU);
-      g.stroke();
-      g.setLineDash([]);
-      A.drawLumi(g, cx + 44, h / 2 + 22, S * 0.8, { color: 0, dir: 0, t: 1, mood: 'scared' });
-      break;
-    case 'lumi':
-      A.drawLumi(g, cx, by, S * 1.2, { color: 0, dir: 2, t: 1 });
-      break;
-    case 'lantern':
-      A.drawLantern(g, cx, by, S * 1.1, 1, { lit: 0.8, t: 1 });
-      break;
-    case 'arrow':
-      A.drawArrowStone(g, cx, h / 2, S * 1.2, 1, {});
-      break;
-    case 'engraved':
-      A.drawArrowStone(g, cx, h / 2, S * 1.2, 2, { fixed: true });
-      break;
-    case 'rock':
-      g.drawImage(A.propSprite('rock', S, 'meadow', 1, 2).canvas, cx - 41.6, by - 105, 83.2, 121.6);
-      break;
-    case 'void':
-      tile(cx, h / 2 - 10);
-      A.drawLumi(g, cx + 6, by + 6, S * 0.8, { color: 0, dir: 2, t: 1, mood: 'scared', alpha: 0.85 });
-      break;
-    case 'firefly':
-      A.drawFirefly(g, cx, by, S * 1.3, 1);
-      break;
-    case 'water':
-      tile(cx, h / 2, '#3f8fd0');
-      break;
-    case 'lily':
-      tile(cx, h / 2, '#3f8fd0');
-      A.drawLily(g, cx, h / 2, S, { t: 1, fixed: true });
-      break;
-    case 'spark':
-      A.drawSpark(g, cx - 30, by, S, 2, 1);
-      A.drawLantern(g, cx + 30, by, S, 2, { lit: 0.1, locked: true, t: 1 });
-      break;
-    case 'mushroom':
-      A.drawMushroom(g, cx, by, S * 1.2, { fixed: true });
-      break;
-    case 'daisy':
-      A.drawDaisy(g, cx, by, S * 1.3, { fixed: true, t: 1 });
-      break;
-    case 'portal':
-      A.drawPortal(g, cx - 32, h / 2, S, 0, 1);
-      A.drawPortal(g, cx + 32, h / 2, S, 0, 2);
-      break;
-    case 'plate':
-      A.drawPlate(g, cx, h / 2, S * 1.2, 0, { lit: true });
-      break;
-    case 'brambles':
-      A.drawBrambles(g, cx, h / 2 + 4, S * 1.2, 0, 0, 1);
-      break;
-    case 'gloomnib':
-      A.drawGloomnib(g, cx, by, S * 1.2, { t: 1 });
-      break;
-    case 'sleeper':
-      A.drawGloomnib(g, cx, by, S * 1.2, { t: 1, sleeping: true });
-      break;
-    case 'vane':
-      A.drawVane(g, cx, h / 2, S * 1.2, 0.5, 1);
-      break;
-    case 'cloud':
-      A.drawCloud(g, cx, h / 2 - 6, S * 1.3, 1);
-      break;
-    default:
-      break;
-  }
-  return cv;
+      A.roundRect(g, x - S / 2, y - S / 2, S, S, 12);
+      g.fill();
+    };
+    switch (kind) {
+      case 'welcome':
+        tile(cx - 34, by - 30);
+        tile(cx + 30, by - 30, '#82c77e');
+        A.drawLumi(g, cx - 34, by - 8, S, { color: 0, dir: 1, t: 1 });
+        A.drawLantern(g, cx + 30, by - 8, S, 0, { lit: 0.8, t: 1 });
+        break;
+      case 'stars':
+        g.fillStyle = '#ffcf5a';
+        for (let i = 0; i < 3; i++) A.star(g, cx + (i - 1) * 40, h / 2 - (i === 1 ? 8 : 0), i === 1 ? 24 : 19, 5, 0.45);
+        break;
+      case 'two':
+        A.drawLumi(g, cx - 28, by, S, { color: 0, dir: 1, t: 1, mood: 'happy' });
+        A.drawLumi(g, cx + 28, by, S, { color: 1, dir: 3, t: 2, mood: 'happy' });
+        break;
+      case 'loop':
+        g.strokeStyle = 'rgba(255,200,100,0.8)';
+        g.lineWidth = 4;
+        g.setLineDash([6, 8]);
+        g.beginPath();
+        g.ellipse(cx, h / 2 + 6, 46, 34, 0, 0, A.TAU);
+        g.stroke();
+        g.setLineDash([]);
+        A.drawLumi(g, cx + 44, h / 2 + 22, S * 0.8, { color: 0, dir: 0, t: 1, mood: 'scared' });
+        break;
+      case 'lumi':
+        A.drawLumi(g, cx, by, S * 1.2, { color: 0, dir: 2, t: 1 });
+        break;
+      case 'lantern':
+        A.drawLantern(g, cx, by, S * 1.1, 1, { lit: 0.8, t: 1 });
+        break;
+      case 'arrow':
+        A.drawArrowStone(g, cx, h / 2, S * 1.2, 1, {});
+        break;
+      case 'engraved':
+        A.drawArrowStone(g, cx, h / 2, S * 1.2, 2, { fixed: true });
+        break;
+      case 'rock':
+        g.drawImage(A.propSprite('rock', S, 'meadow', 1, 2).canvas, cx - 41.6, by - 105, 83.2, 121.6);
+        break;
+      case 'void':
+        tile(cx, h / 2 - 10);
+        A.drawLumi(g, cx + 6, by + 6, S * 0.8, { color: 0, dir: 2, t: 1, mood: 'scared', alpha: 0.85 });
+        break;
+      case 'firefly':
+        A.drawFirefly(g, cx, by, S * 1.3, 1);
+        break;
+      case 'water':
+        tile(cx, h / 2, '#3f8fd0');
+        break;
+      case 'lily':
+        tile(cx, h / 2, '#3f8fd0');
+        A.drawLily(g, cx, h / 2, S, { t: 1, fixed: true });
+        break;
+      case 'spark':
+        A.drawSpark(g, cx - 30, by, S, 2, 1);
+        A.drawLantern(g, cx + 30, by, S, 2, { lit: 0.1, locked: true, t: 1 });
+        break;
+      case 'mushroom':
+        A.drawMushroom(g, cx, by, S * 1.2, { fixed: true });
+        break;
+      case 'daisy':
+        A.drawDaisy(g, cx, by, S * 1.3, { fixed: true, t: 1 });
+        break;
+      case 'portal':
+        A.drawPortal(g, cx - 32, h / 2, S, 0, 1);
+        A.drawPortal(g, cx + 32, h / 2, S, 0, 2);
+        break;
+      case 'plate':
+        A.drawPlate(g, cx, h / 2, S * 1.2, 0, { lit: true });
+        break;
+      case 'brambles':
+        A.drawBrambles(g, cx, h / 2 + 4, S * 1.2, 0, 0, 1);
+        break;
+      case 'gloomnib':
+        A.drawGloomnib(g, cx, by, S * 1.2, { t: 1 });
+        break;
+      case 'sleeper':
+        A.drawGloomnib(g, cx, by, S * 1.2, { t: 1, sleeping: true });
+        break;
+      case 'vane':
+        A.drawVane(g, cx, h / 2, S * 1.2, 0.5, 1);
+        break;
+      case 'cloud':
+        A.drawCloud(g, cx, h / 2 - 6, S * 1.3, 1);
+        break;
+      default:
+        break;
+    }
+  });
 }
 
 function showIntroCard(c, done) {
@@ -1063,7 +1067,7 @@ function showVictory(stars, res, unlocks, gained) {
     cv.height = 72;
     cv.style.width = '36px';
     cv.style.height = '36px';
-    drawFn(cv.getContext('2d'));
+    A.paint(cv, drawFn);
     row.appendChild(cv);
     row.insertAdjacentHTML('beforeend', `<span><b>${label}</b> · ${name}</span>`);
     ul.appendChild(row);
@@ -1296,9 +1300,10 @@ function openWardrobe() {
       cv.height = 140;
       cv.style.width = '70px';
       cv.style.height = '70px';
-      const g = cv.getContext('2d');
-      g.scale(2, 2);
-      A.drawLumi(g, 35, 58, 46, { color: 0, dir: 2, t: 1.3, hat: h.id, mood: un ? 'happy' : 'idle', alpha: un ? 1 : 0.45 });
+      A.paint(cv, (g) => {
+        g.scale(2, 2);
+        A.drawLumi(g, 35, 58, 46, { color: 0, dir: 2, t: 1.3, hat: h.id, mood: un ? 'happy' : 'idle', alpha: un ? 1 : 0.45 });
+      });
       b.appendChild(cv);
       let req = '';
       if (!un) {
@@ -1555,8 +1560,14 @@ function boot() {
     if (document.hidden) {
       SV.persistNow();
       if (sound.ctx) sound.ctx.suspend();
-    } else if (sound.ctx) sound.ctx.resume();
+    } else {
+      if (sound.ctx) sound.ctx.resume();
+      A.checkCanvases(); // the system may have dropped our drawings meanwhile
+    }
   });
+  window.addEventListener('pageshow', (e) => e.persisted && A.checkCanvases());
+  A.watchCanvas(canvas);
+  A.checkCanvases();
   buildTitle();
   showScreen('title');
   const unlockAudio = () => sound.unlock();

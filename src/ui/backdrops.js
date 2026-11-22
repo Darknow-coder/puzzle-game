@@ -28,9 +28,14 @@ export class TitleScene {
     const key = `${w}|${h}|${dpr}`;
     if (key !== this.layoutKey) {
       this.layoutKey = key;
-      this.sky = A.renderSky(Math.ceil(w), Math.ceil(h), 'meadow', { moon: { x: 0.86, y: 0.3, r: 0.045 } });
-      this.island = A.renderIsland(this.L, 'meadow', S, dpr);
+      this.buildLayers();
     }
+  }
+
+  buildLayers() {
+    this.sky = A.renderSky(Math.ceil(this.W), Math.ceil(this.H), 'meadow', { moon: { x: 0.86, y: 0.3, r: 0.045 } });
+    this.island = A.renderIsland(this.L, 'meadow', this.S, this.dpr);
+    this.layersEpoch = A.gpu.epoch;
   }
 
   free(x, y) {
@@ -74,6 +79,7 @@ export class TitleScene {
   }
 
   render(g) {
+    if (this.layersEpoch !== A.gpu.epoch) this.buildLayers();
     const { W, H, S, t } = this;
     g.drawImage(this.sky, 0, 0, W, H);
     A.drawStars(g, this.stars, W, H, t, 0.8, 1.3);
@@ -129,6 +135,10 @@ export class MapBackdrop {
     this.dpr = dpr;
   }
   sky(key) {
+    if (this.skiesEpoch !== A.gpu.epoch) {
+      this.skies.clear();
+      this.skiesEpoch = A.gpu.epoch;
+    }
     let s = this.skies.get(key);
     if (!s) {
       s = A.renderSky(Math.ceil(this.W), Math.ceil(this.H), key);

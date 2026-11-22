@@ -104,9 +104,15 @@ export class GameScene {
     const key = `${S}|${dpr}|${w}|${h}`;
     if (key !== this.layoutKey) {
       this.layoutKey = key;
-      this.island = A.renderIsland(L, this.worldKey, S, dpr);
-      this.sky = A.renderSky(Math.ceil(w), Math.ceil(h), this.worldKey);
+      this.buildLayers();
     }
+  }
+
+  /** The pre-drawn sky and island (rebuilt if the browser dropped their pixels). */
+  buildLayers() {
+    this.island = A.renderIsland(this.L, this.worldKey, this.S, this.dpr);
+    this.sky = A.renderSky(Math.ceil(this.W), Math.ceil(this.H), this.worldKey);
+    this.layersEpoch = A.gpu.epoch;
   }
 
   cellCenter(idx) {
@@ -777,6 +783,7 @@ export class GameScene {
   // --------------------------------------------------------------- render
 
   render(g) {
+    if (this.layersEpoch !== A.gpu.epoch) this.buildLayers();
     const S = this.S;
     const L = this.L;
     const t = this.t;

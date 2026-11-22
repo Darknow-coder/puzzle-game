@@ -179,7 +179,74 @@ export function makeCanvas(w, h) {
   const c = typeof OffscreenCanvas !== 'undefined' && !globalThis.document ? new OffscreenCanvas(w, h) : document.createElement('canvas');
   c.width = Math.max(1, Math.ceil(w));
   c.height = Math.max(1, Math.ceil(h));
+  watchCanvas(c);
   return c;
+}
+
+// ---------------------------------------------------------------------------
+// Lost canvases
+//
+// Mobile browsers may throw away the pixels of every canvas when the GPU
+// process is reclaimed — typically while the app sits in the background. The
+// main view is redrawn each frame, but everything drawn once and reused (the
+// caches below, the scenes' sky and island layers, the icons in the HUD) would
+// stay blank. `gpu.epoch` changes whenever that happens: caches are dropped,
+// scenes rebuild their layers, and canvases drawn through paint() are redrawn.
+
+export const gpu = { epoch: 0 };
+let resetTimer = 0;
+export function canvasesLost() {
+  if (resetTimer || !globalThis.document) return;
+  // Every canvas reports at once (and again when restored): rebuild once.
+  resetTimer = setTimeout(() => {
+    resetTimer = 0;
+    gpu.epoch++;
+    glowCache.clear();
+    propCache.clear();
+    for (const cv of document.querySelectorAll('canvas')) if (cv.__paint) repaint(cv);
+  }, 30);
+}
+
+export function watchCanvas(c) {
+  if (!c.addEventListener || c.__watched) return;
+  c.__watched = true;
+  c.addEventListener('contextlost', canvasesLost);
+  c.addEventListener('contextrestored', canvasesLost);
+}
+
+/** Draws a page canvas now, and again whenever canvases lose their pixels. */
+export function paint(cv, draw) {
+  cv.__paint = draw;
+  watchCanvas(cv);
+  repaint(cv);
+  return cv;
+}
+
+function repaint(cv) {
+  const g = cv.getContext('2d');
+  if (!g) return;
+  g.setTransform(1, 0, 0, 1, 0, 0);
+  g.globalAlpha = 1;
+  g.globalCompositeOperation = 'source-over';
+  g.clearRect(0, 0, cv.width, cv.height);
+  cv.__paint(g);
+}
+
+// Not every browser reports the loss: when the app comes back, a canary canvas
+// (large enough to live on the GPU) tells whether its pixels survived. A fresh
+// canary is made each time, since reading pixels back can move a canvas to the CPU.
+let canary = null;
+export function checkCanvases() {
+  if (!globalThis.document) return;
+  try {
+    if (canary && canary.getContext('2d').getImageData(1, 1, 1, 1).data[3] === 0) canvasesLost();
+    canary = makeCanvas(256, 256);
+    const g = canary.getContext('2d');
+    g.fillStyle = '#fff';
+    g.fillRect(0, 0, 256, 256);
+  } catch {
+    canary = null;
+  }
 }
 
 const glowCache = new Map();
@@ -506,7 +573,13 @@ const propCache = new Map();
 export function propSprite(kind, S, worldKey, variant, dpr = 1) {
   const key = `${kind}|${S}|${worldKey}|${variant}|${dpr}`;
   let spr = propCache.get(key);
-  if (spr) return spr;
+  if (spr) {
+    propCache.delete(key); // most recently used last
+    propCache.set(key, spr);
+    return spr;
+  }
+  // Each board size makes its own sprites: keep only the most recent ones.
+  if (propCache.size >= 96) propCache.delete(propCache.keys().next().value);
   const w = S * 1.3;
   const h = S * 1.9;
   const c = makeCanvas(w * dpr, h * dpr);
