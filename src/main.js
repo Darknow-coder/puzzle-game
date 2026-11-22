@@ -14,6 +14,8 @@ import { createAtelier } from './editor/ui.js';
 import { verifyAsync } from './editor/verify.js';
 import { THEMES } from './editor/model.js';
 import { dailyFor, recordDaily, liveStreak, dayKey } from './daily.js';
+import { exportBackup, importBackup } from './backup.js';
+import { makeShareCard, shareImage } from './share.js';
 
 const VERSION = '2.0.0';
 const $ = (sel, root = document) => root.querySelector(sel);
@@ -1060,6 +1062,7 @@ function showVictory(stars, res, unlocks, gained) {
       <div class="actions" style="margin-top:0">
         <button class="btn btn-ghost btn-small" data-a="replay">${ICONS.retry}${t('replay')}</button>
         <button class="btn btn-ghost btn-small" data-a="tune" aria-label="${t('tune')}">♫</button>
+        <button class="btn btn-ghost btn-small icon-only" data-a="share" aria-label="${t('share')}">${ICONS.share}</button>
         <button class="btn btn-ghost btn-small" data-a="map">${custom ? ICONS.pencil + t('atelier') : daily ? ICONS.back + t('home') : ICONS.map + t('map')}</button>
       </div>
       ${custom && current.from === 'link' ? `<button class="btn btn-ghost btn-small" data-a="keep">${ICONS.plus}${atelier.text().addToAtelier}</button>` : ''}
@@ -1143,6 +1146,7 @@ function showVictory(stars, res, unlocks, gained) {
     sound.unlock();
     game.playMelody();
   };
+  box.querySelector('[data-a=share]').onclick = () => (click(), shareVictory(stars, res));
   box.querySelector('[data-a=map]').onclick = () => {
     click();
     m.close();
@@ -1162,6 +1166,27 @@ function showVictory(stars, res, unlocks, gained) {
   }
   const nb = box.querySelector('[data-a=next]');
   if (nb) nb.onclick = () => (click(), m.close(), startLevel(next));
+}
+
+/** A picture of the finished board (as it is on screen) to share or keep. */
+async function shareVictory(stars, res) {
+  const L = game.L;
+  const S = game.S;
+  const k = canvas.width / W;
+  const x0 = Math.max(0, game.ox - S * 0.8);
+  const y0 = Math.max(0, game.oy - S * 1.4);
+  const x1 = Math.min(W, game.ox + L.w * S + S * 0.8);
+  const y1 = Math.min(H, game.oy + L.h * S + S * 0.9);
+  const crop = { canvas, x: x0 * k, y: y0 * k, w: (x1 - x0) * k, h: (y1 - y0) * k };
+  const daily = !!current.daily;
+  const date = new Date().toLocaleDateString(getLang() === 'fr' ? 'fr-FR' : 'en-GB', { day: 'numeric', month: 'long' });
+  const what = daily ? `${t('daily')} · ${date}` : current.custom ? tr(current.def.name) : `${levelLabel(current)} · ${tr(current.def.name)}`;
+  const streak = daily ? liveStreak(SV.save.data.daily) : 0;
+  const line = t('shareLine', res.pieces) + (streak > 1 ? ` · 🔥 ${t('streak', streak)}` : '');
+  const home = /^https?:$/.test(location.protocol) ? location.origin + location.pathname : '';
+  const card = makeShareCard({ crop, worldKey: game.worldKey, label: what, stars, line, footer: home.replace(/^https?:\/\//, '') });
+  const how = await shareImage(card, `${t('shareText', what, stars)}${home ? ' ' + home : ''}`, `lumignons-${daily ? 'defi-' + dayKey() : current.def.id}.png`);
+  if (how === 'downloaded') toast(t('cardSaved'), 2600);
 }
 
 /** World complete: the world's constellation lights up star after star. */
@@ -1224,10 +1249,12 @@ function openSettings() {
         <div class="row"><span class="grow">${t('showGrid')}</span><button class="toggle ${s.dots ? 'on' : ''}" data-k="dots" aria-label="${t('showGrid')}"></button></div>
         <div class="row"><span class="grow">${t('reducedMotion')}</span><button class="toggle ${s.reducedMotion ? 'on' : ''}" data-k="reducedMotion" aria-label="${t('reducedMotion')}"></button></div>
         <div class="row"><span class="grow">${t('symbols')}<small>${t('symbolsHelp')}</small></span><button class="toggle ${s.symbols ? 'on' : ''}" data-k="symbols" aria-label="${t('symbols')}"></button></div>
+        <div class="row"><span class="grow">${t('openAll')}<small>${t('openAllHelp')}</small></span><button class="toggle ${s.openAll ? 'on' : ''}" data-k="openAll" aria-label="${t('openAll')}"></button></div>
         <div class="row"><span class="grow">${t('language')}</span><div class="seg"><button data-lang="fr" class="${getLang() === 'fr' ? 'on' : ''}">FR</button><button data-lang="en" class="${getLang() === 'en' ? 'on' : ''}">EN</button></div></div>
         <div class="row"><span class="grow">${t('defaultSpeed')}</span><div class="seg">${[1, 2, 3].map((v) => `<button data-speed="${v}" class="${s.speed === v ? 'on' : ''}">×${v}</button>`).join('')}</div></div>
       </div>
       <div class="actions col">
+        <button class="btn btn-ghost btn-small" data-a="backup">${ICONS.download}${t('backup')}</button>
         <button class="btn btn-ghost btn-small" data-a="credits">${t('credits')}</button>
         <button class="btn btn-danger btn-small" data-a="reset">${t('resetProgress')}</button>
       </div>`;
@@ -1235,6 +1262,8 @@ function openSettings() {
       b.onclick = () => {
         const k = b.dataset.k;
         s[k] = !s[k];
+        // Opening everything is a choice, not a reward: no "new world" announcements.
+        if (k === 'openAll' && s.openAll) for (const w of WORLDS) SV.save.data.worldsSeen[w.id] = 1;
         applySettings();
         SV.persist();
         click();
@@ -1263,6 +1292,7 @@ function openSettings() {
     });
     box.querySelector('[data-a=close]').onclick = () => (click(), m.close());
     box.querySelector('[data-a=credits]').onclick = () => (click(), openCredits());
+    box.querySelector('[data-a=backup]').onclick = () => (click(), openBackup());
     box.querySelector('[data-a=reset]').onclick = () => {
       click();
       confirmBox(t('resetConfirm'), () => {
@@ -1275,6 +1305,64 @@ function openSettings() {
   };
   render();
   const m = openModal(box);
+}
+
+/** The whole progress as a code to keep, and the way back in. */
+async function openBackup() {
+  const code = await exportBackup(SV.save.data);
+  const box = el('div');
+  box.innerHTML = `<h2>${t('backup')}</h2><p>${t('backupText')}</p>
+    <textarea class="share-code" id="backup-code" readonly rows="4">${code}</textarea>
+    <div class="actions">
+      <button class="btn btn-primary" data-a="copy">${t('copy')}</button>
+      ${navigator.share ? `<button class="btn btn-ghost" data-a="native">${ICONS.share}${t('share')}</button>` : ''}
+    </div>
+    <div class="actions col"><button class="btn btn-ghost btn-small" data-a="restore">${t('backupRestore')}</button><button class="btn btn-ghost btn-small" data-a="close">OK</button></div>`;
+  const m = openModal(box);
+  const ta = box.querySelector('textarea');
+  box.querySelector('[data-a=copy]').onclick = async () => {
+    try {
+      await navigator.clipboard.writeText(code);
+      toast(t('copied'));
+    } catch {
+      ta.focus();
+      ta.select();
+      toast(t('copyFail'), 2600);
+    }
+  };
+  const nb = box.querySelector('[data-a=native]');
+  if (nb) nb.onclick = () => navigator.share({ title: 'Lumignons', text: code }).catch(() => {});
+  box.querySelector('[data-a=restore]').onclick = () => (click(), restoreDialog());
+  box.querySelector('[data-a=close]').onclick = () => (click(), m.close());
+}
+
+function restoreDialog() {
+  const box = el('div');
+  box.innerHTML = `<h2>${t('backupRestore')}</h2><p>${t('backupPaste')}</p>
+    <textarea class="share-code" id="restore-code" rows="4" placeholder="LUMISAVE1.…"></textarea>
+    <div class="actions"><button class="btn btn-ghost" data-a="close">${t('back')}</button><button class="btn btn-primary" data-a="ok">${t('restore')}</button></div>`;
+  const m = openModal(box);
+  box.querySelector('[data-a=close]').onclick = () => (click(), m.close());
+  box.querySelector('[data-a=ok]').onclick = async () => {
+    let data;
+    try {
+      data = await importBackup(box.querySelector('textarea').value);
+    } catch {
+      sound.sfx('invalid');
+      toast(t('backupBad'), 2600);
+      return;
+    }
+    confirmBox(t('backupConfirm'), () => {
+      SV.replaceSave(data);
+      setLang(SV.save.data.settings.lang || detectLang());
+      applySettings();
+      refreshTexts();
+      closeAllModals();
+      buildTitle();
+      showScreen('title');
+      toast(t('backupDone'));
+    });
+  };
 }
 
 function confirmBox(text, yes) {

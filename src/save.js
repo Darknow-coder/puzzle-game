@@ -8,7 +8,7 @@ function defaults() {
   return {
     v: 1,
     levels: {},
-    settings: { music: true, sound: true, vibration: true, lang: null, speed: 1, reducedMotion: false, dots: true, symbols: false },
+    settings: { music: true, sound: true, vibration: true, lang: null, speed: 1, reducedMotion: false, dots: true, symbols: false, openAll: false },
     hat: 'none',
     seen: {},
     tips: {},
@@ -22,23 +22,31 @@ function defaults() {
 
 export const save = { data: defaults() };
 
+/** Fills in whatever an older (or partial) save lacks. */
+function normalize(d) {
+  const base = defaults();
+  return {
+    ...base,
+    ...d,
+    settings: { ...base.settings, ...(d.settings || {}) },
+    stats: { ...base.stats, ...(d.stats || {}) },
+  };
+}
+
 export function loadSave() {
   try {
     const raw = localStorage.getItem(KEY);
-    if (raw) {
-      const d = JSON.parse(raw);
-      const base = defaults();
-      save.data = {
-        ...base,
-        ...d,
-        settings: { ...base.settings, ...(d.settings || {}) },
-        stats: { ...base.stats, ...(d.stats || {}) },
-      };
-    }
+    if (raw) save.data = normalize(JSON.parse(raw));
   } catch {
     save.data = defaults();
   }
   return save.data;
+}
+
+/** Replaces the whole save (restoring a backup). */
+export function replaceSave(d) {
+  save.data = normalize(d);
+  persistNow();
 }
 
 let pending = 0;
@@ -131,7 +139,7 @@ export function worldComplete(w) {
 }
 
 export function worldUnlocked(wi) {
-  if (wi === 0) return true;
+  if (wi === 0 || save.data.settings.openAll) return true;
   const prev = WORLDS[wi - 1];
   return worldComplete(prev) && totalStars() >= WORLDS[wi].unlock;
 }
@@ -146,6 +154,7 @@ export function worldLockReason(wi) {
 
 export function levelUnlocked(wi, li) {
   if (!worldUnlocked(wi)) return false;
+  if (save.data.settings.openAll) return true;
   const lv = WORLDS[wi].levels;
   if (li === 0) return true;
   if (isDone(lv[li - 1].id)) return true;
@@ -156,6 +165,7 @@ export function levelUnlocked(wi, li) {
 export function bonusUnlocked(wi) {
   const w = WORLDS[wi];
   if (!worldUnlocked(wi)) return false;
+  if (save.data.settings.openAll) return true;
   return w.levels.every((lv) => (save.data.levels[lv.id]?.stars || 0) >= 2);
 }
 
