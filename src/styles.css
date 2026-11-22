@@ -1263,6 +1263,278 @@ svg {
   }
 }
 
+/* ------------------------------------------------------------- atelier */
+
+.title-duo {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+}
+.title-duo .btn {
+  flex: 1;
+  min-height: 48px;
+  font-size: 17px;
+}
+#screen-atelier {
+  display: flex;
+  flex-direction: column;
+}
+.atelier-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  max-width: 520px;
+  margin: 4px auto 16px;
+}
+.atelier-actions .btn {
+  flex: 1 1 200px;
+}
+.atelier-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 520px;
+  margin: 0 auto;
+}
+.atelier-empty {
+  margin: 8px 4px;
+  padding: 16px 18px;
+  border-radius: 20px;
+  background: var(--panel);
+  color: var(--ink-soft);
+  font-weight: 400;
+  line-height: 1.5;
+}
+.atelier-card {
+  display: flex;
+  gap: 12px;
+  padding: 10px;
+  border-radius: 20px;
+  background: var(--panel);
+  box-shadow: inset 0 0 0 1.5px var(--line), 0 8px 22px rgba(10, 4, 30, 0.3);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+.atelier-thumb {
+  flex: none;
+  width: 110px;
+  height: 87px;
+  border-radius: 14px;
+  background: rgba(10, 5, 30, 0.35);
+}
+.atelier-card {
+  position: relative;
+}
+.card-del {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 34px;
+  height: 34px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  color: var(--ink-dim);
+  background: rgba(255, 255, 255, 0.06);
+}
+.card-del svg {
+  width: 18px;
+  height: 18px;
+}
+.atelier-info b {
+  padding-right: 36px;
+}
+.atelier-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.atelier-info b {
+  font-size: 17px;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.badge {
+  align-self: flex-start;
+  font-size: 12.5px;
+  padding: 2px 9px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--ink-dim);
+}
+.badge.ok {
+  background: rgba(126, 235, 176, 0.2);
+  color: var(--mint);
+}
+.atelier-btns {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: auto;
+}
+.atelier-btns .btn-small {
+  min-height: 36px;
+  padding: 0 12px;
+  font-size: 14px;
+}
+.btn.icon-only {
+  padding: 0 10px;
+}
+.btn.icon-only svg {
+  width: 20px;
+  height: 20px;
+}
+
+#screen-editor .hud-top {
+  gap: 8px;
+}
+.ed-name {
+  flex: 1;
+  min-width: 0;
+  height: 48px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 16px;
+  font: 600 17px var(--font);
+  color: var(--ink);
+  background: var(--panel);
+  box-shadow: inset 0 0 0 1.5px var(--line);
+  outline: none;
+}
+.ed-name:focus-visible {
+  box-shadow: inset 0 0 0 2px var(--gold);
+}
+.ed-panel {
+  gap: 8px;
+}
+.ed-status {
+  font-size: 13.5px;
+  line-height: 1.35;
+  padding: 7px 12px;
+  border-radius: 12px;
+  background: var(--panel-strong);
+  box-shadow: inset 0 0 0 1.5px var(--line);
+  color: var(--ink-soft);
+}
+.ed-status.warn {
+  box-shadow: inset 0 0 0 1.5px rgba(255, 207, 90, 0.5);
+  color: var(--gold);
+}
+.ed-status.busy {
+  color: var(--sky);
+}
+.ed-tabs {
+  display: flex;
+  gap: 4px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.ed-tabs::-webkit-scrollbar {
+  display: none;
+}
+.ed-tabs button {
+  flex: none;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink-dim);
+  background: rgba(255, 255, 255, 0.06);
+}
+.ed-tabs button.on {
+  color: #4a2a05;
+  background: var(--gold);
+}
+.ed-tools {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 2px 2px 4px;
+  scrollbar-width: none;
+  min-height: 70px;
+}
+.ed-tools::-webkit-scrollbar {
+  display: none;
+}
+.ed-tool {
+  flex: none;
+  width: 58px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 4px 2px 5px;
+  border-radius: 14px;
+  background: var(--panel);
+  box-shadow: inset 0 0 0 1.5px var(--line);
+}
+.ed-tool canvas {
+  width: 44px;
+  height: 44px;
+}
+.ed-tool-name {
+  font-size: 10px;
+  line-height: 1.1;
+  color: var(--ink-dim);
+  max-width: 54px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ed-tool.sel {
+  box-shadow: inset 0 0 0 3px var(--gold), 0 0 16px rgba(255, 200, 90, 0.4);
+}
+.ed-stepper {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px 4px 4px;
+  border-radius: 16px;
+  background: var(--panel);
+  box-shadow: inset 0 0 0 1.5px var(--line);
+}
+.ed-stepper canvas {
+  width: 40px;
+  height: 40px;
+}
+.ed-step-name {
+  font-size: 13px;
+  color: var(--ink-soft);
+}
+.ed-pm {
+  width: 34px;
+  height: 34px;
+  border-radius: 12px;
+  font-size: 20px;
+  font-weight: 700;
+  background: rgba(255, 255, 255, 0.1);
+}
+.ed-count {
+  min-width: 18px;
+  text-align: center;
+  font-size: 17px;
+}
+.share-code {
+  width: 100%;
+  margin-top: 8px;
+  padding: 10px 12px;
+  border: 0;
+  border-radius: 14px;
+  resize: none;
+  font: 500 13px ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  color: var(--ink);
+  background: rgba(0, 0, 0, 0.25);
+  box-shadow: inset 0 0 0 1.5px var(--line);
+  word-break: break-all;
+  -webkit-user-select: text;
+  user-select: text;
+}
+
 /* Phones held sideways (and short desktop windows): tools move to a right-hand column. */
 @media (orientation: landscape) and (max-height: 560px) {
   .hud-bottom {

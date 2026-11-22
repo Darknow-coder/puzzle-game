@@ -9,8 +9,12 @@ import { GameScene } from './game/scene.js';
 import { TitleScene, MapBackdrop } from './ui/backdrops.js';
 import * as A from './game/art.js';
 import { parseLevel, rateRun, KIND } from './engine/core.js';
+import { EditorScene } from './editor/editor-scene.js';
+import { createAtelier } from './editor/ui.js';
+import { verifyAsync } from './editor/verify.js';
+import { THEMES } from './editor/model.js';
 
-const VERSION = '1.0.0';
+const VERSION = '2.0.0';
 const $ = (sel, root = document) => root.querySelector(sel);
 const el = (tag, cls, html) => {
   const e = document.createElement(tag);
@@ -33,6 +37,16 @@ const ICONS = {
   play: '<svg viewBox="0 0 24 24" style="fill:currentColor;stroke:none"><path d="M8 5v14l11-7z"/></svg>',
   shoot: '<svg viewBox="0 0 24 24"><path d="M14 10 4 20M17 4l1.2 2.6L21 7.5l-2 2 .4 2.8-2.4-1.3-2.5 1.3.5-2.8-2-2 2.8-.4z"/></svg>',
   slow: '<svg viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5M9 2h6"/></svg>',
+  plus: '<svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>',
+  download: '<svg viewBox="0 0 24 24"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>',
+  share: '<svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="2.5"/><circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="19" r="2.5"/><path d="m8.2 10.8 7.6-4.4M8.2 13.2l7.6 4.4"/></svg>',
+  trash: '<svg viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg>',
+  undo: '<svg viewBox="0 0 24 24"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg>',
+  palette: '<svg viewBox="0 0 24 24"><path d="M12 3a9 9 0 1 0 0 18c1.2 0 1.6-.8 1.6-1.6 0-1.3-1-1.6-1-2.6 0-.9.7-1.6 1.6-1.6H16a5 5 0 0 0 5-5C21 6 17 3 12 3Z"/><circle cx="7.5" cy="11" r="1.2"/><circle cx="10" cy="7" r="1.2"/><circle cx="14.5" cy="7" r="1.2"/></svg>',
+  resize: '<svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M14 4v16M4 14h16"/></svg>',
+  check: '<svg viewBox="0 0 24 24"><path d="m5 12 5 5 9-10"/></svg>',
+  pencil: '<svg viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16zM13 7l4 4"/></svg>',
+  sun: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5 19 19M5 19l1.5-1.5M17.5 6.5 19 5"/></svg>',
 };
 
 // ---------------------------------------------------------------------------
@@ -58,6 +72,7 @@ const ctx = canvas.getContext('2d');
 const title = new TitleScene(app);
 const mapBg = new MapBackdrop();
 const game = new GameScene(app);
+const editorScene = new EditorScene(app);
 let active = title;
 let W = 0;
 let H = 0;
@@ -72,6 +87,15 @@ function resize() {
   title.resize(W, H, DPR);
   mapBg.resize(W, H, DPR);
   if (game.L) layoutGame();
+  if (app.screen === 'editor') layoutEditor();
+}
+
+function layoutEditor() {
+  const top = $('#screen-editor .hud-top').getBoundingClientRect().bottom;
+  const panel = $('#screen-editor .hud-bottom').getBoundingClientRect();
+  const side = panel.left > W * 0.5 && panel.height > H * 0.4;
+  if (side) editorScene.resize(W, H, DPR, top + 6, 10, W - panel.left + 8);
+  else editorScene.resize(W, H, DPR, top + 6, H - panel.top + 4, 0);
 }
 
 function layoutGame() {
@@ -106,7 +130,12 @@ function pushNav(name) {
     /* ignore */
   }
 }
+window.addEventListener('hashchange', () => {
+  const shared = location.hash.match(/play=(LUMI1\.[A-Za-z0-9_-]+)/);
+  if (shared) atelier.playShared(shared[1]);
+});
 window.addEventListener('popstate', () => {
+  if (/play=LUMI1/.test(location.hash)) return; // handled by hashchange
   if (navDepth > 0) navDepth--;
   const top = app.modalStack[app.modalStack.length - 1];
   if (top) {
@@ -121,19 +150,23 @@ window.addEventListener('popstate', () => {
   if (app.screen === 'game') {
     game.stop();
     hideFail();
-    openMap(false, true);
-  } else if (app.screen === 'map') {
+    if (current?.custom) leaveCustom();
+    else openMap(false, true);
+  } else if (app.screen === 'map' || app.screen === 'atelier') {
     buildTitle();
     showScreen('title');
+  } else if (app.screen === 'editor') {
+    atelier.openList();
   }
 });
 
 function showScreen(name) {
   app.screen = name;
   for (const s of document.querySelectorAll('.screen')) s.classList.toggle('active', s.id === 'screen-' + name);
-  active = name === 'title' ? title : name === 'map' ? mapBg : game;
+  active = name === 'title' ? title : name === 'map' || name === 'atelier' ? mapBg : name === 'editor' ? editorScene : game;
   if (name !== 'game') hideInfo();
-  sound.startMusic(name === 'game' ? game.worldKey : name === 'map' ? mapBg.key : 'title');
+  if (name === 'atelier') mapBg.setWorld('meadow');
+  sound.startMusic(name === 'game' ? game.worldKey : name === 'map' ? mapBg.key : name === 'editor' ? editorScene.model?.theme || 'meadow' : 'title');
 }
 
 function buildTitle() {
@@ -144,6 +177,9 @@ function buildTitle() {
     <div class="logo"><h1>Lumignons</h1><p>${t('tagline')}</p></div>
     <div class="title-actions">
       <button class="btn btn-primary" data-act="play">${ICONS.play}${started ? t('continue') : t('play')}</button>
+      <div class="title-duo">
+        <button class="btn btn-ghost" data-act="atelier">${ICONS.pencil}${t('atelier')}</button>
+      </div>
       <div class="title-row">
         <button class="tile-btn" data-act="wardrobe">${ICONS.hat}<span>${t('collection')}</span></button>
         <button class="tile-btn" data-act="achievements">${ICONS.trophy}<span>${t('achievements')}</span></button>
@@ -156,6 +192,11 @@ function buildTitle() {
   root.querySelector('[data-act=play]').onclick = () => {
     click();
     openMap(true);
+  };
+  root.querySelector('[data-act=atelier]').onclick = () => {
+    click();
+    pushNav('atelier');
+    atelier.openList();
   };
   root.querySelector('[data-act=wardrobe]').onclick = () => (click(), openWardrobe());
   root.querySelector('[data-act=achievements]').onclick = () => (click(), openAchievements());
@@ -315,7 +356,52 @@ let current = null;
 let tipTimer = 0;
 
 function levelLabel(f) {
+  if (f.custom) return '✎';
   return f.bonus ? `${f.wi + 1}-★` : `${f.wi + 1}-${f.li + 1}`;
+}
+
+/** Plays a level from the workshop (or received through a link). */
+function startCustom(entry, { from = 'atelier' } = {}) {
+  const wi = Math.max(0, THEMES.indexOf(entry.theme));
+  const def = { ...entry.def, id: entry.id, name: { fr: entry.name, en: entry.name } };
+  const world = { id: entry.theme, name: { fr: entry.name, en: entry.name } };
+  current = { custom: true, entry, from, def, world, wi, li: 0, bonus: false };
+  closeAllModals();
+  hideFail();
+  const v = entry.verified;
+  game.load({ def, world, wi, li: 0, bonus: false, solution: v?.status === 'ok' ? { par: v.par, sol: v.sol, alt: v.alt } : null });
+  $('#screen-game .lv-num').textContent = '✎';
+  $('#screen-game .lv-name').textContent = entry.name;
+  buildTray();
+  setSpeedLabel();
+  $('#screen-game').classList.remove('running', 'result');
+  if (app.screen !== 'game') pushNav('game');
+  showScreen('game');
+  layoutGame();
+  app.hudChanged();
+  introCards(current);
+  if (!v) {
+    // Work out the par quietly so stars and hints become available.
+    verifyAsync(def, 15000).then((res) => {
+      entry.verified = res;
+      if (from !== 'link') atelier.store(entry);
+      if (current?.entry === entry && res.status === 'ok') {
+        game.solution = { par: res.par, sol: res.sol, alt: res.alt };
+        game.par = res.par;
+        app.hudChanged();
+      }
+    });
+  }
+}
+
+function leaveCustom() {
+  const from = current?.from;
+  const entry = current?.entry;
+  if (from === 'editor' && entry) atelier.openEditor(entry);
+  else if (from === 'link') {
+    buildTitle();
+    showScreen('title');
+  } else atelier.openList();
 }
 
 function startLevel(id) {
@@ -454,7 +540,7 @@ app.hudChanged = () => {
     b.classList.toggle('empty', left[k] <= 0);
   }
   const used = game.placements.size;
-  const par = game.par;
+  const par = game.solution ? game.par : '?';
   const ffTotal = game.L.fireflies.length;
   const running = game.mode !== 'plan';
   const ffGot = running ? game.liveFireflies || 0 : 0;
@@ -465,7 +551,7 @@ app.hudChanged = () => {
   const pc = gs.querySelector('.chip-pieces');
   pc.querySelector('.pc-count').textContent = running ? game.runPieces : used;
   pc.querySelector('.pc-par').textContent = `/ ${par}`;
-  pc.classList.toggle('over', (running ? game.runPieces : used) > par);
+  pc.classList.toggle('over', !!game.solution && (running ? game.runPieces : used) > par);
   gs.classList.toggle('running', game.mode === 'run' || game.mode === 'post');
   gs.classList.toggle('paused', game.mode === 'run' && !!game.paused);
   gs.querySelector('[data-act=playpause] .lbl').textContent = game.paused ? t('resume') : t('pause');
@@ -488,12 +574,14 @@ app.pulseTray = (k) => {
   b.classList.add('pulse');
 };
 
-app.onHint = () => SV.recordHint(current.def.id);
+app.onHint = () => {
+  if (!current.custom) SV.recordHint(current.def.id);
+};
 
 app.onRunStart = () => {
   hideFail();
   hideInfo();
-  SV.recordTry(current.def.id);
+  if (!current.custom) SV.recordTry(current.def.id);
 };
 
 app.onFail = (cause, name, replayed = false) => {
@@ -515,6 +603,15 @@ function hideFail() {
 }
 
 app.onWin = (res) => {
+  if (current.custom) {
+    const known = !!game.solution;
+    const stars = 1 + (res.allFireflies ? 1 : 0) + (known && res.allFireflies && res.pieces <= game.par ? 1 : 0);
+    current.entry.best = Math.max(current.entry.best || 0, stars);
+    if (current.from !== 'link') atelier.store(current.entry);
+    showVictory(stars, res, { hats: [], worlds: [], achievements: [] }, 0);
+    app.hudChanged();
+    return;
+  }
   const id = current.def.id;
   const stars = 1 + (res.allFireflies ? 1 : 0) + (res.allFireflies && res.pieces <= game.par ? 1 : 0);
   const rec = SV.levelRecord(id);
@@ -560,7 +657,8 @@ function bindGameHud() {
         game.clearAll();
         break;
       case 'hint':
-        game.hint();
+        if (!game.solution) toast(t('hintNeedsCheck'), 2600);
+        else game.hint();
         break;
       case 'speed':
         game.setSpeed(game.speed >= 3 ? 1 : game.speed + 1);
@@ -593,21 +691,24 @@ function bindGameHud() {
   });
   // Board input.
   const pos = (e) => [e.clientX, e.clientY];
+  const board = () => (app.screen === 'game' ? game : app.screen === 'editor' ? editorScene : null);
   canvas.addEventListener('pointerdown', (e) => {
     sound.unlock();
-    if (app.screen !== 'game' || app.modalStack.length) return;
+    const b = board();
+    if (!b || app.modalStack.length) return;
     hideInfo();
     canvas.setPointerCapture?.(e.pointerId);
-    game.pointerDown(...pos(e), e.pointerId);
+    b.pointerDown(...pos(e), e.pointerId);
   });
   canvas.addEventListener('pointermove', (e) => {
-    if (app.screen !== 'game') return;
-    game.pointerMove(...pos(e), e.pointerId);
+    const b = board();
+    if (b) b.pointerMove(...pos(e), e.pointerId);
   });
   const up = (e) => {
-    if (app.screen !== 'game') return;
-    game.pointerUp(...pos(e), e.pointerId);
-    app.hudChanged();
+    const b = board();
+    if (!b) return;
+    b.pointerUp(...pos(e), e.pointerId);
+    if (b === game) app.hudChanged();
   };
   canvas.addEventListener('pointerup', up);
   canvas.addEventListener('pointercancel', (e) => {
@@ -810,7 +911,7 @@ function openGoals() {
     <ul class="goal-list">
       <li class="${rec?.stars >= 1 ? 'ok' : ''}"><span class="mark">${rec?.stars >= 1 ? '✓' : '1'}</span>${t('goal1')}<span class="stars-req">★</span></li>
       ${L.fireflies.length ? `<li class="${rec?.stars >= 2 ? 'ok' : ''}"><span class="mark">${rec?.stars >= 2 ? '✓' : '2'}</span>${t('goal2')}<span class="stars-req">★★</span></li>` : ''}
-      <li class="${rec?.stars >= 3 ? 'ok' : ''}"><span class="mark">${rec?.stars >= 3 ? '✓' : '3'}</span>${t('goal3', game.par)}<span class="stars-req">★★★</span></li>
+      ${game.solution ? `<li class="${rec?.stars >= 3 ? 'ok' : ''}"><span class="mark">${rec?.stars >= 3 ? '✓' : '3'}</span>${t('goal3', game.par)}<span class="stars-req">★★★</span></li>` : ''}
     </ul>
     <div class="actions"><button class="btn btn-primary" data-ok>${t('ok')}</button></div>`;
   const m = openModal(box);
@@ -826,7 +927,7 @@ function openPause() {
       <button class="btn btn-primary" data-a="resume">${ICONS.play}${t('resume')}</button>
       <button class="btn" data-a="restart">${ICONS.retry}${t('restart')}</button>
       <button class="btn btn-ghost" data-a="settings">${ICONS.gear}${t('settings')}</button>
-      <button class="btn btn-ghost" data-a="map">${ICONS.map}${t('map')}</button>
+      <button class="btn btn-ghost" data-a="map">${current.custom ? ICONS.pencil + t('atelier') : ICONS.map + t('map')}</button>
     </div>`;
   const m = openModal(box);
   box.querySelector('[data-a=resume]').onclick = () => (click(), m.close());
@@ -844,6 +945,7 @@ function openPause() {
     game.stop();
     hideFail();
     if (navDepth > 0) history.back();
+    else if (current.custom) leaveCustom();
     else openMap();
   };
 }
@@ -851,13 +953,15 @@ function openPause() {
 function showVictory(stars, res, unlocks, gained) {
   const L = game.L;
   const id = current.def.id;
-  const next = SV.nextLevel(id);
-  const worldDone = !current.bonus && current.li === current.world.levels.length - 1;
+  const custom = !!current.custom;
+  const next = custom ? null : SV.nextLevel(id);
+  const worldDone = !custom && !current.bonus && current.li === current.world.levels.length - 1;
   const lastWorld = current.wi === WORLDS.length - 1 && worldDone;
+  const parKnown = !!game.solution;
   const box = el('div');
   const titleTxt = stars === 3 ? t('win3') : stars === 2 ? t('win2') : t('win1');
   const ffOk = res.allFireflies;
-  const parOk = res.pieces <= game.par;
+  const parOk = parKnown && res.pieces <= game.par;
   box.innerHTML = `
     <div class="eyebrow">${levelLabel(current)} · ${tr(current.def.name)}</div>
     <h2>${titleTxt}</h2>
@@ -865,7 +969,7 @@ function showVictory(stars, res, unlocks, gained) {
     <ul class="goal-list">
       <li class="ok"><span class="mark">✓</span>${t('goal1')}<span class="stars-req">★</span></li>
       ${L.fireflies.length ? `<li class="${ffOk ? 'ok' : ''}"><span class="mark">${ffOk ? '✓' : '✗'}</span>${t('goal2')} (${res.fireflies}/${L.fireflies.length})<span class="stars-req">★★</span></li>` : ''}
-      <li class="${ffOk && parOk ? 'ok' : ''}"><span class="mark">${ffOk && parOk ? '✓' : '✗'}</span>${t('goal3', game.par)} (${res.pieces})<span class="stars-req">★★★</span></li>
+      ${parKnown ? `<li class="${ffOk && parOk ? 'ok' : ''}"><span class="mark">${ffOk && parOk ? '✓' : '✗'}</span>${t('goal3', game.par)} (${res.pieces})<span class="stars-req">★★★</span></li>` : ''}
     </ul>
     ${worldDone ? `<p><b>${t('worldDone')}</b>${lastWorld ? '<br>' + t('ending') : ''}</p>` : ''}
     <div class="unlock-list"></div>
@@ -874,8 +978,9 @@ function showVictory(stars, res, unlocks, gained) {
       <div class="actions" style="margin-top:0">
         <button class="btn btn-ghost btn-small" data-a="replay">${ICONS.retry}${t('replay')}</button>
         <button class="btn btn-ghost btn-small" data-a="tune" aria-label="${t('tune')}">♫</button>
-        <button class="btn btn-ghost btn-small" data-a="map">${ICONS.map}${t('map')}</button>
+        <button class="btn btn-ghost btn-small" data-a="map">${custom ? ICONS.pencil + t('atelier') : ICONS.map + t('map')}</button>
       </div>
+      ${custom && current.from === 'link' ? `<button class="btn btn-ghost btn-small" data-a="keep">${ICONS.plus}${atelier.text().addToAtelier}</button>` : ''}
     </div>`;
   const ul = box.querySelector('.unlock-list');
   let shown = 0;
@@ -924,7 +1029,8 @@ function showVictory(stars, res, unlocks, gained) {
     dismissable: false,
     onBack: () => {
       m.close();
-      openMap(true, true);
+      if (custom) leaveCustom();
+      else openMap(true, true);
     },
   });
   const starsEls = box.querySelectorAll('.win-star');
@@ -949,8 +1055,17 @@ function showVictory(stars, res, unlocks, gained) {
   box.querySelector('[data-a=map]').onclick = () => {
     click();
     m.close();
-    openMap(true);
+    if (custom) leaveCustom();
+    else openMap(true);
   };
+  const kb = box.querySelector('[data-a=keep]');
+  if (kb) {
+    kb.onclick = () => {
+      click();
+      atelier.addShared(current.entry);
+      kb.remove();
+    };
+  }
   const nb = box.querySelector('[data-a=next]');
   if (nb) nb.onclick = () => (click(), m.close(), startLevel(next));
 }
@@ -1247,6 +1362,36 @@ window.addEventListener('keydown', (e) => {
   app.hudChanged();
 });
 
+// ----------------------------------------------------------------- atelier
+
+const atelier = createAtelier({
+  $,
+  el,
+  getLang,
+  ICONS,
+  click,
+  sound,
+  openModal,
+  toast,
+  showScreen,
+  confirmBox,
+  save: SV.save,
+  persist: SV.persist,
+  scene: editorScene,
+  startCustom,
+  layoutEditor,
+  back: () => {
+    if (navDepth > 0) history.back();
+    else {
+      buildTitle();
+      showScreen('title');
+    }
+  },
+});
+app.editorPaint = (idx, repeat) => atelier.paint(idx, repeat);
+app.atelier = atelier;
+app.editor = editorScene;
+
 // ------------------------------------------------------------------- boot
 
 function boot() {
@@ -1275,6 +1420,15 @@ function boot() {
   // Deep link for testing: #level=1-3
   const m = location.hash.match(/level=([\w-]+)/);
   if (m && SV.findLevel(m[1])) startLevel(m[1]);
+  const shared = location.hash.match(/play=(LUMI1\.[A-Za-z0-9_-]+)/);
+  if (shared) {
+    try {
+      history.replaceState(null, '', location.pathname + location.search);
+    } catch {
+      /* ignore */
+    }
+    atelier.playShared(shared[1]);
+  }
 }
 
 app.startLevel = startLevel;

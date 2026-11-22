@@ -869,7 +869,7 @@ export class GameScene {
     }
 
     // Placement dots while choosing.
-    if (this.mode === 'plan' && this.app.settings().dots && (this.gesture?.drag || this.picker === null)) {
+    if (this.mode === 'plan' && !this.noDots && this.app.settings().dots && (this.gesture?.drag || this.picker === null)) {
       const left = this.inventoryLeft();
       const showAll = !!this.gesture?.drag;
       const type = showAll ? this.gesture.drag.type : PIECE[this.selected.toUpperCase()];
