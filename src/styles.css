@@ -709,8 +709,36 @@ svg {
 #screen-game.running .ctl[data-act='hint'] {
   display: none;
 }
-#screen-game.running .ctl.speed {
+#screen-game.running .ctl.speed,
+#screen-game.running .ctl.runctl {
   display: flex;
+}
+.ctl.runctl {
+  display: none;
+}
+.ctl .i-resume {
+  display: none;
+  fill: currentColor;
+  stroke: none;
+}
+#screen-game.paused .ctl .i-pause {
+  display: none;
+}
+#screen-game.paused .ctl .i-resume {
+  display: block;
+}
+#screen-game.running:not(.paused) .ctl[data-act='step'] {
+  opacity: 0.4;
+}
+.fail-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+.fail-actions .btn-primary {
+  flex: 1 1 auto;
 }
 #screen-game.running .tray {
   opacity: 0.35;

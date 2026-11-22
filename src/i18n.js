@@ -91,6 +91,9 @@ const STR = {
     offlineReady: 'Le jeu fonctionne maintenant hors ligne.',
     hintsUsed: 'Indices utilisés',
     tune: 'Écouter la mélodie du chemin',
+    step: 'Pas',
+    replaySlow: 'Revoir',
+    pausedHint: 'Pause · touche le plateau pour reprendre',
     soundOnTip: 'Touchez pour activer le son',
   },
   en: {
@@ -183,6 +186,9 @@ const STR = {
     offlineReady: 'The game now works offline.',
     hintsUsed: 'Hints used',
     tune: 'Play the tune of the path',
+    step: 'Step',
+    replaySlow: 'Replay',
+    pausedHint: 'Paused · tap the board to resume',
     soundOnTip: 'Tap to enable sound',
   },
 };

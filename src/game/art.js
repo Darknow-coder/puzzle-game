@@ -1789,3 +1789,51 @@ export function drawPieceIcon(g, kind, x, y, S, t = 0) {
       break;
   }
 }
+
+/** A cartoon pointing hand whose fingertip is at (x, y). */
+export function drawHand(g, x, y, S, press = 0, alpha = 1) {
+  const s = S * 0.9;
+  g.save();
+  g.globalAlpha *= alpha;
+  g.translate(x, y);
+  g.rotate(-0.42);
+  const dy = press * s * 0.08;
+  g.translate(0, dy);
+  g.fillStyle = 'rgba(20,10,40,0.28)';
+  g.beginPath();
+  roundRect(g, -s * 0.11 + s * 0.06, s * 0.05, s * 0.22, s * 0.5, s * 0.11);
+  roundRect(g, -s * 0.22 + s * 0.06, s * 0.36, s * 0.5, s * 0.42, s * 0.16);
+  g.fill();
+  g.fillStyle = '#ffffff';
+  g.strokeStyle = '#3b2a6a';
+  g.lineWidth = Math.max(1.5, s * 0.035);
+  g.lineJoin = 'round';
+  // index finger
+  g.beginPath();
+  roundRect(g, -s * 0.11, 0, s * 0.22, s * 0.5, s * 0.11);
+  g.fill();
+  g.stroke();
+  // palm with folded fingers
+  g.beginPath();
+  roundRect(g, -s * 0.22, s * 0.32, s * 0.5, s * 0.42, s * 0.16);
+  g.fill();
+  g.stroke();
+  g.beginPath();
+  g.moveTo(s * 0.11, s * 0.42);
+  g.lineTo(s * 0.11, s * 0.52);
+  g.moveTo(s * 0.2, s * 0.44);
+  g.lineTo(s * 0.2, s * 0.54);
+  g.stroke();
+  // thumb
+  g.beginPath();
+  g.ellipse(-s * 0.24, s * 0.48, s * 0.07, s * 0.12, -0.5, 0, TAU);
+  g.fill();
+  g.stroke();
+  // cuff
+  g.fillStyle = '#ffcf5a';
+  g.beginPath();
+  roundRect(g, -s * 0.22, s * 0.7, s * 0.5, s * 0.12, s * 0.05);
+  g.fill();
+  g.stroke();
+  g.restore();
+}

@@ -32,6 +32,7 @@ const ICONS = {
   next: '<svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg>',
   play: '<svg viewBox="0 0 24 24" style="fill:currentColor;stroke:none"><path d="M8 5v14l11-7z"/></svg>',
   shoot: '<svg viewBox="0 0 24 24"><path d="M14 10 4 20M17 4l1.2 2.6L21 7.5l-2 2 .4 2.8-2.4-1.3-2.5 1.3.5-2.8-2-2 2.8-.4z"/></svg>',
+  slow: '<svg viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5M9 2h6"/></svg>',
 };
 
 // ---------------------------------------------------------------------------
@@ -401,10 +402,12 @@ const TIP_CARDS = {
 
 function afterIntro(f) {
   if (f.def.tip === 'place' && !SV.save.data.tips.placeDone) {
+    game.startCoach('place');
     tipTimer = setTimeout(() => toast(t('tapToPlace'), 6000, true), 300);
   } else if (f.def.id === '1-2' && !SV.save.data.tips.swipe) {
     SV.save.data.tips.swipe = 1;
     SV.persist();
+    game.startCoach('swipe');
     tipTimer = setTimeout(() => toast(t('swipeTip'), 5500, true), 400);
   } else if (f.def.id === '1-4' && !SV.save.data.tips.long) {
     SV.save.data.tips.long = 1;
@@ -464,6 +467,8 @@ app.hudChanged = () => {
   pc.querySelector('.pc-par').textContent = `/ ${par}`;
   pc.classList.toggle('over', (running ? game.runPieces : used) > par);
   gs.classList.toggle('running', game.mode === 'run' || game.mode === 'post');
+  gs.classList.toggle('paused', game.mode === 'run' && !!game.paused);
+  gs.querySelector('[data-act=playpause] .lbl').textContent = game.paused ? t('resume') : t('pause');
   gs.classList.toggle('result', game.mode === 'result-win' || game.mode === 'result-fail');
   gs.querySelector('[data-act=undo]').disabled = !game.history.length;
   gs.querySelector('[data-act=reset]').disabled = !game.placements.size;
@@ -491,14 +496,16 @@ app.onRunStart = () => {
   SV.recordTry(current.def.id);
 };
 
-app.onFail = (cause, name) => {
-  SV.save.data.stats.fails++;
-  SV.persist();
+app.onFail = (cause, name, replayed = false) => {
+  if (!replayed) {
+    SV.save.data.stats.fails++;
+    SV.persist();
+  }
   const fb = $('#screen-game .fail-banner');
   fb.querySelector('.fail-title').textContent = t('fail.' + cause.type, name);
   fb.querySelector('.fail-sub').textContent = t('failHint');
-  const rb = fb.querySelector('[data-act=retry]');
-  rb.innerHTML = `${ICONS.retry}${t('retry')}`;
+  fb.querySelector('[data-act=retry]').innerHTML = `${ICONS.retry}${t('retry')}`;
+  fb.querySelector('[data-act=replay-fail]').innerHTML = `${ICONS.slow}${t('replaySlow')}`;
   fb.classList.add('show');
   app.hudChanged();
 };
@@ -568,6 +575,17 @@ function bindGameHud() {
         break;
       case 'retry':
         retry();
+        break;
+      case 'replay-fail':
+        hideFail();
+        game.replayFail();
+        break;
+      case 'playpause':
+        game.togglePause();
+        break;
+      case 'step':
+        if (game.paused) game.stepOnce();
+        else game.togglePause();
         break;
       default:
         break;
@@ -1217,6 +1235,9 @@ window.addEventListener('keydown', (e) => {
   if (k === ' ' || k === 'Enter') {
     e.preventDefault();
     $('#screen-game [data-act=go]').click();
+  } else if (k === 'p' || k === 'P') game.togglePause();
+  else if (k === '.' || k === 'n' || k === 'N') {
+    if (game.paused) game.stepOnce();
   } else if ((k === 'z' || k === 'Z') && !e.altKey) game.undo();
   else if (k === 'h' || k === 'H') game.hint();
   else if (k.startsWith('Arrow')) {

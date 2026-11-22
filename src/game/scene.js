@@ -39,12 +39,10 @@ export class GameScene {
     this.hintCells = [];
     this.wrongCells = [];
     this.hintsUsed = 0;
-    this.shake = 0;
     this.flashCell = null;
-    this.failInfo = null;
     this.speed = this.app.settings().speed || 1;
-    this.trails = [];
-    this.fx.clear();
+    this.coach = null;
+    this.clearRun();
     this.lastArrowDir = 1;
     this.blinks = this.L.walkers.map(() => 1 + Math.random() * 3);
     const inv = this.L.inventory;
@@ -56,6 +54,22 @@ export class GameScene {
     this.motes = [];
     for (let i = 0; i < 14; i++) this.motes.push({ x: Math.random(), y: Math.random(), s: 0.5 + Math.random(), p: Math.random() * 6 });
     this.app.hudChanged();
+  }
+
+  /** Forgets everything the previous run left on screen (paths, trails, tune, markers). */
+  clearRun() {
+    this.run = null;
+    this.failInfo = null;
+    this.trails = [];
+    this.winPaths = null;
+    this.melody = null;
+    clearTimeout(this.melodyTimer);
+    this.fx.clear();
+    this.shake = 0;
+    this.post = 0;
+    this.paused = false;
+    this.stepping = false;
+    this.replaying = false;
   }
 
   inventoryLeft() {
@@ -226,7 +240,8 @@ export class GameScene {
   // ---------------------------------------------------------------- input
 
   pointerDown(px, py, id) {
-    if (this.mode === 'result-fail') {
+    if (this.mode === 'run') {
+      this.togglePause();
       return;
     }
     if (this.mode !== 'plan') return;
@@ -431,16 +446,15 @@ export class GameScene {
     this.picker = null;
     this.hintCells = this.hintCells.filter((h) => !this.placements.has(h.idx));
     const list = this.placementList();
+    this.clearRun();
     this.run = simulate(this.L, list, { record: true });
     this.runPieces = list.length;
     this.frame = 0;
     this.p = 0;
-    this.post = 0;
     this.mode = 'run';
     this.firedEvents = -1;
     this.trails = this.L.walkers.map(() => []);
     this.liveFireflies = 0;
-    this.failInfo = null;
     this.app.onRunStart();
     sound.sfx('go');
     this.app.hudChanged();
@@ -449,11 +463,117 @@ export class GameScene {
   stop() {
     if (this.mode === 'plan') return;
     this.mode = 'plan';
-    this.run = null;
-    this.failInfo = null;
-    this.trails = [];
-    this.fx.clear();
+    this.clearRun();
     sound.sfx('stop');
+    this.app.hudChanged();
+  }
+
+  // ------------------------------------------------------------ tutorial
+
+  /** Animated hand showing the gestures: 'place' (tap, choose, Go) or 'swipe'. */
+  startCoach(kind) {
+    const first = this.solution?.sol?.[0];
+    if (!first) return;
+    const [idx, , dir] = first;
+    this.coach = { kind, step: kind === 'swipe' ? 'swipe' : 'tap', idx, dir, t0: this.t };
+  }
+
+  updateCoach() {
+    const c = this.coach;
+    if (!c) return;
+    if (c.kind === 'swipe') {
+      if (this.placements.size) this.coach = null;
+      return;
+    }
+    if (this.mode !== 'plan') {
+      if (c.step === 'go') this.coach = null;
+      return;
+    }
+    const p = this.placements.get(c.idx);
+    const step = !p ? 'tap' : p.type === PIECE.ARROW && p.dir === c.dir ? 'go' : 'petal';
+    if (step !== c.step) {
+      c.step = step;
+      c.t0 = this.t;
+    }
+  }
+
+  drawCoach(g) {
+    const c = this.coach;
+    if (!c || this.gesture?.drag) return;
+    const S = this.S;
+    const k = (this.t - c.t0) % 1.4;
+    const press = k < 0.25 ? k / 0.25 : k < 0.45 ? 1 - (k - 0.25) / 0.2 : 0;
+    let x;
+    let y;
+    if (c.step === 'swipe') {
+      const [cx, cy] = this.cellCenter(c.idx);
+      const q = Math.min(1, ((this.t - c.t0) % 1.6) / 1.1);
+      const e = q < 0.5 ? 2 * q * q : 1 - Math.pow(-2 * q + 2, 2) / 2;
+      x = cx + DX[c.dir] * S * (-0.35 + 0.75 * e);
+      y = cy + DY[c.dir] * S * (-0.35 + 0.75 * e);
+      g.strokeStyle = `rgba(255,236,170,${0.6 * (1 - q)})`;
+      g.lineWidth = Math.max(3, S * 0.08);
+      g.lineCap = 'round';
+      g.beginPath();
+      g.moveTo(cx - DX[c.dir] * S * 0.35, cy - DY[c.dir] * S * 0.35);
+      g.lineTo(x, y);
+      g.stroke();
+      A.drawHand(g, x, y, S, 0.6);
+      return;
+    }
+    if (c.step === 'tap') [x, y] = this.cellCenter(c.idx);
+    else if (c.step === 'petal') {
+      if (this.picker && this.picker.idx === c.idx) {
+        const it = this.pickerGeometry().find((i) => i.key === c.dir);
+        x = it.x;
+        y = it.y;
+      } else [x, y] = this.cellCenter(c.idx);
+    } else {
+      // The Go button glows instead (it sits above the canvas).
+      return;
+    }
+    if (press > 0.6) {
+      g.strokeStyle = `rgba(255,236,170,${(press - 0.6) * 2})`;
+      g.lineWidth = 3;
+      g.beginPath();
+      g.arc(x, y, S * (0.25 + 0.35 * (1 - press)), 0, A.TAU);
+      g.stroke();
+    }
+    A.drawHand(g, x, y, S, press);
+  }
+
+  /** Pause / resume the playback (tap on the board or the pause button). */
+  togglePause() {
+    if (this.mode !== 'run') return;
+    this.paused = !this.paused;
+    this.stepping = false;
+    sound.sfx('tap');
+    this.app.hudChanged();
+  }
+
+  /** While paused: play exactly one more turn, then pause again. */
+  stepOnce() {
+    if (this.mode !== 'run') return;
+    this.paused = false;
+    this.stepping = true;
+    this.stepUntil = this.frame + 1;
+    this.app.hudChanged();
+  }
+
+  /** After a failure: replay the last few turns in slow motion. */
+  replayFail() {
+    if (this.mode !== 'result-fail' || !this.run) return;
+    const last = this.run.frames.length - 1;
+    this.frame = Math.max(0, last - 5);
+    this.p = 0;
+    this.firedEvents = this.frame;
+    this.failInfo = null;
+    this.fx.clear();
+    this.trails = this.L.walkers.map(() => []);
+    this.replaying = true;
+    this.paused = false;
+    this.stepping = false;
+    this.mode = 'run';
     this.app.hudChanged();
   }
 
@@ -483,6 +603,7 @@ export class GameScene {
       this.blinks[i] -= dt;
       if (this.blinks[i] < -0.14) this.blinks[i] = 2 + Math.random() * 3.5;
     }
+    this.updateCoach();
     if (this.mode === 'run') this.advance(dt);
     else if (this.mode === 'post') {
       this.post += dt;
@@ -491,8 +612,9 @@ export class GameScene {
   }
 
   advance(dt) {
+    if (this.paused) return;
     const frames = this.run.frames;
-    this.p += dt / TICK[this.speed];
+    this.p += dt / (this.replaying ? TICK[1] * 2.4 : TICK[this.speed]);
     if (this.firedEvents < this.frame + 1 && this.p >= 0.62) this.fireEvents(this.frame + 1);
     while (this.p >= 1) {
       if (this.frame + 1 >= frames.length - 1) {
@@ -504,6 +626,13 @@ export class GameScene {
       }
       this.p -= 1;
       this.frame++;
+      if (this.stepping && this.frame >= this.stepUntil) {
+        this.p = 0;
+        this.paused = true;
+        this.stepping = false;
+        this.app.hudChanged();
+        return;
+      }
       if (this.firedEvents < this.frame + 1 && this.p >= 0.62) this.fireEvents(this.frame + 1);
     }
   }
@@ -633,17 +762,15 @@ export class GameScene {
     } else {
       this.mode = 'result-fail';
       const name = LUMI_NAMES[this.L.walkers[run.cause.id]?.color ?? 0];
-      this.app.onFail(run.cause, name);
+      this.app.onFail(run.cause, name, this.replaying);
+      this.replaying = false;
     }
   }
 
   retry() {
     if (this.mode === 'plan') return;
     this.mode = 'plan';
-    this.run = null;
-    this.failInfo = null;
-    this.trails = [];
-    this.winPaths = null;
+    this.clearRun();
     this.app.hudChanged();
   }
 
@@ -942,6 +1069,29 @@ export class GameScene {
     }
     // Radial picker.
     if (this.picker) this.drawPicker(g);
+    g.restore();
+    this.drawCoach(g);
+    if (this.mode === 'run' && (this.paused || this.replaying)) this.drawBadge(g, this.paused ? '❚❚  ' + this.app.t('pausedHint') : '◷  ' + this.app.t('replaySlow'));
+  }
+
+  drawBadge(g, text) {
+    g.save();
+    g.font = `600 ${Math.round(Math.max(13, Math.min(16, this.S * 0.28)))}px Fredoka, sans-serif`;
+    const w = g.measureText(text).width + 28;
+    const h = 32;
+    const x = this.ox + (this.L.w * this.S) / 2 - w / 2;
+    const y = Math.max(this.oy - this.S * 0.72 - h - 4, 72);
+    g.fillStyle = 'rgba(28,19,58,0.88)';
+    g.beginPath();
+    A.roundRect(g, x, y, w, h, 16);
+    g.fill();
+    g.strokeStyle = 'rgba(255,207,90,0.5)';
+    g.lineWidth = 1.5;
+    g.stroke();
+    g.fillStyle = '#fff8ea';
+    g.textAlign = 'center';
+    g.textBaseline = 'middle';
+    g.fillText(text, x + w / 2, y + h / 2 + 1);
     g.restore();
   }
 
