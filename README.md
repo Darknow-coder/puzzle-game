@@ -5,6 +5,8 @@ place des flèches (et bien plus) pour guider de petites lueurs têtues jusqu’
 puis appuie sur **Go !** et regarde ton plan se dérouler… en musique.
 
 - **77 niveaux** répartis en 7 mondes + 7 « étoiles filantes », tous **prouvés solvables** par un solveur.
+- **140 énigmes** : un recueil de vingt niveaux corsés par monde (paliers *Malin*, *Rusé*, *Génie*),
+  ouvert quand le monde est terminé ; chacune a une seule disposition parfaite, prouvée par le solveur.
 - **Miroirs de cristal** (monde 7, *L’Aube de Cristal*) : posés ou gravés, ils renvoient les Lumignons
   comme des rayons de lumière.
 - 3 étoiles par niveau : rentrer, attraper toutes les lucioles, le faire avec le minimum de pièces.
@@ -88,6 +90,7 @@ node tools/build-sw.mjs               # régénère la liste des fichiers mis en
 node tools/levels-doc.mjs             # régénère docs/LEVELS.md
 node tools/build-artifact.mjs         # page autonome (CSS et police intégrées) pour un aperçu hébergé
 node tools/build-daily.mjs <dossiers> # réserve du défi du jour (--only dawn : un seul monde, les autres inchangés)
+node tools/build-enigmas.mjs <dossiers> # recueils d’énigmes, à partir des recettes …Hard de generate.mjs (--only aussi)
 node tools/store-shots.cjs            # captures 1080×1920 et image de présentation (store/screenshots)
 ```
 
@@ -102,6 +105,8 @@ src/data/solutions.js    généré : par et solution parfaite de chaque niveau
 src/data/meta.js         carnet, chapeaux, succès
 src/data/daily.js        généré : les 427 puzzles du défi du jour (solution parfaite unique prouvée)
 src/daily.js             choix du puzzle du jour et série de jours
+src/data/enigmas.js      généré : les 7 recueils de 20 énigmes (solution parfaite unique prouvée)
+src/enigmas.js           identifiants, paliers et lecture des énigmes
 src/share.js             image souvenir d’un niveau réussi
 src/backup.js            codes de sauvegarde de la progression
 src/quests.js            quêtes de la semaine : tirage, progression, récompenses

@@ -204,7 +204,7 @@ const STR = {
     soundOnTip: 'Touchez pour activer le son',
     podium: 'Podium',
     enigmas: {
-      title: 'Énigmes',
+      title: 'Brainteasers',
       intro: 'Twenty puzzles, harder and harder. A single perfect layout catches every firefly with the fewest pieces: find it!',
       progress: (d, n) => `${d} / ${n} solved`,
       locked: 'Finish this world to open its puzzles.',

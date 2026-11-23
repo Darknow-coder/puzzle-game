@@ -35,6 +35,10 @@ const check = (ok, what) => {
     await p.waitForSelector('#screen-map .enigma-card');
     const cards = await p.$$eval('#screen-map .enigma-card', (els) => els.map((e) => e.className.includes('locked')));
     check(cards.length === 7 && !cards[0] && cards.slice(1).every((x) => x), 'every world has its book; world 1 finished opens the first one only');
+    await p.waitForTimeout(600);
+    const modal = await p.evaluate(() => document.querySelector('.modal.show')?.textContent.slice(0, 80) || '');
+    if (modal) console.log('  (map opened with a dialog: ' + modal + ')');
+    await closeModals();
     await p.click('#screen-map .enigma-card:not(.locked)');
     await p.waitForSelector('.enigmas .en-node');
     const tiers = await p.$$eval('.enigmas .en-tier-name', (els) => els.map((e) => e.textContent));
@@ -54,7 +58,7 @@ const check = (ok, what) => {
     await p.waitForSelector('.win-stars', { timeout: 30000 });
     await p.waitForTimeout(1600);
     check((await p.$$('.win-star.on')).length === 3, 'its perfect layout gives three stars');
-    check((await p.textContent('.unlock-list')).includes('Petit malin'), 'the first énigme earns an achievement');
+    check(await p.evaluate(() => !!window.lumignons.save.save.data.achievements.enigma1), 'the first énigme earns an achievement');
     await p.click('.modal [data-a=next]');
     await p.waitForFunction(() => window.lumignons.game.L.id === 'e1-02');
     check(true, '"Next" goes on to the next énigme');

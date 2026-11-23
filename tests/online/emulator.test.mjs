@@ -10,6 +10,8 @@ import { makeEntry, globalKey, UNKNOWN } from '../../src/online/score.js';
 import { nameKey } from '../../src/online/names.js';
 import { SOLUTIONS } from '../../src/data/solutions.js';
 import { DAILY } from '../../src/data/daily.js';
+import { ENIGMAS } from '../../src/data/enigmas.js';
+import { WORLDS } from '../../src/data/levels.js';
 
 const PROJECT = process.env.GCLOUD_PROJECT || 'demo-lumignons';
 const cfg = {
@@ -50,6 +52,9 @@ function service(save = fakeSave(), extra = {}) {
       if (SOLUTIONS[b]) return { min: SOLUTIONS[b].min, par: SOLUTIONS[b].par };
       const m = /^d-.*-([a-z]+)-(\d+)$/.exec(b);
       if (m && DAILY[m[1]]?.[+m[2]]) return { min: DAILY[m[1]][+m[2]][5], par: DAILY[m[1]][+m[2]][4] };
+      const e = /^e(\d)-(\d\d)$/.exec(b);
+      const book = e && ENIGMAS[WORLDS[+e[1] - 1]?.id];
+      if (book?.[+e[2] - 1]) return { min: book[+e[2] - 1][5], par: book[+e[2] - 1][4] };
       return null;
     },
     levelBoards: () => Object.keys(SOLUTIONS),
@@ -315,6 +320,28 @@ test('daily puzzles have their own rankings, open around their day only', async 
   await denied(
     c.commit([{ set: `boards/${old}/entries/${A.online.me().uid}`, data: { ...m, min: DAILY.meadow[3][5], par: DAILY.meadow[3][4], v: 1 }, create: true, serverTime: ['at'] }]),
   );
+});
+
+test('énigmes have their own rankings, without changing the total of stars', async () => {
+  const A = service();
+  await A.online.choose('Futée');
+  const e = ENIGMAS.pond[4];
+  A.online.addTry('e2-05');
+  A.online.tick('e2-05', 45000);
+  A.online.win('e2-05', { stars: 3, pieces: e[4] });
+  assert.equal(await A.online.sync('e2-05'), 'sent');
+  const b = await A.online.board('e2-05', { force: true });
+  assert.equal(b.rows[0].name, 'Futée');
+  const g = await A.online.globalBoard({ force: true });
+  assert.equal(g.rows[0].stars, 0);
+  // Fewer pieces than the perfect layout, or an énigme that does not exist: refused.
+  const c = createClient(cfg, { session: { uid: A.online.me().uid, refresh: A.save.data.online.refresh } });
+  const uid = A.online.me().uid;
+  const f = ENIGMAS.pond[5];
+  const bad = makeEntry({ stars: 3, pieces: f[4] - 1, tries: 1, ms: 9000 });
+  await denied(c.commit([{ set: `boards/e2-06/entries/${uid}`, data: { ...bad, min: f[5], par: f[4] - 1, v: 1 }, create: true, serverTime: ['at'] }]), 'forged par');
+  const ok = makeEntry({ stars: 1, pieces: 9, tries: 1, ms: 9000 });
+  await denied(c.commit([{ set: `boards/e2-21/entries/${uid}`, data: { ...ok, min: 5, par: 8, v: 1 }, create: true, serverTime: ['at'] }]), 'no such énigme');
 });
 
 test('a pseudo taken meanwhile is reported to the player', async () => {

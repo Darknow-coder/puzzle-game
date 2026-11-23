@@ -19,6 +19,8 @@ regarde ton plan se dérouler. Chaque pas joue une note : ta solution devient un
 • 77 niveaux faits main et vérifiés, répartis en 7 mondes : le Pré des Murmures, l’Étang Miroir,
   le Bois des Champignons, les Ruines de Lune, la Forêt des Grignombres, la Cime des Vents
   et l’Aube de Cristal, où des miroirs renvoient les Lumignons comme des rayons de lumière.
+• 140 énigmes en plus pour les plus malins : vingt par monde, de plus en plus corsées, avec une
+  seule disposition parfaite à trouver.
 • Des règles simples et toujours prévisibles : aucun hasard, chaque échec s’explique.
 • Trois étoiles par niveau : rentrer, attraper toutes les lucioles, le faire avec le minimum de pièces.
 • Pause, pas à pas et ralenti pour comprendre ce qui s’est passé.
@@ -36,6 +38,9 @@ regarde ton plan se dérouler. Chaque pas joue une note : ta solution devient un
 **Catégorie** : Jeux › Réflexion. **Classification** : tout public (aucune violence, aucun contenu
 sensible ; les pseudos et résultats des autres joueurs sont visibles dans les classements, sans
 messagerie ni échange entre joueurs).
+
+**Nouveautés 3.5** : 140 nouveaux niveaux ! Chaque monde terminé ouvre un recueil de vingt énigmes,
+de *Malin* à *Génie*, avec une seule disposition parfaite à trouver.
 
 **Nouveautés 3.4** : des quêtes chaque semaine (éclats et coffre offert), des amis à ajouter par
 pseudo ou par lien, des classements entre amis et des défis à envoyer depuis l’écran de victoire.
@@ -72,6 +77,8 @@ plays a note, so your solution becomes a tune.
 
 • 77 hand-crafted, verified levels across 7 worlds, the last one full of crystal mirrors that
   bounce the Lumignons like rays of light.
+• 140 extra brainteasers for clever minds: twenty per world, harder and harder, each with a single
+  perfect layout to find.
 • Simple, fully predictable rules: no luck involved, every failure makes sense.
 • Three stars per level: bring everyone home, catch every firefly, use as few pieces as possible.
 • Pause, step-by-step playback and slow-motion replays.

@@ -243,6 +243,23 @@ accueille, commente ce qu’on essaie, félicite les achats, encourage quand la 
   résultat à battre et joue le niveau ; il devient ami de l’autre. La réussite « devant un ami » nourrit
   une quête.
 
+## 7 octies. Version 3.5 : les recueils d’énigmes
+
+- **Pourquoi** : la campagne se termine en quelques jours pour un joueur assidu. Chaque monde reçoit un
+  **recueil de 20 énigmes**, ouvert quand les dix niveaux du monde sont réussis (l’étoile filante
+  n’est pas exigée) : de quoi rejouer chaque mécanique bien plus loin, sans toucher à la courbe de la campagne.
+- **Fabrication** : des recettes « …Hard » du générateur (plus de Lumignons, plus d’obstacles, 5 à 8
+  pièces pour ★★★, la mécanique du monde obligatoire), puis `tools/build-enigmas.mjs` garde les plateaux
+  cohérents (pas de flaque isolée, peu de murs), différents de tous les niveaux et défis du jour, et
+  **prouvés à disposition parfaite unique** par le solveur. Ils sont classés par une note de
+  difficulté (pièces, longueur du parcours, cases partagées, retours, écart entre ★ et ★★★) et choisis
+  en éventail du milieu de la plage jusqu’aux plus durs.
+- **Paliers** : énigmes 1 à 7 *Malin*, 8 à 14 *Rusé*, 15 à 20 *Génie*. Toutes sont jouables dans
+  l’ordre qu’on veut ; « Suivant » mène à la suivante.
+- Elles rapportent éclats et succès comme les autres niveaux et ont leur classement, mais **le total
+  d’étoiles (général, récompenses de la campagne) ne compte que la campagne**, pour que les recueils
+  restent un bonus.
+
 ## 8. Conception et vérification des niveaux
 
 La campagne compte **77 niveaux** (7 mondes × 10 + 7 étoiles filantes). La liste complète, avec

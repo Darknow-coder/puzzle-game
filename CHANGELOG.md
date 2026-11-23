@@ -1,5 +1,24 @@
 # Journal des versions
 
+## 3.5.0
+
+**Nouveautés**
+
+- **Les recueils d’énigmes** : **140 nouveaux niveaux**, vingt par monde, bien plus corsés que la
+  campagne (5 à 8 pièces pour les trois étoiles). Un monde terminé ouvre son recueil, sur la carte
+  juste après l’étoile filante (ou tout de suite avec « Ouvrir tous les niveaux »). Chaque recueil va
+  du plus simple au plus dur, en trois paliers : *Malin*, *Rusé* et *Génie*.
+- Chaque énigme a **une seule disposition parfaite** (toutes les lucioles avec le moins de pièces),
+  prouvée par le solveur, et ne reprend aucun niveau de la campagne ni aucun défi du jour.
+- Comme les autres niveaux : éclats et étoiles, indices, image souvenir, classement par énigme, défi
+  à envoyer à un ami. « Suivant » enchaîne sur l’énigme suivante du recueil.
+- Trois succès : *Petit malin* (une énigme), *Grand esprit* (50 énigmes) et *Génie des lucioles*
+  (toutes les étoiles d’un recueil).
+
+**Changements**
+
+- Le total d’étoiles du classement général et des récompenses compte toujours la seule campagne.
+
 ## 3.4.0
 
 **Nouveautés**
