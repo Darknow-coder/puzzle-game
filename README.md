@@ -4,11 +4,14 @@ Un jeu de réflexion mobile, original et entièrement gratuit à faire tourner :
 place des flèches (et bien plus) pour guider de petites lueurs têtues jusqu’à leurs lanternes,
 puis appuie sur **Go !** et regarde ton plan se dérouler… en musique.
 
-- **77 niveaux** répartis en 7 mondes + 7 « étoiles filantes », tous **prouvés solvables** par un solveur.
-- **140 énigmes** : un recueil de vingt niveaux corsés par monde (paliers *Malin*, *Rusé*, *Génie*),
+- **88 niveaux** répartis en 8 mondes + 8 « étoiles filantes », tous **prouvés solvables** par un solveur.
+- **160 énigmes** : un recueil de vingt niveaux corsés par monde (paliers *Malin*, *Rusé*, *Génie*),
   ouvert quand le monde est terminé ; chacune a une seule disposition parfaite, prouvée par le solveur.
 - **Miroirs de cristal** (monde 7, *L’Aube de Cristal*) : posés ou gravés, ils renvoient les Lumignons
   comme des rayons de lumière.
+- **Comètes** (monde 8, *Le Jardin des Comètes*) : une flèche qui ne sert qu’une fois. Le premier qui
+  passe dessus tourne, puis elle remonte dans le ciel ; les suivants passent tout droit.
+- **Histoire** : un chapitre illustré avant le monde 8 et un épilogue à la fin, à relire depuis la carte.
 - 3 étoiles par niveau : rentrer, attraper toutes les lucioles, le faire avec le minimum de pièces.
 - **Atelier** : crée tes niveaux, le jeu vérifie qu’ils sont faisables et calcule le nombre de pièces
   parfait, puis partage-les avec un code ou un lien.
@@ -100,7 +103,7 @@ node tools/store-shots.cjs            # captures 1080×1920 et image de présent
 index.html, manifest.webmanifest, sw.js   coquille de l'application, PWA
 src/engine/core.js       règles du jeu (moteur déterministe, sans DOM)
 src/engine/solver.js     solveur exhaustif (preuve de solvabilité, par, indices)
-src/data/levels.js       les 7 mondes et 77 niveaux (cartes en texte)
+src/data/levels.js       les 8 mondes et 88 niveaux (cartes en texte)
 src/data/solutions.js    généré : par et solution parfaite de chaque niveau
 src/data/meta.js         carnet, chapeaux, succès
 src/data/daily.js        généré : les 427 puzzles du défi du jour (solution parfaite unique prouvée)
@@ -134,7 +137,7 @@ tools/                   solveur en ligne de commande, générateur, vérificati
 
 ## Publication
 
-- **GitHub Pages** : le workflow `.github/workflows/pages.yml` lance les tests, vérifie les 77 niveaux,
+- **GitHub Pages** : le workflow `.github/workflows/pages.yml` lance les tests, vérifie les 88 niveaux,
   puis publie le jeu à chaque push sur `main` ou sur la branche de développement.
   1. *Settings → Pages → Build and deployment → Source* : **GitHub Actions**.
   2. *Settings → Environments → github-pages → Deployment branches and tags* : autoriser la branche

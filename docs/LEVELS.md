@@ -1,4 +1,4 @@
-# Les 77 niveaux
+# Les 88 niveaux
 
 Généré par `node tools/levels-doc.mjs` à partir de `src/data/levels.js` et des résultats du solveur.
 « ★ » = nombre minimal de pièces pour terminer, « ★★★ » = nombre minimal pour un parcours parfait
@@ -129,4 +129,22 @@ La nuit s’achève. Sur l’île de cristal, chaque miroir renvoie les Lumignon
 | 7-9 | Flèches et miroirs | 5×7 | 2 flèches, 3 miroirs | 3 | 5 | 1 | Only an arrow can turn a Lumignon back: Nim retraces Pip’s mirrors twice, and Pip’s lantern finally turns him towards his own. |
 | 7-10 | Lever du jour | 7×8 | 7 miroirs | 5 | 6 | 1 | Three Lumignons share six mirrors: Pip and Nim run the same loop a few steps apart while Lou slips around them. |
 | 7-B | Le Prisme | 7×8 | 2 flèches, 1 nénuphar, 5 miroirs | 4 | 8 | 1 | The grand finale: both Lumignons cross the moon gates, bounce back off an arrow by the pond and return the whole way, thirty-four turns of light. |
+
+## Monde 8 — Le Jardin des Comètes
+
+Les étoiles sont tombées au-dessus des nuages. Chaque comète guide un seul pas, puis remonte briller dans le ciel.
+
+| Niveau | Nom | Taille | Pièces | ★ | ★★★ | sol. | Intention |
+|---|---|---|---|---|---|---|---|
+| 8-1 | Aller-retour | 6×3 | 2 flèches, 1 undefined | 1 | 2 | 1 | A comet is an arrow that works once: it sends Pip down to the firefly, an arrow sends him back up, and the comet has flown away, so he walks on up to his lantern. An arrow alone gets him home without the firefly. |
+| 8-2 | Une pour deux | 6×2 | 1 flèche, 1 undefined | 1 | 1 | 1 | Pip and Nim walk the same row: the comet turns Pip, who is in front, down to his lantern, then flies away; Nim walks straight on to his. |
+| 8-3 | Deux tours | 6×6 | 3 flèches, 1 undefined | 1 | 3 | 1 | Two arrows make a loop: the comet sends Pip up through the second firefly on the first lap; on the second it is gone and he leaves the loop towards his lantern. |
+| 8-4 | La grande ronde | 6×5 | 4 flèches, 1 undefined | 2 | 4 | 1 | Pip goes twice round a loop of three arrows: the comet lifts him through the middle firefly the first time only, then lets him run on to the rock that turns him home. |
+| 8-5 | Portes d’étoiles | 7×7 | 5 flèches, 1 undefined | 3 | 5 | 1 | The comet sends Pip up the first time and lets him through the second; Nim, from below, shares his arrows, and one trip through the moon gates saves a long way round. |
+| 8-6 | L’étang aux étoiles | 7×6 | 4 flèches, 1 nénuphar, 1 undefined | 1 | 5 | 1 | A lily pad across the starry pond, a long loop through both fireflies, and a comet that turns Pip towards his lantern only on the second pass. |
+| 8-7 | Les voleurs d’étoiles | 6×6 | 5 flèches, 1 undefined | 1 | 5 | 1 | Two Gloomnibs fall off the edge on their own; Pip passes the same comet three times, and only the first time does it turn him. |
+| 8-8 | La lunette | 6×6 | 3 flèches, 2 miroirs, 1 undefined | 2 | 5 | 1 | Engraved and placed mirrors bounce Pip all over the island; the comet he crosses at the start turns him, and when he comes back at the very end it lets him through to the lantern. |
+| 8-9 | Au-dessus des nuages | 7×8 | 5 flèches, 1 undefined | 3 | 5 | 1 | A cloud that carries only once, a weathervane that turns between two visits, and a comet that sends Pip up the first time and straight on the second. |
+| 8-10 | La voie lactée | 6×6 | 6 flèches, 1 undefined | 1 | 6 | 1 | Pip and Nim weave through five shared arrows; at the very end, Nim reaches the comet twice: up to the firefly, then straight to his lantern. |
+| 8-B | Le Grand Retour | 7×9 | 7 flèches, 1 nénuphar, 1 undefined | 7 | 8 | 1 | The finale of the story: Pip, Nim and Lou together, a lily pad, a cloud that carries once, seven arrows and the last comet, which turns Lou the first time and lets her walk past the second. The mirror and the gates are only there to tempt. |
 

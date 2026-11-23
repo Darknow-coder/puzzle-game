@@ -260,9 +260,31 @@ accueille, commente ce qu’on essaie, félicite les achats, encourage quand la 
   d’étoiles (général, récompenses de la campagne) ne compte que la campagne**, pour que les recueils
   restent un bonus.
 
+## 7 nonies. Version 3.6 : le Jardin des Comètes
+
+- **Histoire** : après l’Aube de Cristal, le jour se lève… et la nuit suivante, le ciel reste noir :
+  les étoiles sont tombées dans le Jardin des Comètes, au-dessus des nuages. Un **chapitre illustré**
+  (quatre pages dessinées en direct, animées) s’ouvre avant le premier niveau du monde 8 ; un
+  **épilogue** (le ciel qui se rallume, la constellation des quatre Lumignons) suit le dernier niveau.
+  Les deux se relisent depuis la carte (bouton *Histoire* / *Épilogue*).
+- **La comète** : une pièce orientée, posée sur l’herbe comme une flèche, qui **n’agit qu’une fois** :
+  le premier qui entre sur sa case (Lumignon ou Grignombre) repart dans sa direction, puis elle
+  s’envole. Les passages suivants vont tout droit. C’est la seule pièce qui permet de **sortir d’une
+  boucle** : un tour avec la comète, le suivant sans. Elle rend aussi possibles les chemins partagés où
+  le premier tourne et le second continue (niveau 8-2).
+- **Moteur et solveur** : l’état d’une partie garde les comètes utilisées (prises en compte dans le
+  hachage des états, donc dans la détection des boucles). Le solveur traite la comète comme une pièce
+  qui agit au premier passage, et a été vérifié contre une recherche par force brute sur 400 plateaux
+  aléatoires avec comètes.
+- **Niveaux** : 8-1 et 8-2 dessinés à la main pour l’enseigner (aller-retour, une pour deux), puis des
+  candidats du générateur où la comète est **indispensable** (la même disposition avec une flèche à sa
+  place échoue), mêlée à toutes les mécaniques précédentes ; chaque niveau a une solution parfaite
+  unique. Monde ouvert à 100 étoiles, 20 énigmes, un chapeau (*Petite comète*) et un succès
+  (*Mille étoiles*).
+
 ## 8. Conception et vérification des niveaux
 
-La campagne compte **77 niveaux** (7 mondes × 10 + 7 étoiles filantes). La liste complète, avec
+La campagne compte **88 niveaux** (8 mondes × 10 + 8 étoiles filantes). La liste complète, avec
 l’intention de chaque niveau, est dans [`LEVELS.md`](LEVELS.md).
 
 - Les niveaux d’introduction de chaque mécanique sont **dessinés à la main** pour enseigner une idée
@@ -295,7 +317,7 @@ l’intention de chaque niveau, est dans [`LEVELS.md`](LEVELS.md).
 Le principe général « préparer des pièces puis observer des personnages qui avancent seuls » est un
 genre ancien et répandu. Lumignons n’en reprend **aucun élément protégé** : pas de personnages, noms,
 niveaux, interface, sons ou visuels issus d’autres jeux. L’univers (Lumignons, Grignombres, lanternes,
-archipel nocturne), les règles détaillées, les 77 niveaux, les graphismes et la musique sont originaux.
+archipel nocturne), les règles détaillées, les 88 niveaux, les graphismes et la musique sont originaux.
 Les seules ressources tierces sont listées dans [`THIRD_PARTY.md`](../THIRD_PARTY.md).
 
 Avant une publication commerciale, il reste recommandé de vérifier la disponibilité du nom

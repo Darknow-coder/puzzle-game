@@ -126,7 +126,7 @@ function seed(lang) {
     await p.evaluate(() => {
       const app = window.lumignons;
       const g = app.game;
-      for (const [i, t, d] of app.solutions['2-10'].sol) g.placeAt(i, ['', 'arrow', 'lily', 'mushroom', 'daisy', 'mirror'][t], d);
+      for (const [i, t, d] of app.solutions['2-10'].sol) g.placeAt(i, ['', 'arrow', 'lily', 'mushroom', 'daisy', 'mirror', 'comet'][t], d);
       g.picker = null;
       g.go();
     });
@@ -141,7 +141,7 @@ function seed(lang) {
     await p.evaluate(() => {
       const app = window.lumignons;
       const g = app.game;
-      for (const [i, t, d] of app.solutions['2-9'].sol) g.placeAt(i, ['', 'arrow', 'lily', 'mushroom', 'daisy', 'mirror'][t], d);
+      for (const [i, t, d] of app.solutions['2-9'].sol) g.placeAt(i, ['', 'arrow', 'lily', 'mushroom', 'daisy', 'mirror', 'comet'][t], d);
       g.picker = null;
       g.timeScale = 6;
       g.go();
@@ -163,7 +163,7 @@ function seed(lang) {
     await p.evaluate(() => {
       const app = window.lumignons;
       const g = app.game;
-      for (const [i, t, d] of app.solutions['7-10'].sol) g.placeAt(i, ['', 'arrow', 'lily', 'mushroom', 'daisy', 'mirror'][t], d);
+      for (const [i, t, d] of app.solutions['7-10'].sol) g.placeAt(i, ['', 'arrow', 'lily', 'mushroom', 'daisy', 'mirror', 'comet'][t], d);
       g.picker = null;
       g.timeScale = 1;
       g.go();

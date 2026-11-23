@@ -9,7 +9,7 @@ const check = (ok, what) => {
   console.log(`${ok ? '✓' : '✗'} ${what}`);
   if (!ok) failed++;
 };
-const KEYS = ['', 'arrow', 'lily', 'mushroom', 'daisy', 'mirror'];
+const KEYS = ['', 'arrow', 'lily', 'mushroom', 'daisy', 'mirror', 'comet'];
 
 (async () => {
   const b = await chromium.launch();
@@ -194,7 +194,7 @@ const KEYS = ['', 'arrow', 'lily', 'mushroom', 'daisy', 'mirror'];
     await p.evaluate(() => {
       const g = window.lumignons.game;
       g.timeScale = 8;
-      for (const [i, t, d] of g.solution.sol) g.placeAt(i, ['', 'arrow', 'lily', 'mushroom', 'daisy', 'mirror'][t], d);
+      for (const [i, t, d] of g.solution.sol) g.placeAt(i, ['', 'arrow', 'lily', 'mushroom', 'daisy', 'mirror', 'comet'][t], d);
       g.go();
     });
     await p.waitForSelector('.win-stars', { timeout: 30000 });

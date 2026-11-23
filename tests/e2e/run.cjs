@@ -88,7 +88,7 @@ function assert(cond, msg) {
         const g = app.game;
         g.timeScale = 12;
         const sol = app.solutions[id].sol;
-        for (const [idx, type, dir] of sol) g.placeAt(idx, ['', 'arrow', 'lily', 'mushroom', 'daisy', 'mirror'][type], dir);
+        for (const [idx, type, dir] of sol) g.placeAt(idx, ['', 'arrow', 'lily', 'mushroom', 'daisy', 'mirror', 'comet'][type], dir);
         g.go();
         const t0 = performance.now();
         while (g.mode === 'run' || g.mode === 'post') {
@@ -138,7 +138,7 @@ function assert(cond, msg) {
       app.modalStack.splice(0);
       const g = app.game;
       g.timeScale = 12;
-      for (const [i, t, d] of g.solution.sol) g.placeAt(i, ['', 'arrow', 'lily', 'mushroom', 'daisy', 'mirror'][t], d);
+      for (const [i, t, d] of g.solution.sol) g.placeAt(i, ['', 'arrow', 'lily', 'mushroom', 'daisy', 'mirror', 'comet'][t], d);
       g.go();
       while (g.mode === 'run' || g.mode === 'post') await new Promise((r) => setTimeout(r, 50));
       return { status, mode: g.mode, saved: JSON.parse(localStorage.getItem('lumignons.save.v1')).custom.length };
@@ -159,7 +159,7 @@ function assert(cond, msg) {
       app.modalStack.splice(0);
       const g = app.game;
       g.timeScale = 12;
-      for (const [i, t, d] of g.solution.sol) g.placeAt(i, ['', 'arrow', 'lily', 'mushroom', 'daisy', 'mirror'][t], d);
+      for (const [i, t, d] of g.solution.sol) g.placeAt(i, ['', 'arrow', 'lily', 'mushroom', 'daisy', 'mirror', 'comet'][t], d);
       g.go();
       while (g.mode === 'run' || g.mode === 'post') await new Promise((r) => setTimeout(r, 50));
       await new Promise((r) => setTimeout(r, 100));

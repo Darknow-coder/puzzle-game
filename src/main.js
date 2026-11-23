@@ -29,7 +29,7 @@ import { createStory } from './ui/story.js';
 import { enigmaId, packSize, tierOf, enigmaInfo } from './enigmas.js';
 import * as Q from './quests.js';
 
-const VERSION = '3.5.0';
+const VERSION = '3.6.0';
 const $ = (sel, root = document) => root.querySelector(sel);
 const el = (tag, cls, html) => {
   const e = document.createElement(tag);

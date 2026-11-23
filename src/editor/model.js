@@ -2,7 +2,7 @@
 // format, plus compact share codes. Pure module (works in Node for tests).
 import { parseLevel, validateLevel, simulate, KIND, COLORS, DIR_CHARS, PIECE_KINDS, emptyInventory, inventorySize } from '../engine/core.js';
 
-export const THEMES = ['meadow', 'pond', 'grove', 'ruins', 'gloom', 'peak', 'dawn'];
+export const THEMES = ['meadow', 'pond', 'grove', 'ruins', 'gloom', 'peak', 'dawn', 'comets'];
 export const MIN_W = 3;
 export const MAX_W = 8;
 export const MIN_H = 3;

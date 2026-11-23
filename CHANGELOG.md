@@ -1,5 +1,28 @@
 # Journal des versions
 
+## 3.6.0
+
+**Nouveautés**
+
+- **Monde 8, le Jardin des Comètes** (ouvert à 100 étoiles, après l’Aube de Cristal) : 10 niveaux et
+  une étoile filante, *Le Grand Retour*, avec Pip, Nim et Lou.
+- **La comète**, nouvelle pièce : elle se pose et se tourne comme une flèche, mais **ne sert qu’une
+  fois**. Le premier qui passe dessus tourne… puis elle s’envole rejoindre le ciel, et les suivants
+  passent tout droit. De quoi faire un seul tour de boucle, ou guider un Lumignon sans gêner l’autre.
+- **La suite de l’histoire** : au lever du jour, les Lumignons s’endorment ; le soir suivant, le ciel
+  est tout noir, les étoiles sont tombées. Un chapitre illustré et animé s’ouvre avant le monde 8, et
+  un **épilogue** attend à la fin (« Mille étoiles »). Les deux se relisent depuis la carte.
+- Un ciel étoilé avec sa voie lactée, des rochers où brillent des étoiles tombées, des lunettes
+  d’astronome, une musique et des bruits d’étoiles.
+- **20 énigmes** de plus : le recueil du Jardin des Comètes (160 en tout).
+- Un chapeau, *Petite comète*, et un succès, *Mille étoiles*. La comète entre au carnet et dans
+  l’atelier (pièce à donner, thème « Jardin des Comètes »).
+
+**Changements**
+
+- L’auréole d’étoiles, une fois gagnée, reste acquise même quand de nouveaux niveaux arrivent.
+- Le classement général compte les étoiles des 88 niveaux. Les règles Firebase sont à republier.
+
 ## 3.5.0
 
 **Nouveautés**

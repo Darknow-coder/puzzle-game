@@ -250,7 +250,8 @@ export function hatUnlocked(h, sum = summary()) {
   if (n.stars !== undefined) return sum.stars >= n.stars;
   if (n.world !== undefined) return worldComplete(WORLDS[n.world]);
   if (n.bonus !== undefined) return sum.bonusDone >= n.bonus;
-  if (n.perfect) return sum.allPerfect;
+  // Earned once, kept: a new world must not take the halo back.
+  if (n.perfect) return sum.allPerfect || !!save.data.hatsSeen[h.id];
   if (n.shop) return !!save.data.wallet?.owned?.[h.id];
   if (n.collector) return !!save.data.wallet?.owned?.collector;
   return false;

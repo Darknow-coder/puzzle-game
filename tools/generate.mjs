@@ -25,16 +25,18 @@ const RECIPES = {
   peak: { style: 'peak', w: [6, 7], h: [6, 8], lumis: [1, 2], walls: [1, 4], vanes: [1, 2], clouds: [1, 4], inv: { arrow: 6, daisy: 1 }, par: [3, 6], need: ['vane'] },
   peakCloud: { style: 'peak', w: [6, 7], h: [7, 9], lumis: [1, 2], walls: [1, 4], clouds: [4, 9], vanes: [0, 1], inv: { arrow: 6, mushroom: 1, daisy: 1 }, par: [4, 7], need: ['cloud'] },
   finale3: { w: [7, 7], h: [7, 9], lumis: [3, 3], walls: [3, 6], water: [0, 4], portals: [0, 1], vanes: [0, 1], clouds: [0, 3], mush: [0, 1], shadows: [0, 1], inv: { arrow: 8, lily: 1, mushroom: 1, daisy: 1 }, par: [6, 8] },
-  // World 8, Le Jardin des Comètes: comets, arrows that work once.
+  // World 8, Le Jardin des Comètes: comets, arrows that work once. One or two
+  // comets per board keep the search fast (each one doubles the choices).
   comets: { w: [5, 7], h: [5, 7], lumis: [1, 1], walls: [2, 5], inv: { arrow: 4, comet: 3 }, spare: 'comet', par: [2, 4], need: ['cometOnce'] },
-  comets2: { w: [6, 7], h: [6, 8], lumis: [2, 2], walls: [2, 5], inv: { arrow: 4, comet: 3 }, spare: 'comet', par: [3, 6], need: ['cometOnce'] },
-  cometsMirror: { w: [6, 7], h: [6, 8], lumis: [1, 2], walls: [2, 5], mirrorsF: [0, 2], inv: { arrow: 2, comet: 3, mirror: 3 }, spare: 'comet', par: [3, 6], need: ['cometOnce', 'mirror'] },
-  cometsShadow: { w: [6, 7], h: [6, 8], lumis: [1, 2], walls: [2, 4], shadows: [1, 2], inv: { arrow: 4, comet: 3 }, spare: 'comet', par: [3, 6], need: ['cometOnce', 'shadow'] },
-  cometsCloud: { style: 'peak', w: [6, 7], h: [7, 9], lumis: [1, 2], walls: [1, 3], clouds: [2, 5], vanes: [0, 1], inv: { arrow: 4, comet: 3 }, spare: 'comet', par: [3, 6], need: ['cometOnce', 'cloud'] },
-  cometsPortal: { style: 'ruins', w: [7, 7], h: [6, 8], lumis: [1, 2], walls: [2, 5], portals: [1, 1], inv: { arrow: 4, comet: 3 }, spare: 'comet', par: [3, 6], need: ['cometOnce', 'portal'] },
-  cometsWater: { style: 'pond', w: [6, 7], h: [6, 8], lumis: [1, 2], walls: [1, 4], water: [4, 10], inv: { arrow: 4, comet: 3, lily: 2 }, spare: 'comet', par: [3, 6], need: ['cometOnce', 'lily'] },
-  cometsFinale: { w: [7, 7], h: [7, 9], lumis: [3, 3], walls: [2, 5], water: [0, 4], mirrorsF: [0, 1], portals: [0, 1], clouds: [0, 2], inv: { arrow: 5, comet: 4, lily: 1, mirror: 1 }, spare: 'comet', par: [6, 8], need: ['cometOnce'] },
-  cometsHard: { w: [6, 7], h: [7, 9], lumis: [2, 2], walls: [2, 6], mirrorsF: [0, 1], shadows: [0, 1], inv: { arrow: 5, comet: 4 }, spare: 'comet', par: [5, 8], need: ['cometOnce'] },
+  comets2: { w: [6, 7], h: [6, 8], lumis: [2, 2], walls: [2, 5], inv: { arrow: 5, comet: 1 }, spare: 'arrow', par: [3, 6], need: ['cometOnce'] },
+  comets2b: { w: [6, 7], h: [6, 7], lumis: [2, 2], walls: [2, 5], inv: { arrow: 3, comet: 2 }, spare: 'arrow', par: [3, 5], need: ['cometOnce'] },
+  cometsMirror: { w: [6, 7], h: [6, 8], lumis: [1, 2], walls: [2, 5], mirrorsF: [0, 2], inv: { arrow: 2, comet: 1, mirror: 3 }, spare: 'mirror', par: [3, 6], need: ['cometOnce', 'mirror'] },
+  cometsShadow: { w: [6, 7], h: [6, 8], lumis: [1, 2], walls: [2, 4], shadows: [1, 2], inv: { arrow: 4, comet: 1 }, spare: 'arrow', par: [3, 6], need: ['cometOnce', 'shadow'] },
+  cometsCloud: { style: 'peak', w: [6, 7], h: [7, 9], lumis: [1, 2], walls: [1, 3], clouds: [2, 5], vanes: [0, 1], inv: { arrow: 4, comet: 1 }, spare: 'arrow', par: [3, 6], need: ['cometOnce', 'cloud'] },
+  cometsPortal: { style: 'ruins', w: [7, 7], h: [6, 8], lumis: [1, 2], walls: [2, 5], portals: [1, 1], inv: { arrow: 4, comet: 1 }, spare: 'arrow', par: [3, 6], need: ['cometOnce', 'portal'] },
+  cometsWater: { style: 'pond', w: [6, 7], h: [6, 8], lumis: [1, 2], walls: [1, 4], water: [4, 10], inv: { arrow: 4, comet: 1, lily: 2 }, spare: 'arrow', par: [3, 6], need: ['cometOnce', 'lily'] },
+  cometsFinale: { w: [7, 7], h: [7, 9], lumis: [3, 3], walls: [2, 5], water: [0, 4], mirrorsF: [0, 1], portals: [0, 1], clouds: [0, 2], inv: { arrow: 6, comet: 1, lily: 1 }, spare: 'arrow', par: [6, 8], need: ['cometOnce'] },
+  cometsHard: { w: [6, 7], h: [7, 9], lumis: [2, 2], walls: [2, 6], mirrorsF: [0, 1], shadows: [0, 1], inv: { arrow: 6, comet: 1 }, spare: 'arrow', par: [5, 8], need: ['cometOnce'] },
   // World 7, L'Aube de Cristal: mirrors.
   dawn: { w: [5, 7], h: [6, 8], lumis: [1, 1], walls: [2, 5], mirrorsF: [0, 2], inv: { mirror: 5 }, spare: 'mirror', par: [3, 5], need: ['mirrorPiece'] },
   dawn2: { w: [6, 7], h: [6, 8], lumis: [2, 2], walls: [2, 5], mirrorsF: [0, 2], inv: { mirror: 5 }, spare: 'mirror', par: [3, 6], need: ['mirrorTwice'] },

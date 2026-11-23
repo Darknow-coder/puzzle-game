@@ -28,7 +28,7 @@ const check = (ok, what) => {
       window.lumignons.modalStack.splice(0);
       const app = window.lumignons;
       const g = app.game;
-      for (const [i, t, d] of app.solutions['1-1'].sol) g.placeAt(i, ['', 'arrow', 'lily', 'mushroom', 'daisy', 'mirror'][t], d);
+      for (const [i, t, d] of app.solutions['1-1'].sol) g.placeAt(i, ['', 'arrow', 'lily', 'mushroom', 'daisy', 'mirror', 'comet'][t], d);
       g.picker = null;
       g.timeScale = 8;
       g.go();

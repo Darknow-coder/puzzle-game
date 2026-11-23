@@ -28,7 +28,7 @@ test('every world has its book, and every puzzle is solved by its perfect layout
       total++;
     }
   });
-  assert.equal(total, 140, `${total} énigmes in all`);
+  assert.equal(total, 160, `${total} énigmes in all`);
 });
 
 test('no énigme repeats a campaign level or a daily puzzle', () => {

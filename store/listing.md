@@ -16,10 +16,12 @@ Les Lumignons sont de petites lueurs têtues : ils marchent tout droit, sans jam
 mettent les pieds. Pose des flèches, des nénuphars, des champignons sauteurs… puis appuie sur Go et
 regarde ton plan se dérouler. Chaque pas joue une note : ta solution devient une mélodie.
 
-• 77 niveaux faits main et vérifiés, répartis en 7 mondes : le Pré des Murmures, l’Étang Miroir,
-  le Bois des Champignons, les Ruines de Lune, la Forêt des Grignombres, la Cime des Vents
-  et l’Aube de Cristal, où des miroirs renvoient les Lumignons comme des rayons de lumière.
-• 140 énigmes en plus pour les plus malins : vingt par monde, de plus en plus corsées, avec une
+• 88 niveaux faits main et vérifiés, répartis en 8 mondes : le Pré des Murmures, l’Étang Miroir,
+  le Bois des Champignons, les Ruines de Lune, la Forêt des Grignombres, la Cime des Vents,
+  l’Aube de Cristal et ses miroirs, et le Jardin des Comètes, où les étoiles tombées guident les
+  Lumignons une seule fois avant de remonter dans le ciel.
+• Une histoire illustrée : quand le ciel s’éteint, aide les Lumignons à y renvoyer les étoiles.
+• 160 énigmes en plus pour les plus malins : vingt par monde, de plus en plus corsées, avec une
   seule disposition parfaite à trouver.
 • Des règles simples et toujours prévisibles : aucun hasard, chaque échec s’explique.
 • Trois étoiles par niveau : rentrer, attraper toutes les lucioles, le faire avec le minimum de pièces.
@@ -38,6 +40,9 @@ regarde ton plan se dérouler. Chaque pas joue une note : ta solution devient un
 **Catégorie** : Jeux › Réflexion. **Classification** : tout public (aucune violence, aucun contenu
 sensible ; les pseudos et résultats des autres joueurs sont visibles dans les classements, sans
 messagerie ni échange entre joueurs).
+
+**Nouveautés 3.6** : un huitième monde, le Jardin des Comètes ! Une nouvelle pièce, la comète, qui
+ne guide qu’une seule fois, 11 niveaux, 20 énigmes, et la suite de l’histoire : le ciel s’est éteint…
 
 **Nouveautés 3.5** : 140 nouveaux niveaux ! Chaque monde terminé ouvre un recueil de vingt énigmes,
 de *Malin* à *Génie*, avec une seule disposition parfaite à trouver.
@@ -75,9 +80,10 @@ Lumignons are stubborn little lights: they walk straight ahead and never look wh
 Place arrows, lily pads, bouncy mushrooms… then press Go and watch your plan unfold. Every step
 plays a note, so your solution becomes a tune.
 
-• 77 hand-crafted, verified levels across 7 worlds, the last one full of crystal mirrors that
-  bounce the Lumignons like rays of light.
-• 140 extra brainteasers for clever minds: twenty per world, harder and harder, each with a single
+• 88 hand-crafted, verified levels across 8 worlds, with crystal mirrors that bounce the
+  Lumignons like rays of light, and fallen stars that guide them once, then fly back to the sky.
+• An illustrated story: when the sky goes dark, help the Lumignons send the stars back up.
+• 160 extra brainteasers for clever minds: twenty per world, harder and harder, each with a single
   perfect layout to find.
 • Simple, fully predictable rules: no luck involved, every failure makes sense.
 • Three stars per level: bring everyone home, catch every firefly, use as few pieces as possible.

@@ -141,17 +141,17 @@ function constellation(g, cx, cy, r, t, k = 1) {
 const SCENES = {
   sleep(g, t) {
     worldSky(g, 'dawn');
-    island(g, 'dawn', 150);
-    [58, 118, 182, 242].forEach((x, i) => {
-      A.drawLantern(g, x, 152, 34, i, { lit: 0.35, t });
-      A.drawLumi(g, x + 18, 160, 26, { color: i, dir: 2, t: t + i, mood: 'sleep' });
+    island(g, 'dawn', 138);
+    [44, 114, 186, 256].forEach((x, i) => {
+      A.drawLantern(g, x - 8, 140, 50, i, { lit: 0.35, t });
+      A.drawLumi(g, x + 18, 152, 38, { color: i, dir: 2, t: t + i, mood: 'sleep' });
     });
-    g.fillStyle = 'rgba(255,255,255,0.8)';
-    g.font = 'bold 11px Fredoka, sans-serif';
+    g.fillStyle = 'rgba(255,255,255,0.85)';
+    g.font = 'bold 13px Fredoka, sans-serif';
     for (let i = 0; i < 3; i++) {
       const k = (t * 0.4 + i / 3) % 1;
       g.globalAlpha = 1 - k;
-      g.fillText('z', 98 + i * 4 + k * 10, 120 - k * 26);
+      g.fillText('z', 140 + i * 5 + k * 12, 104 - k * 30);
     }
     g.globalAlpha = 1;
   },
@@ -160,61 +160,61 @@ const SCENES = {
     // An empty sky: only a few specks where stars used to be.
     g.fillStyle = 'rgba(255,255,255,0.08)';
     for (let i = 0; i < 20; i++) g.fillRect(STARS[i].x * W, STARS[i].y * H, 1, 1);
-    island(g, 'comets', 150);
-    A.drawLantern(g, 70, 152, 34, 1, { lit: 0.2, t });
-    A.drawLantern(g, 230, 152, 34, 2, { lit: 0.2, t });
-    A.drawLumi(g, 150, 162, 40, { color: 0, dir: 0, t, mood: 'scared' });
-    A.drawLumi(g, 96, 162, 28, { color: 1, dir: 2, t: t + 1, mood: 'sleep' });
-    A.drawLumi(g, 206, 162, 28, { color: 2, dir: 2, t: t + 2, mood: 'sleep' });
+    island(g, 'comets', 140);
+    A.drawLantern(g, 52, 142, 50, 1, { lit: 0.2, t });
+    A.drawLantern(g, 248, 142, 50, 2, { lit: 0.2, t });
+    A.drawLumi(g, 150, 156, 60, { color: 0, dir: 0, t, mood: 'scared' });
+    A.drawLumi(g, 88, 156, 40, { color: 1, dir: 2, t: t + 1, mood: 'sleep' });
+    A.drawLumi(g, 212, 156, 40, { color: 2, dir: 2, t: t + 2, mood: 'sleep' });
     g.fillStyle = '#fff4d6';
-    g.font = 'bold 22px Fredoka, sans-serif';
+    g.font = 'bold 26px Fredoka, sans-serif';
     g.textAlign = 'center';
-    g.fillText('?!', 176, 92 + Math.sin(t * 6) * 2);
+    g.fillText('?!', 186, 70 + Math.sin(t * 6) * 2);
     g.textAlign = 'left';
   },
   fallen(g, t) {
     worldSky(g, 'comets');
-    island(g, 'comets', 140);
-    [[40, 150, 1], [100, 162, 2], [170, 150, 3], [240, 160, 0], [280, 148, 1]].forEach(([x, y, d], i) => A.drawComet(g, x, y, 34, d, { t: t + i }));
+    island(g, 'comets', 128);
+    [[34, 140, 1], [92, 156, 2], [250, 140, 3], [204, 160, 0]].forEach(([x, y, d], i) => A.drawComet(g, x, y, 50, d, { t: t + i }));
     // One comet keeps flying back up to the sky.
     const k = (t * 0.35) % 1;
-    A.drawComet(g, 205, 150 - k * 20, 34, 0, { t, fly: k });
-    A.drawLumi(g, 132, 170, 30, { color: 3, dir: 1, t, mood: 'happy' });
+    A.drawComet(g, 160, 138 - k * 10, 54, 0, { t, fly: k });
+    A.drawLumi(g, 130, 170, 44, { color: 3, dir: 1, t, mood: 'happy' });
   },
   quest(g, t) {
     worldSky(g, 'comets');
-    island(g, 'comets', 146);
-    A.drawComet(g, 150, 150, 40, 0, { t });
-    [70, 112, 188, 230].forEach((x, i) => A.drawLumi(g, x, 166, 32, { color: i, dir: i < 2 ? 1 : 3, t: t + i, mood: 'happy' }));
     const n = Math.floor(40 * (0.5 + 0.5 * Math.sin(t * 0.5)));
-    A.drawStars(g, STARS.slice(0, n), W, H * 0.9, t);
+    A.drawStars(g, STARS.slice(0, n), W, H * 0.8, t);
+    island(g, 'comets', 134);
+    A.drawComet(g, 150, 142, 56, 0, { t });
+    [46, 96, 204, 254].forEach((x, i) => A.drawLumi(g, x, 166, 46, { color: i, dir: i < 2 ? 1 : 3, t: t + i, mood: 'happy' }));
   },
   return(g, t) {
     plainSky(g, '#06051c', '#2a2370');
     const lit = Math.min(1, (t % 6) / 4);
     A.drawStars(g, STARS, W, H, t, lit);
-    island(g, 'comets', 152);
-    for (let i = 0; i < 6; i++) {
-      const k = (t * 0.3 + i / 6) % 1;
-      A.drawComet(g, 30 + i * 48, 156 - k * 120, 26, 0, { t: t + i, fly: Math.min(0.9, k * 1.2) });
+    island(g, 'comets', 140);
+    for (let i = 0; i < 5; i++) {
+      const k = (t * 0.3 + i / 5) % 1;
+      A.drawComet(g, 32 + i * 59, 146 - k * 110, 40, 0, { t: t + i, fly: Math.min(0.9, k * 1.2) });
     }
-    [96, 204].forEach((x, i) => A.drawLumi(g, x, 172, 30, { color: i, dir: 0, t: t + i, mood: 'happy' }));
+    [110, 190].forEach((x, i) => A.drawLumi(g, x, 170, 46, { color: i, dir: 0, t: t + i, mood: 'happy' }));
   },
   constellation(g, t) {
     plainSky(g, '#05041a', '#231c5c');
     A.drawStars(g, STARS, W, H, t);
-    constellation(g, 150, 62, 44, t);
-    island(g, 'comets', 160);
-    [90, 130, 170, 210].forEach((x, i) => A.drawLumi(g, x, 176, 24, { color: i, dir: 0, t: t + i, mood: 'happy' }));
+    constellation(g, 150, 52, 46, t);
+    island(g, 'comets', 146);
+    [72, 122, 178, 228].forEach((x, i) => A.drawLumi(g, x, 172, 40, { color: i, dir: 0, t: t + i, mood: 'happy' }));
   },
   thanks(g, t) {
     plainSky(g, '#070622', '#3a2f7d');
     A.drawStars(g, STARS, W, H, t);
-    constellation(g, 220, 44, 26, t, 0.8);
-    island(g, 'meadow', 148);
-    [60, 120, 180, 240].forEach((x, i) => {
-      A.drawLantern(g, x - 16, 150, 30, i, { lit: 1, t });
-      A.drawLumi(g, x + 6, 162, 30, { color: i, dir: 2, t: t + i * 0.7, mood: 'happy' });
+    constellation(g, 222, 38, 26, t, 0.8);
+    island(g, 'meadow', 136);
+    [40, 112, 186, 258].forEach((x, i) => {
+      A.drawLantern(g, x - 14, 138, 44, i, { lit: 1, t });
+      A.drawLumi(g, x + 12, 156, 42, { color: i, dir: 2, t: t + i * 0.7, mood: 'happy' });
     });
   },
 };

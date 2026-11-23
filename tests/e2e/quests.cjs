@@ -2,7 +2,7 @@
 // victory card note, collecting rewards, and the free chest of the week.
 const { chromium, devices } = require('playwright');
 const BASE = process.env.BASE || 'http://localhost:8080/index.html';
-const KEYS = ['', 'arrow', 'lily', 'mushroom', 'daisy', 'mirror'];
+const KEYS = ['', 'arrow', 'lily', 'mushroom', 'daisy', 'mirror', 'comet'];
 let failed = 0;
 const check = (ok, what) => {
   console.log(`${ok ? '✓' : '✗'} ${what}`);

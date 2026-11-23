@@ -209,6 +209,7 @@ export const HATS_INFO = [
   { id: 'wizard', name: { fr: 'Chapeau d’astronome', en: 'Stargazer hat' }, need: { stars: 100 } },
   { id: 'crown', name: { fr: 'Couronne', en: 'Crown' }, need: { world: 5 } },
   { id: 'prism', name: { fr: 'Diadème de cristal', en: 'Crystal tiara' }, need: { world: 6 } },
+  { id: 'cometcap', name: { fr: 'Petite comète', en: 'Little comet' }, need: { world: 7 } },
   { id: 'halo', name: { fr: 'Auréole d’étoiles', en: 'Star halo' }, need: { perfect: true } },
   // Sold in the shop (data/cosmetics.js), and the crown of a full collection.
   ...COSMETICS.filter((c) => c.slot === 'hat').map((c) => ({ id: c.id, name: c.name, need: { shop: true } })),
@@ -231,6 +232,7 @@ export const ACHIEVEMENTS = [
   { id: 'perfect20', icon: '✪', name: { fr: 'Perfectionniste', en: 'Perfectionist' }, desc: { fr: 'Obtenir 3 étoiles sur 20 niveaux.', en: 'Get 3 stars on 20 levels.' }, check: (p) => p.perfectLevels >= 20, progress: (p) => [p.perfectLevels, 20] },
   { id: 'world6', icon: '🏮', name: { fr: 'La grande lanterne', en: 'The great lantern' }, desc: { fr: 'Terminer la Cime des Vents.', en: 'Finish the Windy Peak.' }, check: (p) => p.worldsDone >= 6 },
   { id: 'world7', icon: '🌅', name: { fr: 'Lever du jour', en: 'Daybreak' }, desc: { fr: 'Terminer l’Aube de Cristal.', en: 'Finish the Crystal Dawn.' }, check: (p) => p.worldsDone >= 7 },
+  { id: 'world8', icon: '🌠', name: { fr: 'Mille étoiles', en: 'A thousand stars' }, desc: { fr: 'Terminer le Jardin des Comètes.', en: 'Finish the Comet Garden.' }, check: (p) => p.worldsDone >= 8 },
   { id: 'enigma1', icon: '🧩', name: { fr: 'Petit malin', en: 'Smart cookie' }, desc: { fr: 'Résoudre une énigme.', en: 'Solve a brainteaser.' }, check: (p) => p.enigmasDone >= 1 },
   { id: 'enigma50', icon: '🦉', name: { fr: 'Grand esprit', en: 'Great mind' }, desc: { fr: 'Résoudre 50 énigmes.', en: 'Solve 50 brainteasers.' }, check: (p) => p.enigmasDone >= 50, progress: (p) => [p.enigmasDone, 50] },
   { id: 'genius', icon: '💡', name: { fr: 'Génie des lucioles', en: 'Firefly genius' }, desc: { fr: 'Toutes les étoiles d’un recueil d’énigmes.', en: 'Every star of a book of brainteasers.' }, check: (p) => p.enigmaBooks >= 1 },

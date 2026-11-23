@@ -2,7 +2,7 @@
 // 20 puzzles in three tiers, played from the book, chained with "Next".
 const { chromium, devices } = require('playwright');
 const BASE = process.env.BASE || 'http://localhost:8080/index.html';
-const KEYS = ['', 'arrow', 'lily', 'mushroom', 'daisy', 'mirror'];
+const KEYS = ['', 'arrow', 'lily', 'mushroom', 'daisy', 'mirror', 'comet'];
 let failed = 0;
 const check = (ok, what) => {
   console.log(`${ok ? '✓' : '✗'} ${what}`);
@@ -34,7 +34,7 @@ const check = (ok, what) => {
     await p.click('[data-act=play]');
     await p.waitForSelector('#screen-map .enigma-card');
     const cards = await p.$$eval('#screen-map .enigma-card', (els) => els.map((e) => e.className.includes('locked')));
-    check(cards.length === 7 && !cards[0] && cards.slice(1).every((x) => x), 'every world has its book; world 1 finished opens the first one only');
+    check(cards.length === 8 && !cards[0] && cards.slice(1).every((x) => x), 'every world has its book; world 1 finished opens the first one only');
     await p.waitForTimeout(600);
     const modal = await p.evaluate(() => document.querySelector('.modal.show')?.textContent.slice(0, 80) || '');
     if (modal) console.log('  (map opened with a dialog: ' + modal + ')');

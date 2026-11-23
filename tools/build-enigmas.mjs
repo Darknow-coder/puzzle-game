@@ -16,7 +16,7 @@ const args = process.argv.slice(2);
 const onlyAt = args.indexOf('--only');
 const only = onlyAt >= 0 ? args.splice(onlyAt, 2)[1].split(',') : null;
 const PER_THEME = 20;
-const THEMES = ['meadow', 'pond', 'grove', 'ruins', 'gloom', 'peak', 'dawn'];
+const THEMES = ['meadow', 'pond', 'grove', 'ruins', 'gloom', 'peak', 'dawn', 'comets'];
 const themeOf = (f) => THEMES.find((t) => path.basename(f).startsWith(t)) || null;
 
 const known = new Set(allLevels().map((d) => parseLevel(d).rows.join('/')));

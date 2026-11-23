@@ -2020,6 +2020,26 @@ export function drawHat(g, x, y, s, hat, t = 0) {
       star(g, x + s * 0.02, y - s * 0.2, s * 0.03, 4, 0.3);
       break;
     }
+    case 'cometcap': {
+      // A little comet perched on the head, its tail swaying behind.
+      const sway = Math.sin(t * 2) * 0.04;
+      const tg = g.createLinearGradient(x, y - s * 0.16, x - s * 0.32, y - s * 0.02);
+      tg.addColorStop(0, 'rgba(255,240,180,0.95)');
+      tg.addColorStop(1, 'rgba(150,200,255,0)');
+      g.fillStyle = tg;
+      g.beginPath();
+      g.moveTo(x + s * 0.02, y - s * 0.21);
+      g.quadraticCurveTo(x - s * 0.16, y - s * (0.2 + sway), x - s * 0.34, y - s * (0.04 + sway));
+      g.quadraticCurveTo(x - s * 0.14, y - s * 0.08, x + s * 0.02, y - s * 0.11);
+      g.closePath();
+      g.fill();
+      glow(g, x + s * 0.03, y - s * 0.16, s * 0.2, 'rgba(255,230,150,', 0.6);
+      g.fillStyle = '#ffe9a0';
+      star(g, x + s * 0.03, y - s * 0.16, s * 0.085, 5, 0.46);
+      g.fillStyle = '#fffdf2';
+      star(g, x + s * 0.03, y - s * 0.165, s * 0.04, 5, 0.46);
+      break;
+    }
     case 'halo': {
       g.strokeStyle = '#fff3a6';
       g.lineWidth = s * 0.025;
@@ -2313,23 +2333,34 @@ export function drawComet(g, x, y, S, dir, o = {}) {
   g.translate(0, -s * 0.03 - fly * s * 1.6);
   g.globalAlpha *= 1 - fly;
   g.rotate((dir * Math.PI) / 2);
-  const tail = s * (0.3 + fly * 0.5);
-  const grd = g.createLinearGradient(0, -s * 0.1, 0, -s * 0.1 + tail);
-  grd.addColorStop(0, 'rgba(255,244,190,0.95)');
-  grd.addColorStop(0.5, 'rgba(150,205,255,0.55)');
-  grd.addColorStop(1, 'rgba(150,205,255,0)');
+  const head = -s * 0.13;
+  const tail = s * (0.42 + fly * 0.5);
+  const grd = g.createLinearGradient(0, head, 0, head + tail);
+  grd.addColorStop(0, 'rgba(255,236,160,1)');
+  grd.addColorStop(0.45, 'rgba(255,196,120,0.75)');
+  grd.addColorStop(1, 'rgba(190,160,255,0)');
   g.fillStyle = grd;
   g.beginPath();
-  g.moveTo(-s * 0.1, -s * 0.12);
-  g.quadraticCurveTo(-s * 0.06, -s * 0.1 + tail * 0.6, 0, -s * 0.1 + tail);
-  g.quadraticCurveTo(s * 0.06, -s * 0.1 + tail * 0.6, s * 0.1, -s * 0.12);
+  g.moveTo(-s * 0.14, head);
+  g.quadraticCurveTo(-s * 0.09, head + tail * 0.55, 0, head + tail);
+  g.quadraticCurveTo(s * 0.09, head + tail * 0.55, s * 0.14, head);
   g.closePath();
   g.fill();
-  if (!o.ghost) glow(g, 0, -s * 0.12, s * (0.32 + fly * 0.3), 'rgba(255,230,150,', 0.55 + 0.12 * Math.sin(t * 4));
-  g.fillStyle = '#ffe9a0';
-  star(g, 0, -s * 0.12, s * 0.135, 5, 0.46);
-  g.fillStyle = '#fffdf2';
-  star(g, 0, -s * 0.125, s * 0.07, 5, 0.46);
+  // Two thin streaks along the tail.
+  g.strokeStyle = 'rgba(255,250,225,0.8)';
+  g.lineWidth = Math.max(1, s * 0.018);
+  g.lineCap = 'round';
+  for (const k of [-1, 1]) {
+    g.beginPath();
+    g.moveTo(k * s * 0.05, head + s * 0.05);
+    g.lineTo(k * s * 0.025, head + tail * 0.75);
+    g.stroke();
+  }
+  if (!o.ghost) glow(g, 0, head, s * (0.36 + fly * 0.3), 'rgba(255,220,130,', 0.6 + 0.12 * Math.sin(t * 4));
+  g.fillStyle = '#ffd45e';
+  star(g, 0, head, s * 0.17, 5, 0.46);
+  g.fillStyle = '#fffbea';
+  star(g, 0, head - s * 0.005, s * 0.085, 5, 0.46);
   g.restore();
 }
 

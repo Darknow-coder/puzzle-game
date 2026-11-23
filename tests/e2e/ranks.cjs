@@ -11,7 +11,7 @@ const BASE = process.env.BASE || 'http://localhost:8080/index.html';
 const PROJECT = 'demo-lumignons';
 const FS = 'http://127.0.0.1:8085';
 const AUTH = 'http://127.0.0.1:9099';
-const KEYS = ['', 'arrow', 'lily', 'mushroom', 'daisy', 'mirror'];
+const KEYS = ['', 'arrow', 'lily', 'mushroom', 'daisy', 'mirror', 'comet'];
 let failed = 0;
 const check = (ok, what) => {
   console.log(`${ok ? '✓' : '✗'} ${what}`);
