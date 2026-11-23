@@ -241,6 +241,8 @@ export function createOnline(deps) {
       r.t = 0;
       n++;
     }
+    // A result refused by the rules may be accepted now (rules published since): try again.
+    for (const r of Object.values(boards())) delete r.err;
     // Old daily results that were sent (or can no longer be) are not needed any more.
     const today = Date.now();
     for (const [bid, r] of Object.entries(boards())) {

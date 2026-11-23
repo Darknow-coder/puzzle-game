@@ -25,6 +25,7 @@ import { createOnline } from './online/online.js';
 import { levelBoard, dailyBoard } from './online/score.js';
 import { createRanks, PODIUM_SVG } from './ui/ranks.js';
 import { createTour } from './ui/tour.js';
+import { enigmaId, packSize, tierOf, enigmaInfo } from './enigmas.js';
 import * as Q from './quests.js';
 
 const VERSION = '3.4.0';
@@ -429,6 +430,24 @@ function buildMap() {
     };
     con.appendChild(bb);
     sec.appendChild(con);
+    const size = packSize(w.id);
+    if (size) {
+      const open = SV.enigmasOpen(wi);
+      const st = SV.enigmaStats(wi);
+      const card = el('button', 'enigma-card' + (open ? '' : ' locked'));
+      card.innerHTML = `<span class="en-ico">🧩</span><span class="grow"><b>${t('enigmas.title')}</b><small>${open ? t('enigmas.progress', st.done, size) : t('enigmas.locked')}</small></span>${open ? `<span class="en-stars"><span class="st">★</span> ${st.stars} / ${size * 3}</span>` : ICONS.lock}`;
+      card.onclick = () => {
+        sound.unlock();
+        if (!open) {
+          sound.sfx('invalid');
+          toast(t('enigmas.locked'), 2600);
+          return;
+        }
+        click();
+        openEnigmas(wi);
+      };
+      sec.appendChild(card);
+    }
     sc.appendChild(sec);
   });
   const end = el('div', 'map-end', `Lumignons ${VERSION}`);
@@ -436,6 +455,34 @@ function buildMap() {
   sc.scrollTop = prevScroll;
   sc.addEventListener('scroll', updateMapSky, { passive: true });
 }
+
+/** A world's book of énigmes: 20 puzzles, harder and harder. */
+function openEnigmas(wi) {
+  const w = WORLDS[wi];
+  const size = packSize(w.id);
+  const st = SV.enigmaStats(wi);
+  const box = el('div', 'enigmas');
+  const tiers = [0, 1, 2].map((k) => t('enigmas.tier.' + k));
+  let html = `<button class="close-x" data-a="close" aria-label="${t('close')}">${ICONS.close}</button>
+    <div class="eyebrow">${t('world')} ${wi + 1} · ${tr(w.name)}</div><h2>🧩 ${t('enigmas.title')}</h2>
+    <p>${t('enigmas.intro')}</p><div class="en-total"><span class="st">★</span> ${st.stars} / ${size * 3}</div>`;
+  for (let k = 0; k < 3; k++) {
+    html += `<div class="en-tier t${k}"><div class="en-tier-name">${tiers[k]}</div><div class="en-grid">`;
+    for (let i = 0; i < size; i++) {
+      if (tierOf(i) !== k) continue;
+      const id = enigmaId(wi, i);
+      const r = SV.levelRecord(id);
+      const s = r?.stars || 0;
+      html += `<button class="en-node ${r?.done ? 'done' : ''}" data-id="${id}">${i + 1}<span class="stars">${[1, 2, 3].map((q) => `<span class="${s >= q ? 'on' : ''}">★</span>`).join('')}</span></button>`;
+    }
+    html += '</div></div>';
+  }
+  box.innerHTML = html;
+  const m = openModal(box);
+  box.querySelector('[data-a=close]').onclick = () => (click(), m.close());
+  box.querySelectorAll('.en-node').forEach((b) => (b.onclick = () => (click(), m.close(), startLevel(b.dataset.id))));
+}
+app.openEnigmas = openEnigmas;
 
 function updateMapSky() {
   const sc = $('#screen-map .map-scroll');
@@ -462,6 +509,7 @@ let sessionTries = 0; // Go presses since the level was opened (for "first try" 
 function levelLabel(f) {
   if (f.custom) return '✎';
   if (f.daily) return '☀';
+  if (f.enigma) return `🧩${f.wi + 1}-${f.li + 1}`;
   return f.bonus ? `${f.wi + 1}-★` : `${f.wi + 1}-${f.li + 1}`;
 }
 
@@ -553,7 +601,7 @@ function startLevel(id) {
   SV.persist();
   closeAllModals();
   hideFail();
-  game.load({ def: f.def, world: f.world, wi: f.wi, li: f.li, bonus: f.bonus, solution: SOLUTIONS[id] });
+  game.load({ def: f.def, world: f.world, wi: f.wi, li: f.li, bonus: f.bonus, solution: f.solution || SOLUTIONS[id] });
   $('#screen-game .lv-num').textContent = levelLabel(f);
   $('#screen-game .lv-name').textContent = tr(f.def.name);
   buildTray();
@@ -1228,7 +1276,7 @@ function showVictory(stars, res, unlocks, gained, reward = null, ranked = null) 
   const custom = !!current.custom;
   const daily = !!current.daily;
   const next = custom || daily ? null : SV.nextLevel(id);
-  const worldDone = !custom && !daily && !current.bonus && current.li === current.world.levels.length - 1;
+  const worldDone = !custom && !daily && !current.bonus && !current.enigma && current.li === current.world.levels.length - 1;
   const lastWorld = current.wi === WORLDS.length - 1 && worldDone;
   const parKnown = !!game.solution;
   const box = el('div');
@@ -1979,6 +2027,7 @@ const online = createOnline({
   persist: SV.persist,
   info: (bid) => {
     if (SOLUTIONS[bid]) return { min: SOLUTIONS[bid].min, par: SOLUTIONS[bid].par };
+    if (/^e\d-\d\d$/.test(bid)) return enigmaInfo(bid, WORLDS);
     const m = /^d-\d{4}-\d{2}-\d{2}-([a-z]+)-(\d+)$/.exec(bid);
     return m ? dailyInfo(m[1], +m[2]) : null;
   },

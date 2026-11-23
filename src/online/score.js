@@ -35,10 +35,11 @@ export function makeEntry({ stars, pieces, helped, tries, ms }) {
 // ------------------------------------------------------------------ boards
 
 const LEVEL_RE = /^[1-9]-(?:[1-9]|10|B)$/;
+const ENIGMA_RE = /^e[1-9]-\d{2}$/;
 const DAILY_RE = /^d-(\d{4})-(\d{2})-(\d{2})-([a-z]{3,10})-(\d{1,2})$/;
 
 /** Board of a campaign level ("1-3", "1-B"), or null. */
-export const levelBoard = (id) => (LEVEL_RE.test(id) ? id : null);
+export const levelBoard = (id) => (LEVEL_RE.test(id) || ENIGMA_RE.test(id) ? id : null);
 
 /** Board of a daily puzzle: date + the puzzle itself (players see different ones). */
 export const dailyBoard = (d) => `d-${d.key}-${d.theme}-${d.idx}`;

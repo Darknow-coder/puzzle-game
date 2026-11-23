@@ -203,6 +203,13 @@ const STR = {
     pausedHint: 'Pause · touche le plateau pour reprendre',
     soundOnTip: 'Touchez pour activer le son',
     podium: 'Podium',
+    enigmas: {
+      title: 'Énigmes',
+      intro: 'Twenty puzzles, harder and harder. A single perfect layout catches every firefly with the fewest pieces: find it!',
+      progress: (d, n) => `${d} / ${n} solved`,
+      locked: 'Finish this world to open its puzzles.',
+      tier: ['Clever', 'Cunning', 'Genius'],
+    },
     quests: {
       tile: 'Quests',
       tab: { week: 'This week', achievements: 'Achievements' },
@@ -219,6 +226,13 @@ const STR = {
       bonusCoins: (n) => `You already own the whole shop: +${n} ✦ instead!`,
       completed: 'Quest complete',
       claimed: (n) => `+${n} ✦!`,
+    },
+    enigmas: {
+      title: 'Énigmes',
+      intro: 'Vingt énigmes de plus en plus corsées. Une seule disposition parfaite donne toutes les lucioles avec le moins de pièces : à toi de la trouver !',
+      progress: (d, n) => `${d} / ${n} résolues`,
+      locked: 'Termine ce monde pour ouvrir ses énigmes.',
+      tier: ['Malin', 'Rusé', 'Génie'],
     },
     quests: {
       tile: 'Quêtes',

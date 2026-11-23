@@ -8,6 +8,7 @@ import path from 'node:path';
 import { SOLUTIONS } from '../src/data/solutions.js';
 import { DAILY } from '../src/data/daily.js';
 import { WORLDS } from '../src/data/levels.js';
+import { ENIGMAS } from '../src/data/enigmas.js';
 
 const root = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..');
 const file = path.join(root, 'firestore.rules');
@@ -25,12 +26,18 @@ for (const theme of Object.keys(DAILY).sort()) {
   DAILY[theme].forEach((e, i) => daily.push(`${theme}-${i}:${e[5]}:${e[4]}`));
 }
 
+const enigmas = [];
+WORLDS.forEach((w, wi) => (ENIGMAS[w.id] || []).forEach((e, i) => enigmas.push(`e${wi + 1}-${String(i + 1).padStart(2, '0')}:${e[5]}:${e[4]}`)));
+
 const block = `    // BEGIN TABLES
     function levelTable() {
       return '${levels.join(',')}';
     }
     function dailyTable() {
       return '${daily.join(',')}';
+    }
+    function enigmaTable() {
+      return '${enigmas.join(',')}';
     }
     // END TABLES`;
 
@@ -41,8 +48,8 @@ if (process.argv.includes('--check')) {
     console.error('firestore.rules is out of date: run node tools/build-rules.mjs');
     process.exit(1);
   }
-  console.log(`firestore.rules up to date (${levels.length} levels, ${daily.length} daily puzzles)`);
+  console.log(`firestore.rules up to date (${levels.length} levels, ${daily.length} daily puzzles, ${enigmas.length} énigmes)`);
 } else {
   fs.writeFileSync(file, out);
-  console.log(`firestore.rules: ${levels.length} levels, ${daily.length} daily puzzles`);
+  console.log(`firestore.rules: ${levels.length} levels, ${daily.length} daily puzzles, ${enigmas.length} énigmes`);
 }

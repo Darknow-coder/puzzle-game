@@ -38,6 +38,16 @@ const RECIPES = {
   dawnPortal2: { style: 'ruins', w: [6, 7], h: [6, 8], lumis: [1, 1], walls: [2, 5], mirrorsF: [0, 1], portals: [1, 1], inv: { mirror: 4 }, spare: 'mirror', par: [2, 4], need: ['mirrorTwice', 'portal'] },
   dawn3: { w: [7, 7], h: [7, 8], lumis: [3, 3], walls: [2, 5], mirrorsF: [0, 2], inv: { mirror: 6 }, spare: 'mirror', par: [4, 6], need: ['mirrorTwice'] },
   dawnFinale: { w: [7, 7], h: [8, 9], lumis: [2, 3], walls: [3, 6], mirrorsF: [1, 3], water: [0, 4], portals: [0, 1], shadows: [0, 1], vanes: [0, 1], clouds: [0, 2], inv: { mirror: 5, arrow: 2, lily: 1 }, spare: null, par: [5, 8], need: ['mirrorTwice'] },
+  // Énigmes (harder, generated packs per world; only mechanics known in that world).
+  meadowHard: { w: [6, 7], h: [7, 9], lumis: [2, 3], walls: [3, 7], arrows: [0, 2], inv: { arrow: 8 }, par: [5, 8] },
+  meadowHard2: { w: [6, 7], h: [7, 9], lumis: [2, 2], walls: [3, 7], arrows: [0, 3], inv: { arrow: 8 }, par: [5, 7] },
+  gloomHard2: { w: [6, 7], h: [6, 8], lumis: [1, 2], walls: [2, 5], shadows: [1, 2], sleepers: [0, 1], inv: { arrow: 7 }, par: [5, 7], need: ['shadow'] },
+  pondHard: { style: 'pond', w: [6, 7], h: [7, 9], lumis: [2, 3], walls: [2, 4], water: [5, 12], arrows: [0, 1], sparks: [0, 1], inv: { arrow: 7, lily: 3 }, par: [5, 8], need: ['lily'] },
+  groveHard: { gaps: true, w: [6, 7], h: [7, 9], lumis: [2, 2], walls: [3, 6], water: [0, 6], mush: [0, 2], sparks: [0, 1], inv: { arrow: 6, mushroom: 3, lily: 1 }, par: [5, 8], need: ['leap'] },
+  ruinsHard: { style: 'ruins', w: [7, 7], h: [7, 9], lumis: [2, 2], walls: [3, 6], portals: [1, 2], plates: [0, 1], gates: [0, 2], inv: { arrow: 7, daisy: 1 }, par: [5, 8], need: ['portal'] },
+  gloomHard: { w: [6, 7], h: [7, 9], lumis: [1, 2], walls: [3, 6], water: [0, 4], shadows: [1, 2], sleepers: [0, 2], inv: { arrow: 7, daisy: 1, lily: 1 }, par: [5, 8], need: ['shadow'] },
+  peakHard: { style: 'peak', w: [6, 7], h: [7, 9], lumis: [2, 2], walls: [1, 4], vanes: [1, 2], clouds: [1, 6], inv: { arrow: 7, mushroom: 1, daisy: 1 }, par: [5, 8], need: ['vane'] },
+  dawnHard: { w: [6, 7], h: [7, 9], lumis: [2, 3], walls: [2, 5], mirrorsF: [0, 3], inv: { mirror: 6 }, spare: 'mirror', par: [5, 8], need: ['mirrorTwice'] },
   finale: { w: [7, 7], h: [8, 9], lumis: [2, 3], walls: [3, 6], water: [0, 4], portals: [0, 1], plates: [0, 1], gates: [0, 2], shadows: [0, 1], vanes: [0, 1], clouds: [0, 4], mush: [0, 1], inv: { arrow: 7, lily: 1, mushroom: 1, daisy: 1 }, par: [5, 8] },
 };
 

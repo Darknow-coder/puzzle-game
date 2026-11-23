@@ -1,6 +1,7 @@
 // Local save (localStorage) and progression rules.
 import { WORLDS } from './data/levels.js';
 import { HATS_INFO, ACHIEVEMENTS } from './data/meta.js';
+import { findEnigma, isEnigma, packSize, enigmaId } from './enigmas.js';
 
 const KEY = 'lumignons.save.v1';
 
@@ -120,11 +121,30 @@ export function recordHint(id) {
 // ---------------------------------------------------------------------------
 // Progression rules
 
+/** Stars of the campaign (the énigmes have their own count). */
 export function totalStars() {
   let n = 0;
-  for (const k in save.data.levels) n += save.data.levels[k].stars || 0;
+  for (const w of WORLDS) for (const lv of [...w.levels, w.bonus]) n += save.data.levels[lv.id]?.stars || 0;
   return n;
 }
+
+/** A world's book of énigmes: { size, done, stars, perfect }. */
+export function enigmaStats(wi) {
+  const size = packSize(WORLDS[wi].id);
+  let done = 0;
+  let stars = 0;
+  let perfect = 0;
+  for (let i = 0; i < size; i++) {
+    const r = save.data.levels[enigmaId(wi, i)];
+    if (r?.done) done++;
+    stars += r?.stars || 0;
+    if ((r?.stars || 0) >= 3) perfect++;
+  }
+  return { size, done, stars, perfect };
+}
+
+/** Énigmes open once their world is finished (or with "open all"). */
+export const enigmasOpen = (wi) => !!save.data.settings.openAll || worldComplete(WORLDS[wi]);
 
 export function worldStars(w) {
   let n = 0;
@@ -187,7 +207,14 @@ export function summary() {
     dailyDone: Object.keys(save.data.daily?.results || {}).length,
     dailyBest: save.data.daily?.best || 0,
     customMade: (save.data.custom || []).filter((c) => c.verified?.status === 'ok').length,
+    enigmasDone: 0,
+    enigmaBooks: 0,
   };
+  WORLDS.forEach((w, wi) => {
+    const e = enigmaStats(wi);
+    s.enigmasDone += e.done;
+    if (e.size && e.perfect === e.size) s.enigmaBooks++;
+  });
   WORLDS.forEach((w) => {
     let done = 0;
     let noHint = true;
@@ -257,6 +284,10 @@ export function collectUnlocks() {
 
 /** Locate a level by id. */
 export function findLevel(id) {
+  if (isEnigma(id)) {
+    const e = findEnigma(id, WORLDS);
+    return e ? { world: WORLDS[e.wi], wi: e.wi, li: e.i, def: e.def, bonus: false, enigma: true, solution: e.solution } : null;
+  }
   for (let wi = 0; wi < WORLDS.length; wi++) {
     const w = WORLDS[wi];
     const li = w.levels.findIndex((l) => l.id === id);
@@ -270,6 +301,7 @@ export function findLevel(id) {
 export function nextLevel(id) {
   const f = findLevel(id);
   if (!f) return null;
+  if (f.enigma) return f.li + 1 < packSize(f.world.id) ? enigmaId(f.wi, f.li + 1) : null;
   if (!f.bonus && f.li < f.world.levels.length - 1) return f.world.levels[f.li + 1].id;
   const nw = WORLDS[f.wi + 1];
   if (!nw) return null;
