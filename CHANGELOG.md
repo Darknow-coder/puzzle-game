@@ -1,5 +1,11 @@
 # Journal des versions
 
+## 3.8.1
+
+- La carte d’un joueur qui n’a pas encore la 3.8 indique quand il a joué pour la dernière fois
+  (« A joué il y a 3 h », d’après son dernier résultat envoyé). Un joueur qui cache sa présence
+  n’affiche rien du tout. Règles Firebase à republier.
+
 ## 3.8.0
 
 **Nouveautés**

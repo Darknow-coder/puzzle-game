@@ -363,7 +363,8 @@ test('presence: "online" or last seen, written only by the player, hidden on req
   await denied(other.c.commit([{ set: `presence/${other.uid}`, data: { note: 'x' }, serverTime: ['seen'] }]), 'extra field');
   // Hidden: the last time seen is gone, and no new beat is sent.
   await A.online.setShowPresence(false);
-  assert.equal(await B.online.presenceOf(uidA), null);
+  assert.deepEqual(await B.online.presenceOf(uidA), { hidden: true });
+  await denied(other.c.commit([{ set: `presence/${other.uid}`, data: { hidden: false } }]), 'hidden is only true');
   assert.equal(await A.online.heartbeat({ force: true }), false);
   // Deleting everything removes it too.
   await A.online.setShowPresence(true);

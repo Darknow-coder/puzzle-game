@@ -124,10 +124,12 @@ service cloud.firestore {
     // only for a player with a profile, only by themselves.
     match /presence/{uid} {
       allow read: if true;
+      // Either { seen: the server's time }, or { hidden: true } for a player who
+      // hides it (the game then shows nothing at all about them).
       allow create, update: if isMe(uid) && notBanned()
-        && request.resource.data.keys().hasOnly(['seen'])
-        && request.resource.data.seen == request.time
-        && exists(playerPath(uid));
+        && exists(playerPath(uid))
+        && ((request.resource.data.keys().hasOnly(['seen']) && request.resource.data.seen == request.time)
+          || (request.resource.data.keys().hasOnly(['hidden']) && request.resource.data.hidden == true));
       allow delete: if isMe(uid);
     }
 

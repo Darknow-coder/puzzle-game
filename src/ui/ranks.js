@@ -548,25 +548,29 @@ export function createRanks(api) {
         m.close();
       });
     };
-    // Online now, or when last seen (nothing for a player who hides it).
-    online
-      .presenceOf(r.uid)
-      .then((p) => {
-        const ps = box.querySelector('.pf-seen');
-        if (!ps || !p) return;
+    // Online now, or when last seen; for a player whose game does not tell yet,
+    // when they last sent a result (nothing at all for a player who hides it).
+    const presence = online.presenceOf(r.uid).catch(() => undefined);
+    const showSeen = async (c) => {
+      const p = await presence;
+      const ps = box.querySelector('.pf-seen');
+      if (!ps || p === undefined || p?.hidden) return;
+      if (p) {
         ps.className = 'pf-seen' + (p.online ? ' on' : '');
         ps.innerHTML = p.online ? `<i></i>${t('ranks.onlineNow')}` : t('ranks.seen', seenAgo(p.seen));
-      })
-      .catch(() => {});
+      } else if (c?.played) ps.textContent = t('ranks.played', seenAgo(c.played));
+    };
     online
       .playerCard(r.uid)
       .then((c) => {
+        showSeen(c);
         const pr = box.querySelector('.pf-rank');
         if (pr) pr.innerHTML = c ? `<span class="pf-stars">★ ${c.total}</span> · ${t('ranks.globalRank', ordinal(c.rank, lang()))}` : '';
       })
       .catch(() => {
         const pr = box.querySelector('.pf-rank');
         if (pr) pr.innerHTML = '';
+        showSeen(null);
       });
   }
 

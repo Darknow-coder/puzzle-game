@@ -477,7 +477,7 @@ export function createOnline(deps) {
     if (!p) return null;
     players.set(uid, { at: Date.now(), p: p.data });
     const better = await c.count('', 'players', { field: 'stars', op: 'GREATER_THAN', value: p.data.stars | 0 });
-    return { ...whoFields(p.data), uid, rank: better + 1 };
+    return { ...whoFields(p.data), uid, rank: better + 1, played: p.data.at || null };
   }
 
   // --------------------------------------------------------------- the pseudo
@@ -579,22 +579,27 @@ export function createOnline(deps) {
     persist();
     onChange('presence');
     if (on) return heartbeat({ force: true });
-    // Hidden: forget the last time seen, too.
+    // Hidden: the last time seen is replaced by a "hidden" mark, so that the
+    // card does not show the time of the last result instead.
     return serial(async () => {
       if (!configured || !st().uid) return;
       try {
         const c = api();
         const uid = await c.signIn();
-        await c.commit([{ del: `presence/${uid}` }]);
+        await c.commit([{ set: `presence/${uid}`, data: { hidden: true } }]);
       } catch {
         /* nothing on the server, or offline */
       }
     });
   }
 
-  /** { online, seen } for a player (seen: ms since epoch), or null if unknown or hidden. */
+  /**
+   * { online, seen } for a player (seen: ms since epoch); { hidden: true } when
+   * they hide it; null when they never sent one (an older version of the game).
+   */
   async function presenceOf(uid) {
     const [d] = await api().getAll([`presence/${uid}`]);
+    if (d?.data?.hidden) return { hidden: true };
     const seen = d?.data?.seen;
     if (!seen) return null;
     const now = api().now();
