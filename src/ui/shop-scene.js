@@ -158,14 +158,25 @@ function drawPaintedChest(g, im, s, open, glowCol, shake) {
   const sy = im.height * LID;
   // Light escaping from under the lid while it shakes.
   if (open < 1) A.glow(g, 0, top + cut, s * (0.45 + shake * 0.4), glowCol, 0.3 + shake * 0.6);
-  g.drawImage(im, 0, sy, im.width, im.height - sy, -w / 2, top + cut, w, h - cut);
   if (open > 0) {
-    // The inside, glowing in the rarity's colour.
-    g.fillStyle = '#1c0b2b';
-    A.ellipse(g, 0, top + cut + s * 0.015, w * 0.42, s * 0.1 * open);
+    // The opening, full of light in the rarity's colour; the front of the box hides its lower half.
+    const ry = s * 0.12 * open;
+    const iy = top + cut + s * 0.03;
+    const inner = g.createRadialGradient(0, iy, 0, 0, iy, w * 0.44);
+    inner.addColorStop(0, 'rgba(255,255,240,' + 0.95 * open + ')');
+    inner.addColorStop(0.45, glowCol + 0.8 * open + ')');
+    inner.addColorStop(1, glowCol + '0)');
+    g.save();
+    g.translate(0, iy);
+    g.scale(1, ry / (w * 0.44));
+    g.fillStyle = inner;
+    g.beginPath();
+    g.arc(0, 0, w * 0.44, 0, A.TAU);
     g.fill();
-    A.glow(g, 0, top + cut, s * (0.6 + open * 0.5), glowCol, 0.9 * open);
+    g.restore();
+    A.glow(g, 0, top + cut, s * (0.6 + open * 0.5), glowCol, 0.8 * open);
   }
+  g.drawImage(im, 0, sy, im.width, im.height - sy, -w / 2, top + cut, w, h - cut);
   // The lid tips back: it rises and flattens.
   g.save();
   g.translate(0, top + cut - open * s * 0.3);
