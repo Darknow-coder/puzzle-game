@@ -184,6 +184,15 @@ export const NOTEBOOK = [
     },
     has: (L) => L.inventory.mirror > 0 || L.fixedMirror.some((m) => m >= 0),
   },
+  {
+    id: 'comet',
+    name: { fr: 'Comète', en: 'Comet' },
+    text: {
+      fr: 'Une étoile tombée du ciel. Pose-la comme une flèche : le premier qui marche dessus repart dans sa direction… puis elle s’envole rejoindre le ciel. Les suivants passent tout droit. Une seule fois, pour sortir d’une boucle !',
+      en: 'A star fallen from the sky. Place it like an arrow: the first to step on it leaves in its direction… then it flies back up to the sky. Whoever comes next walks straight on. Once only, the way out of a loop!',
+    },
+    has: (L) => L.inventory.comet > 0,
+  },
 ];
 
 /** Cosmetic hats. `need` is evaluated by the progress module. */

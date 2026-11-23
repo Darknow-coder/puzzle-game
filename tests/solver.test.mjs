@@ -14,7 +14,7 @@ function rng(seed) {
   };
 }
 
-function randomLevel(seed, mirrors = false) {
+function randomLevel(seed, mirrors = false, comets = false) {
   const r = rng(seed);
   const w = 3 + Math.floor(r() * 3);
   const h = 3 + Math.floor(r() * 2);
@@ -74,6 +74,10 @@ function randomLevel(seed, mirrors = false) {
     inv.arrow = Math.floor(r() * 2);
     inv.mirror = 1 + Math.floor(r() * 2);
   }
+  if (comets) {
+    inv.arrow = Math.floor(r() * 2);
+    inv.comet = 1 + Math.floor(r() * 2);
+  }
   const d = {};
   for (const k of Object.keys(dirs)) if (dirs[k]) d[k] = dirs[k];
   try {
@@ -87,7 +91,7 @@ function brute(L, maxK, wantFireflies) {
   const n = L.w * L.h;
   const opts = [];
   for (let i = 0; i < n; i++) {
-    for (const t of [PIECE.ARROW, PIECE.LILY, PIECE.MUSHROOM, PIECE.DAISY, PIECE.MIRROR]) {
+    for (const t of [PIECE.ARROW, PIECE.LILY, PIECE.MUSHROOM, PIECE.DAISY, PIECE.MIRROR, PIECE.COMET]) {
       if (!canPlace(L, i, t)) continue;
       const key = PIECE_KEYS[t];
       if (!L.inventory[key]) continue;
@@ -124,11 +128,11 @@ function brute(L, maxK, wantFireflies) {
   return null;
 }
 
-function crossCheck(mirrors, boards) {
+function crossCheck(mirrors, boards, comets = false) {
   let checked = 0;
   let solvable = 0;
   for (let seed = 1; checked < boards && seed < 20000; seed++) {
-    const L = randomLevel(seed, mirrors);
+    const L = randomLevel(seed, mirrors, comets);
     if (!L) continue;
     const total = inventorySize(L.inventory);
     const maxK = Math.min(3, total);
@@ -152,6 +156,12 @@ test('pruned solver agrees with brute force on random tiny levels', () => {
 
 test('pruned solver agrees with brute force on random levels with mirrors', () => {
   const { checked, solvable } = crossCheck(true, 400);
+  assert.ok(checked >= 350);
+  assert.ok(solvable > 100, `only ${solvable} solvable cases`);
+});
+
+test('pruned solver agrees with brute force on random levels with comets', () => {
+  const { checked, solvable } = crossCheck(false, 400, true);
   assert.ok(checked >= 350);
   assert.ok(solvable > 100, `only ${solvable} solvable cases`);
 });

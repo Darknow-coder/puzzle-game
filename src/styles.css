@@ -3661,3 +3661,75 @@ small.r-legendary {
 .en-node:active {
   transform: scale(0.94);
 }
+
+/* ---------------------------------------------------------------- story */
+.world-meta .story-btn {
+  margin-left: auto;
+  padding: 5px 11px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 207, 90, 0.45);
+  background: rgba(255, 207, 90, 0.12);
+  color: var(--ink);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.world-meta .story-btn + .story-btn {
+  margin-left: 6px;
+}
+.story {
+  text-align: center;
+}
+.story .eyebrow {
+  margin-bottom: 10px;
+}
+.story-art {
+  display: block;
+  width: 100%;
+  max-width: 300px;
+  aspect-ratio: 300 / 190;
+  margin: 0 auto;
+  border-radius: 16px;
+  background: #0a0820;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.35), inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+.story-text {
+  min-height: 4.4em;
+  margin: 14px 4px 6px;
+  font-size: 16px;
+  line-height: 1.45;
+  color: var(--ink);
+}
+.story-text.in {
+  animation: story-in 0.5s ease both;
+}
+@keyframes story-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+.story-dots {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  margin: 4px 0 2px;
+}
+.story-dots i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.22);
+}
+.story-dots i.on {
+  background: var(--gold);
+}
+.story .actions {
+  justify-content: space-between;
+}
+@media (prefers-reduced-motion: reduce) {
+  .story-text.in {
+    animation: none;
+  }
+}

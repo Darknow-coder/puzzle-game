@@ -21,6 +21,10 @@ const VARIANTS = [
   { type: PIECE.LILY, dir: 0, key: 'lily' },
   { type: PIECE.MIRROR, dir: 0, key: 'mirror' },
   { type: PIECE.MIRROR, dir: 1, key: 'mirror' },
+  { type: PIECE.COMET, dir: 0, key: 'comet' },
+  { type: PIECE.COMET, dir: 1, key: 'comet' },
+  { type: PIECE.COMET, dir: 2, key: 'comet' },
+  { type: PIECE.COMET, dir: 3, key: 'comet' },
 ];
 
 // Identity of a placed piece, to skip layouts already explored in another order.

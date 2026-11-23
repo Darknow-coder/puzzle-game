@@ -3,13 +3,14 @@ import { parseLevel, simulate, validateLevel, PIECE, PIECE_KEYS, DIR_CHARS } fro
 import { solve, checkSolution } from '../src/engine/solver.js';
 
 const ARROWS = ['↑', '→', '↓', '←'];
+const COMETS = ['⇡', '⇢', '⇣', '⇠'];
 
 export function overlay(L, placements) {
   const rows = L.rows.map((r) => r.padEnd(L.w, ' ').split(''));
   for (const p of placements) {
     const x = p.idx % L.w;
     const y = (p.idx / L.w) | 0;
-    rows[y][x] = p.type === PIECE.ARROW ? ARROWS[p.dir] : p.type === PIECE.MIRROR ? (p.dir ? '⟍' : '⟋') : p.type === PIECE.LILY ? 'L' : p.type === PIECE.MUSHROOM ? 'M' : 'F';
+    rows[y][x] = p.type === PIECE.ARROW ? ARROWS[p.dir] : p.type === PIECE.COMET ? COMETS[p.dir] : p.type === PIECE.MIRROR ? (p.dir ? '⟍' : '⟋') : p.type === PIECE.LILY ? 'L' : p.type === PIECE.MUSHROOM ? 'M' : 'F';
   }
   return rows.map((r) => '   ' + r.join('')).join('\n');
 }
@@ -18,7 +19,7 @@ export function describe(p, L) {
   const x = p.idx % L.w;
   const y = (p.idx / L.w) | 0;
   const t = PIECE_KEYS[p.type];
-  const o = p.type === PIECE.ARROW ? ' ' + DIR_CHARS[p.dir] : p.type === PIECE.MIRROR ? ' ' + '/\\'[p.dir] : '';
+  const o = p.type === PIECE.ARROW || p.type === PIECE.COMET ? ' ' + DIR_CHARS[p.dir] : p.type === PIECE.MIRROR ? ' ' + '/\\'[p.dir] : '';
   return `${t}${o}@${x},${y}`;
 }
 

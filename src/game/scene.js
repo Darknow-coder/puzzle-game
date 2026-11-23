@@ -347,7 +347,7 @@ export class GameScene {
         // A short swipe that stays on its tile re-orients an arrow.
         const dx = px - g.x0;
         const dy = py - g.y0;
-        if (piece.type === PIECE.ARROW && Math.hypot(dx, dy) > this.S * 0.28) {
+        if ((piece.type === PIECE.ARROW || piece.type === PIECE.COMET) && Math.hypot(dx, dy) > this.S * 0.28) {
           this.setDir(g.idx, Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 1 : 3) : dy > 0 ? 2 : 0);
         } else if (piece.type === PIECE.MIRROR && Math.hypot(dx, dy) > this.S * 0.28) {
           this.setDir(g.idx, 1 - piece.dir); // a flick flips a mirror
@@ -386,7 +386,7 @@ export class GameScene {
     }
     const placed = this.placements.get(idx);
     if (placed) {
-      this.picker = { idx, t: this.t, arrow: placed.type === PIECE.ARROW, mirror: placed.type === PIECE.MIRROR };
+      this.picker = { idx, t: this.t, arrow: placed.type === PIECE.ARROW || placed.type === PIECE.COMET, mirror: placed.type === PIECE.MIRROR };
       sound.sfx('tap');
       return;
     }
@@ -407,7 +407,7 @@ export class GameScene {
       return;
     }
     this.placeAt(idx, c.k, c.type === PIECE.MIRROR ? this.lastMirrorDir : this.lastArrowDir);
-    if (c.type === PIECE.ARROW) this.picker = { idx, t: this.t, arrow: true, fresh: true };
+    if (c.type === PIECE.ARROW || c.type === PIECE.COMET) this.picker = { idx, t: this.t, arrow: true, fresh: true };
     else if (c.type === PIECE.MIRROR) this.picker = { idx, t: this.t, mirror: true, fresh: true };
   }
 
@@ -758,6 +758,10 @@ export class GameScene {
         case 'turn':
           sound.sfx('turn');
           break;
+        case 'comet':
+          sound.sfx('comet');
+          this.fx.emit('star', cx, cy - S * 0.2, 10, { speed: 80, life: 0.9, size: S * 0.06, color: 'rgba(255,235,160,', fill: '#fff4c2', vy: -60 });
+          break;
         case 'mirror':
           sound.sfx('mirror', e.dir);
           this.mirrorFlash.set(e.idx, this.t);
@@ -941,6 +945,13 @@ export class GameScene {
       if (pc.type === PIECE.ARROW) {
         A.drawArrowStone(g, cx, cy, S, pc.dir, { scale: pop, highlight: this.picker && this.picker.idx === idx });
       } else if (pc.type === PIECE.LILY) A.drawLily(g, cx, cy, S * pop, { t });
+      else if (pc.type === PIECE.COMET) {
+        // Once used, a comet flies back up to the sky.
+        let fly = 0;
+        if (run && f0.spent[idx]) continue;
+        if (run && f1.spent[idx]) fly = easeInOut(seg(p, 0.55, 1));
+        A.drawComet(g, cx, cy, S, pc.dir, { scale: pop, t, fly, highlight: this.picker && this.picker.idx === idx });
+      }
     }
 
     // Placement dots while choosing.
@@ -971,6 +982,7 @@ export class GameScene {
       else if (h.type === PIECE.MUSHROOM) A.drawMushroom(g, cx, cy + S * 0.25, S, { ghost: true });
       else if (h.type === PIECE.DAISY) A.drawDaisy(g, cx, cy + S * 0.25, S, { ghost: true, t });
       else if (h.type === PIECE.MIRROR) A.drawMirror(g, cx, cy, S, h.dir, { ghost: true });
+      else if (h.type === PIECE.COMET) A.drawComet(g, cx, cy, S, h.dir, { ghost: true, t });
     }
     if (this.mode === 'plan') {
       for (const c of this.wrongCells) {
@@ -1154,6 +1166,7 @@ export class GameScene {
       else if (pc.type === PIECE.LILY) A.drawLily(g, x, y, S, { t });
       else if (pc.type === PIECE.MUSHROOM) A.drawMushroom(g, x, y + S * 0.2, S, {});
       else if (pc.type === PIECE.MIRROR) A.drawMirror(g, x, y, S, pc.dir, { lift: 6, scale: 1.1 });
+      else if (pc.type === PIECE.COMET) A.drawComet(g, x, y, S, pc.dir, { lift: 6, scale: 1.1, t });
       else A.drawDaisy(g, x, y + S * 0.2, S, { t });
     }
     // Radial picker.

@@ -25,6 +25,7 @@ import { createOnline } from './online/online.js';
 import { levelBoard, dailyBoard } from './online/score.js';
 import { createRanks, PODIUM_SVG } from './ui/ranks.js';
 import { createTour } from './ui/tour.js';
+import { createStory } from './ui/story.js';
 import { enigmaId, packSize, tierOf, enigmaInfo } from './enigmas.js';
 import * as Q from './quests.js';
 
@@ -381,8 +382,11 @@ function buildMap() {
         <p>${tr(w.blurb)}</p>
         <div class="world-meta">
           ${unlocked ? `<span><span class="st">★</span> ${SV.worldStars(w)} / ${(w.levels.length + 1) * 3}</span>` : `<span class="lock-note">${ICONS.lock}${lockTxt}</span>`}
+          ${unlocked && w.story ? `<button class="story-btn" data-story="${w.story}">📖 ${t('story.read')}</button>` : ''}
+          ${unlocked && w.story && wi === WORLDS.length - 1 && SV.worldComplete(w) ? `<button class="story-btn" data-story="epilogue">✨ ${t('story.epilogue')}</button>` : ''}
         </div>
       </div>`;
+    sec.querySelectorAll('.story-btn').forEach((b) => (b.onclick = () => (click(), story.open(b.dataset.story))));
     const con = el('div', 'constellation');
     // Alternate the constellation's orientation from one world to the next.
     const flip = wi % 2 === 1;
@@ -612,7 +616,13 @@ function startLevel(id) {
   showScreen('game');
   layoutGame();
   app.hudChanged();
-  introCards(f);
+  // A world with a chapter of the story tells it before its first level.
+  const chapter = !f.enigma && !f.custom && !f.daily && f.world?.story;
+  if (chapter && !SV.save.data.tips[story.seenKey(chapter)]) {
+    SV.save.data.tips[story.seenKey(chapter)] = 1;
+    SV.persist();
+    story.open(chapter, () => introCards(f));
+  } else introCards(f);
 }
 
 /** Tutorial cards for elements met for the first time, then level tips. */
@@ -1171,6 +1181,24 @@ function illustration(kind, w = 140, h = 120) {
         A.drawLumi(g, 26, my + 16, S * 0.62, { color: 1, dir: 1, t: 1, mood: 'happy' });
         break;
       }
+      case 'comet': {
+        // The comet turns the Lumignon, then flies away to the sky.
+        const my = h / 2 + 8;
+        g.strokeStyle = 'rgba(255,225,150,0.9)';
+        g.lineWidth = 3;
+        g.setLineDash([2, 7]);
+        g.lineCap = 'round';
+        g.beginPath();
+        g.moveTo(10, my);
+        g.lineTo(cx, my);
+        g.lineTo(cx, h - 4);
+        g.stroke();
+        g.setLineDash([]);
+        A.drawComet(g, cx, my, S * 1.1, 2, { t: 1 });
+        A.drawComet(g, cx + S * 0.55, my, S * 0.7, 0, { t: 1, fly: 0.55 });
+        A.drawLumi(g, 26, my + 16, S * 0.62, { color: 2, dir: 1, t: 1, mood: 'happy' });
+        break;
+      }
       default:
         break;
     }
@@ -1298,7 +1326,8 @@ function showVictory(stars, res, unlocks, gained, reward = null, ranked = null) 
     <div class="rank-line"></div>
     <div class="unlock-list"></div>
     <div class="actions col">
-      ${next ? `<button class="btn btn-primary" data-a="next">${t('next')}${ICONS.next}</button>` : ''}
+      ${lastWorld ? `<button class="btn btn-primary" data-a="epilogue">✨ ${t('story.epilogue')}</button>` : ''}
+      ${next ? `<button class="btn ${lastWorld ? 'btn-ghost' : 'btn-primary'}" data-a="next">${t('next')}${ICONS.next}</button>` : ''}
       <div class="actions" style="margin-top:0">
         <button class="btn btn-ghost btn-small" data-a="replay">${ICONS.retry}${t('replay')}</button>
         <button class="btn btn-ghost btn-small" data-a="tune" aria-label="${t('tune')}">♫</button>
@@ -1433,6 +1462,8 @@ function showVictory(stars, res, unlocks, gained, reward = null, ranked = null) 
   }
   const nb = box.querySelector('[data-a=next]');
   if (nb) nb.onclick = () => (click(), m.close(), startLevel(next));
+  const eb = box.querySelector('[data-a=epilogue]');
+  if (eb) eb.onclick = () => (click(), story.open('epilogue'));
   // Right after the tutorial level, the main menu's guided tour, then level 1-2.
   if (id === WORLDS[0].levels[0].id && !SV.save.data.tips.tour) {
     const toTour = () => {
@@ -2092,6 +2123,9 @@ function ranks_todayBoard() {
   const d = dailyFor(WORLDS.filter((w, i) => SV.worldUnlocked(i)).map((w) => w.id));
   return d ? dailyBoard(d) : null;
 }
+
+const story = createStory({ el, openModal, tr, getLang, click, sound });
+app.story = story;
 
 const tour = createTour({
   tr,

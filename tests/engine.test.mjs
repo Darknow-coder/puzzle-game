@@ -208,6 +208,37 @@ test('Gloomnibs obey mirrors; a mushroom jump landing on a mirror is reflected',
   assert.equal(sm.result, 'fail');
 });
 
+test('a comet turns the first walker that steps on it, then flies away', () => {
+  const comet = (L, x, y, d) => ({ idx: at(L, x, y), type: PIECE.COMET, dir: 'NESW'.indexOf(d) });
+  // Pip walks east: the comet sends him south, he reaches the lantern.
+  const L = lvl(['a...', '...A'], { a: 'E' }, { comet: 1 });
+  const s = simulate(L, [comet(L, 3, 0, 'S')], { record: true });
+  assert.equal(s.result, 'win');
+  assert.equal(s.final.spent[at(L, 3, 0)], 1, 'spent once used');
+  assert.ok(s.frames.some((f) => f.events?.some((e) => e.type === 'comet')));
+  // Two Lumignons on the same row: the first one turns, the second goes straight on.
+  const T2 = lvl(['ba..', '..A.', '..B.'], { a: 'E', b: 'E' }, { comet: 1 });
+  const s2 = simulate(T2, [comet(T2, 2, 0, 'S')], { record: true });
+  // (walkers are numbered in reading order: Nim, at the far left, is walker 0)
+  assert.equal(path(s2, 1).slice(0, 3).join(' '), '1,0 2,0 2,1');
+  assert.equal(path(s2, 0).slice(0, 4).join(' '), '0,0 1,0 2,0 3,0');
+  // A loop of arrows becomes a single lap: the comet sends Pip into the loop
+  // once, and on the next lap he goes straight through to the lantern.
+  const R = lvl(['#   ', 'a..A', '..  '], { a: 'E' }, { arrow: 2, comet: 1 });
+  const lap = [comet(R, 1, 1, 'S'), arrow(R, 1, 2, 'W'), arrow(R, 0, 2, 'N')];
+  const r = simulate(R, lap, { record: true });
+  assert.deepEqual(path(r), ['0,1', '1,1', '1,2', '0,2', '0,1', '1,1', '2,1', '3,1']);
+  assert.equal(r.result, 'win');
+  // With an arrow instead of the comet the same layout loops forever.
+  const loop = simulate(R, [arrow(R, 1, 1, 'S'), ...lap.slice(1)]);
+  assert.equal(loop.cause?.type, 'loop');
+  // Comets go on grass only, like arrows; the solver uses them.
+  assert.equal(canPlace(R, at(R, 3, 1), PIECE.COMET), false);
+  const best = solve(L, { countCap: 2 });
+  assert.equal(best.min, 1);
+  assert.equal(best.solutions[0][0].type, PIECE.COMET);
+});
+
 test('Lumignons pass through each other', () => {
   const L = lvl(['Ba.bA'], { a: 'E', b: 'W' });
   const s = simulate(L, [], { record: true });

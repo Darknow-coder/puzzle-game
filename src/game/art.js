@@ -140,6 +140,21 @@ export const WORLD_STYLES = {
     particle: 'rgba(255,214,236,',
     props: ['prism', 'rock', 'prism', 'flowers'],
   },
+  comets: {
+    sky: ['#04031a', '#120e45', '#2b2072', '#5a4aa6'],
+    stars: 1,
+    moon: { x: 0.2, y: 0.13, r: 0.04, color: '#ece8ff' },
+    milky: true,
+    hills: ['#231c5c', '#1a144b'],
+    grass: ['#b8aeea', '#ab9fe0'],
+    grassEdge: '#e4ddff',
+    side: ['#3b3080', '#2c2365'],
+    soilLine: '#5244a8',
+    water: ['#5a72e0', '#4358c2'],
+    accent: '#fff1a6',
+    particle: 'rgba(210,215,255,',
+    props: ['starrock', 'telescope', 'starrock', 'crystal'],
+  },
 };
 
 const PORTAL_COLORS = ['#69e6ff', '#c78bff'];
@@ -412,6 +427,48 @@ export function renderSky(w, h, worldKey, opts = {}) {
       g.fill();
     }
     g.globalCompositeOperation = 'source-over';
+  }
+  if (st.milky) {
+    // A band of star dust across the sky, and a few comets heading home.
+    g.save();
+    g.globalCompositeOperation = 'lighter';
+    g.translate(w * 0.5, h * 0.34);
+    g.rotate(-0.42);
+    for (let i = 0; i < 3; i++) {
+      const bw = unit * (0.42 - i * 0.12);
+      const bg = g.createLinearGradient(0, -bw, 0, bw);
+      bg.addColorStop(0, 'rgba(170,150,255,0)');
+      bg.addColorStop(0.5, `rgba(${i === 1 ? '255,210,240' : '170,170,255'},${0.09 + i * 0.03})`);
+      bg.addColorStop(1, 'rgba(170,150,255,0)');
+      g.fillStyle = bg;
+      g.fillRect(-w, -bw, w * 2, bw * 2);
+    }
+    for (let i = 0; i < 160; i++) {
+      const x = (hash2(i, 3, 88) - 0.5) * w * 1.6;
+      const y = (hash2(i, 4, 88) - 0.5) * (hash2(i, 5, 88) - 0.5) * unit * 1.2;
+      g.fillStyle = `rgba(255,255,255,${0.15 + 0.5 * hash2(i, 6, 88)})`;
+      g.fillRect(x, y, 1.4, 1.4);
+    }
+    g.restore();
+    g.save();
+    g.globalCompositeOperation = 'lighter';
+    for (let i = 0; i < 3; i++) {
+      const x = w * (0.25 + 0.3 * i);
+      const y = h * (0.12 + 0.1 * ((i * 2) % 3));
+      const len = unit * (0.16 + 0.05 * i);
+      const tg = g.createLinearGradient(x, y, x - len, y - len * 0.45);
+      tg.addColorStop(0, 'rgba(255,240,190,0.7)');
+      tg.addColorStop(1, 'rgba(160,200,255,0)');
+      g.strokeStyle = tg;
+      g.lineWidth = Math.max(1.5, unit * 0.006);
+      g.lineCap = 'round';
+      g.beginPath();
+      g.moveTo(x, y);
+      g.lineTo(x - len, y - len * 0.45);
+      g.stroke();
+      glow(g, x, y, unit * 0.025, 'rgba(255,235,170,', 0.8);
+    }
+    g.restore();
   }
   // Two layers of distant floating islands / hills.
   st.hills.forEach((col, layer) => {
@@ -1034,6 +1091,63 @@ function drawProp(g, kind, x, y, S, v) {
       }
       g.fillStyle = 'rgba(255,255,255,0.85)';
       star(g, x + 0.06 * s, y - 0.7 * s, s * 0.05, 4, 0.3);
+      break;
+    }
+    case 'starrock': {
+      // A dark stone with a fallen star caught in it.
+      shadow(g, x, y, s * 0.4, s * 0.13);
+      g.fillStyle = '#3e3678';
+      g.beginPath();
+      g.moveTo(x - s * 0.38, y);
+      g.quadraticCurveTo(x - s * 0.42, y - s * 0.36, x - s * 0.12, y - s * 0.5 - v * s * 0.01);
+      g.quadraticCurveTo(x + s * 0.2, y - s * 0.6, x + s * 0.36, y - s * 0.3);
+      g.quadraticCurveTo(x + s * 0.44, y - s * 0.08, x + s * 0.36, y);
+      g.closePath();
+      g.fill();
+      g.fillStyle = '#5a50a6';
+      g.beginPath();
+      g.moveTo(x - s * 0.3, y - s * 0.12);
+      g.quadraticCurveTo(x - s * 0.32, y - s * 0.38, x - s * 0.1, y - s * 0.46);
+      g.quadraticCurveTo(x + s * 0.1, y - s * 0.52, x + s * 0.22, y - s * 0.38);
+      g.quadraticCurveTo(x, y - s * 0.32, x - s * 0.3, y - s * 0.12);
+      g.fill();
+      const sx = x + (v % 2 ? -0.08 : 0.08) * s;
+      const sy = y - s * 0.3;
+      glow(g, sx, sy, s * 0.32, 'rgba(255,225,140,', 0.7);
+      g.fillStyle = '#ffe9a0';
+      star(g, sx, sy, s * 0.1, 5, 0.46);
+      g.fillStyle = '#fffdf2';
+      star(g, sx, sy - s * 0.005, s * 0.05, 5, 0.46);
+      break;
+    }
+    case 'telescope': {
+      // A little brass telescope on its tripod, pointed at the sky.
+      shadow(g, x, y, s * 0.32, s * 0.1);
+      g.strokeStyle = '#6b4a2f';
+      g.lineWidth = s * 0.045;
+      g.lineCap = 'round';
+      g.beginPath();
+      g.moveTo(x, y - s * 0.42);
+      g.lineTo(x - s * 0.22, y - s * 0.02);
+      g.moveTo(x, y - s * 0.42);
+      g.lineTo(x + s * 0.22, y - s * 0.02);
+      g.moveTo(x, y - s * 0.42);
+      g.lineTo(x + s * 0.03, y - s * 0.01);
+      g.stroke();
+      g.save();
+      g.translate(x, y - s * 0.48);
+      g.rotate(-0.6 + (v % 3) * 0.12);
+      g.fillStyle = '#d9a441';
+      g.fillRect(-s * 0.26, -s * 0.06, s * 0.5, s * 0.12);
+      g.fillStyle = '#f2c96a';
+      g.fillRect(-s * 0.26, -s * 0.06, s * 0.5, s * 0.04);
+      g.fillStyle = '#b07f2a';
+      g.fillRect(s * 0.2, -s * 0.085, s * 0.1, s * 0.17);
+      g.fillStyle = '#9fd4ff';
+      g.fillRect(s * 0.29, -s * 0.06, s * 0.025, s * 0.12);
+      g.fillStyle = '#7a5520';
+      g.fillRect(-s * 0.3, -s * 0.04, s * 0.06, s * 0.08);
+      g.restore();
       break;
     }
     case 'crystal': {
@@ -2151,6 +2265,75 @@ export function drawArrowStone(g, x, y, S, dir, o = {}) {
 }
 
 /**
+ * Comet: a night-blue stone holding a fallen star, its tail of light trailing
+ * behind it and the star pointing where it sends the Lumignon.
+ * o.ghost, o.scale, o.highlight, o.lift, o.t (twinkle), o.fly (0..1: it flies
+ * back up to the sky once used).
+ */
+export function drawComet(g, x, y, S, dir, o = {}) {
+  const s = S;
+  const fly = o.fly || 0;
+  const lift = o.lift || 0;
+  const t = o.t || 0;
+  g.save();
+  g.translate(x, y - lift);
+  g.scale(o.scale ?? 1, o.scale ?? 1);
+  // The stone stays on the ground while the star leaves it.
+  const stoneA = 1 - Math.min(1, fly * 1.4);
+  if (!o.ghost && stoneA > 0) {
+    g.fillStyle = `rgba(20,10,40,${0.25 * stoneA})`;
+    ellipse(g, 0, s * 0.06 + lift, s * 0.36, s * 0.3);
+    g.fill();
+  }
+  g.globalAlpha *= o.ghost ? 0.55 : 1;
+  const r = s * 0.36;
+  if (stoneA > 0) {
+    const a0 = g.globalAlpha;
+    g.globalAlpha = a0 * stoneA;
+    g.fillStyle = '#25235a';
+    ellipse(g, 0, 0, r, r * 0.92);
+    g.fill();
+    g.fillStyle = '#34327a';
+    ellipse(g, 0, -s * 0.03, r * 0.9, r * 0.8);
+    g.fill();
+    g.strokeStyle = o.highlight ? '#ffffff' : 'rgba(160,210,255,0.9)';
+    g.lineWidth = s * 0.035;
+    ellipse(g, 0, -s * 0.03, r * 0.9, r * 0.8);
+    g.stroke();
+    // Star dust on the stone.
+    g.fillStyle = 'rgba(220,235,255,0.7)';
+    for (const [dx, dy, rr] of [[-0.2, 0.08, 0.016], [0.17, 0.12, 0.012], [0.05, 0.2, 0.01], [-0.12, -0.17, 0.011]]) {
+      g.beginPath();
+      g.arc(dx * s, dy * s, rr * s, 0, TAU);
+      g.fill();
+    }
+    g.globalAlpha = a0;
+  }
+  // The star and its tail, pointing in `dir`; once used they rise and fade.
+  g.translate(0, -s * 0.03 - fly * s * 1.6);
+  g.globalAlpha *= 1 - fly;
+  g.rotate((dir * Math.PI) / 2);
+  const tail = s * (0.3 + fly * 0.5);
+  const grd = g.createLinearGradient(0, -s * 0.1, 0, -s * 0.1 + tail);
+  grd.addColorStop(0, 'rgba(255,244,190,0.95)');
+  grd.addColorStop(0.5, 'rgba(150,205,255,0.55)');
+  grd.addColorStop(1, 'rgba(150,205,255,0)');
+  g.fillStyle = grd;
+  g.beginPath();
+  g.moveTo(-s * 0.1, -s * 0.12);
+  g.quadraticCurveTo(-s * 0.06, -s * 0.1 + tail * 0.6, 0, -s * 0.1 + tail);
+  g.quadraticCurveTo(s * 0.06, -s * 0.1 + tail * 0.6, s * 0.1, -s * 0.12);
+  g.closePath();
+  g.fill();
+  if (!o.ghost) glow(g, 0, -s * 0.12, s * (0.32 + fly * 0.3), 'rgba(255,230,150,', 0.55 + 0.12 * Math.sin(t * 4));
+  g.fillStyle = '#ffe9a0';
+  star(g, 0, -s * 0.12, s * 0.135, 5, 0.46);
+  g.fillStyle = '#fffdf2';
+  star(g, 0, -s * 0.125, s * 0.07, 5, 0.46);
+  g.restore();
+}
+
+/**
  * Crystal mirror standing on a stone disc. orient 0 = '/', 1 = '\'.
  * o.fixed (set in the ground), o.ghost, o.scale, o.highlight, o.flash (0..1, just reflected someone).
  */
@@ -2631,6 +2814,9 @@ export function drawPieceIcon(g, kind, x, y, S, t = 0) {
       break;
     case 'mirror':
       drawMirror(g, x, y + S * 0.08, S, 0, {});
+      break;
+    case 'comet':
+      drawComet(g, x, y, S, 1, { t });
       break;
     default:
       break;

@@ -14,12 +14,16 @@ export const COLORS = ['amber', 'blue', 'rose', 'mint'];
 export const LUMI_NAMES = ['Pip', 'Nim', 'Lou', 'Bo'];
 
 // Pieces the player can place. Index 0 = none.
-export const PIECE = { NONE: 0, ARROW: 1, LILY: 2, MUSHROOM: 3, DAISY: 4, MIRROR: 5 };
-export const PIECE_KEYS = ['none', 'arrow', 'lily', 'mushroom', 'daisy', 'mirror'];
+export const PIECE = { NONE: 0, ARROW: 1, LILY: 2, MUSHROOM: 3, DAISY: 4, MIRROR: 5, COMET: 6 };
+export const PIECE_KEYS = ['none', 'arrow', 'lily', 'mushroom', 'daisy', 'mirror', 'comet'];
 /** Placeable kinds, in tray order. */
 export const PIECE_KINDS = PIECE_KEYS.slice(1);
-/** Pieces whose `dir` matters: arrows (4 directions) and mirrors (0 = '/', 1 = '\\'). */
-export const ORIENTED = { [PIECE.ARROW]: 4, [PIECE.MIRROR]: 2 };
+/**
+ * Pieces whose `dir` matters: arrows and comets (4 directions), mirrors (0 = '/', 1 = '\\').
+ * A comet is an arrow that works once: whoever steps on it first turns, then it
+ * flies back up to the sky.
+ */
+export const ORIENTED = { [PIECE.ARROW]: 4, [PIECE.MIRROR]: 2, [PIECE.COMET]: 4 };
 
 /** Direction after a mirror: '/' (0) swaps up/right and down/left, '\\' (1) up/left and down/right. */
 export function reflect(mirror, d) {
@@ -27,7 +31,7 @@ export function reflect(mirror, d) {
 }
 
 export function emptyInventory() {
-  return { arrow: 0, lily: 0, mushroom: 0, daisy: 0, mirror: 0 };
+  return { arrow: 0, lily: 0, mushroom: 0, daisy: 0, mirror: 0, comet: 0 };
 }
 
 export function inventorySize(inv) {
@@ -353,6 +357,7 @@ export function compile(L, placements) {
   const daisy = new Uint8Array(L.fixedDaisy);
   const lily = new Uint8Array(n);
   const mirror = new Int8Array(L.fixedMirror);
+  const comet = new Int8Array(n).fill(-1);
   for (let i = 0; i < n; i++) {
     const p = grid.type[i];
     if (p === PIECE.ARROW) arrow[i] = grid.dir[i];
@@ -360,13 +365,14 @@ export function compile(L, placements) {
     else if (p === PIECE.DAISY) daisy[i] = 1;
     else if (p === PIECE.LILY) lily[i] = 1;
     else if (p === PIECE.MIRROR) mirror[i] = grid.dir[i] & 1;
+    else if (p === PIECE.COMET) comet[i] = grid.dir[i] & 3;
   }
-  return { L, arrow, mush, daisy, lily, mirror };
+  return { L, arrow, mush, daisy, lily, mirror, comet };
 }
 
 /** Same compiled board with one more piece. */
 export function withPiece(ctx, idx, type, dir) {
-  const c = { L: ctx.L, arrow: ctx.arrow, mush: ctx.mush, daisy: ctx.daisy, lily: ctx.lily, mirror: ctx.mirror };
+  const c = { L: ctx.L, arrow: ctx.arrow, mush: ctx.mush, daisy: ctx.daisy, lily: ctx.lily, mirror: ctx.mirror, comet: ctx.comet };
   if (type === PIECE.ARROW) {
     c.arrow = ctx.arrow.slice();
     c.arrow[idx] = dir;
@@ -382,6 +388,9 @@ export function withPiece(ctx, idx, type, dir) {
   } else if (type === PIECE.MIRROR) {
     c.mirror = ctx.mirror.slice();
     c.mirror[idx] = dir & 1;
+  } else if (type === PIECE.COMET) {
+    c.comet = ctx.comet.slice();
+    c.comet[idx] = dir & 3;
   }
   return c;
 }
@@ -397,6 +406,8 @@ export function initialState(L) {
     gate: new Uint8Array([L.gateInitOpen[0] ? 1 : 0, L.gateInitOpen[1] ? 1 : 0]),
     vane: new Int8Array(L.vanes.map((v) => v.dir)),
     broken: new Uint8Array(L.w * L.h),
+    spent: new Uint8Array(L.w * L.h),
+    sh: 0,
     ff: 0,
     sp: 0,
   };
@@ -418,6 +429,8 @@ export function cloneState(s) {
     gate: s.gate.slice(),
     vane: s.vane.slice(),
     broken: s.broken.slice(),
+    spent: s.spent.slice(),
+    sh: s.sh,
     ff: s.ff,
     sp: s.sp,
   };
@@ -440,6 +453,7 @@ export function hashState(L, s) {
   mix(s.ff);
   mix(s.sp + 0x400);
   for (const c of L.cloudCells) if (s.broken[c]) mix(0x10000 + c);
+  if (s.sh) for (let c = 0; c < s.spent.length; c++) if (s.spent[c]) mix(0x20000 + c);
   return (h1 >>> 0) * 2097152 + ((h2 >>> 0) & 0x1fffff);
 }
 
@@ -468,7 +482,7 @@ export function step(ctx, s, t, rec, log) {
   const W = L.w;
   const H = L.h;
   const K = L.walkers.length;
-  const { arrow, mush, daisy, lily, mirror } = ctx;
+  const { arrow, mush, daisy, lily, mirror, comet } = ctx;
   const walkers = L.walkers;
   const ev = rec ? rec.events : null;
 
@@ -575,6 +589,12 @@ export function step(ctx, s, t, rec, log) {
     if (arrow[c] >= 0) {
       if (ev && s.wd[i] !== arrow[c]) ev.push({ type: 'turn', id: i, idx: c });
       s.wd[i] = arrow[c];
+    }
+    if (comet[c] >= 0 && !s.spent[c]) {
+      s.spent[c] = 1;
+      s.sh++;
+      s.wd[i] = comet[c];
+      if (ev) ev.push({ type: 'comet', id: i, idx: c, dir: comet[c] });
     }
     if (mirror[c] >= 0) {
       s.wd[i] = reflect(mirror[c], s.wd[i]);
@@ -745,6 +765,7 @@ function frameOf(s) {
     gateOpen: [!!s.gate[0], !!s.gate[1]],
     vaneDir: Array.from(s.vane),
     broken: s.broken.slice(),
+    spent: s.spent.slice(),
     fireflyMask: s.ff,
     sparkMask: s.sp,
   };

@@ -10,6 +10,7 @@ const SCALES = {
   gloom: { root: 62, steps: [0, 3, 5, 7, 10], prog: [[0, 3, 7], [-2, 2, 5], [-4, 0, 3], [-5, -2, 2]], bpm: 56 },
   peak: { root: 67, steps: [0, 2, 4, 7, 9], prog: [[0, 4, 7], [-3, 0, 4], [-8, -5, -1], [-5, -1, 2]], bpm: 70 },
   dawn: { root: 69, steps: [0, 2, 4, 7, 9], prog: [[0, 4, 7], [-7, -3, 0], [-3, 0, 4], [-5, -1, 2]], bpm: 76 },
+  comets: { root: 64, steps: [0, 2, 4, 7, 11], prog: [[0, 4, 11], [-3, 0, 7], [-7, -3, 4], [-5, -1, 2]], bpm: 62 },
   shop: { root: 65, steps: [0, 2, 4, 7, 9], prog: [[0, 4, 7], [2, 5, 9], [-3, 0, 4], [-5, -1, 2]], bpm: 88 },
 };
 
@@ -246,6 +247,11 @@ class Sound {
         this.tone({ freq: f * 2.01, type: 'sine', at: 0.01, decay: 0.12, gain: 0.02 });
         break;
       }
+      case 'comet':
+        // A rising whoosh and a glittering arpeggio: the star flies back to the sky.
+        this.hiss({ dur: 0.45, gain: 0.035, from: 1200, to: 9000 });
+        [0, 4, 7, 12].forEach((st, i) => this.tone({ freq: midi(84 + st), type: 'sine', at: 0.05 + i * 0.06, decay: 0.3, gain: 0.04 }));
+        break;
       case 'shopBell':
         // The little bell over the shop's door.
         [0, 0.13].forEach((at, i) => {
@@ -410,6 +416,10 @@ class Sound {
       case 'shop':
         if (r < 0.12) this.chime(t + Math.random() * spb);
         break;
+      case 'comets':
+        if (r < 0.16) this.chime(t + Math.random() * spb);
+        else if (r < 0.3) this.twinkle(t + Math.random() * spb);
+        break;
       case 'dawn':
         if (r < 0.22) this.bird(t + Math.random() * spb);
         else if (r < 0.3) this.chime(t + Math.random() * spb);
@@ -432,6 +442,13 @@ class Sound {
     o.connect(gn).connect(this.musicBus);
     o.start(t);
     o.stop(t + attack + decay + 0.05);
+  }
+
+  twinkle(t) {
+    // Two tiny high glints: a star blinking.
+    const f = 2600 + Math.random() * 1400;
+    this.ambTone(f, t, { decay: 0.12, gain: 0.01 });
+    this.ambTone(f * 1.5, t + 0.07, { decay: 0.16, gain: 0.008 });
   }
 
   cricket(t, f = 4400) {
