@@ -1912,6 +1912,7 @@ app.editor = editorScene;
 
 function boot() {
   A.loadSkyArt();
+  A.loadArt({ chest: 'assets/shop/chest.webp' });
   SV.loadSave();
   const s = SV.save.data.settings;
   setLang(s.lang || detectLang());

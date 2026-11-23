@@ -307,12 +307,27 @@ export function loadSkyArt(base = 'assets/skies/', keys = ['meadow', 'pond', 'gr
       SKY_ART[k] = im;
       // Scenes rebuild their cached sky (once for several images).
       clearTimeout(artTimer);
-      artTimer = setTimeout(() => gpu.epoch++, 60);
+      artTimer = setTimeout(() => canvasesLost(), 60);
     };
     im.src = base + k + '.webp';
   }
 }
 export const hasSkyArt = (k) => !!SKY_ART[k];
+
+/** Other painted pieces ({ key: url }), e.g. the shop's chest. */
+export function loadArt(map) {
+  if (typeof Image === 'undefined') return;
+  for (const [k, src] of Object.entries(map)) {
+    const im = new Image();
+    im.onload = () => {
+      SKY_ART[k] = im;
+      clearTimeout(artTimer);
+      artTimer = setTimeout(() => canvasesLost(), 60);
+    };
+    im.src = src;
+  }
+}
+export const artImage = (k) => SKY_ART[k] || null;
 
 /** The painted background, covering w×h (anchored low, where the scenery is). */
 function drawSkyArt(g, im, w, h) {

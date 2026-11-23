@@ -24,7 +24,8 @@
   Lumignon explique, puis « Bon à savoir », et le niveau 1-2 démarre. À revoir depuis les réglages.
 - **Fonds peints** : un ciel illustré pour chacun des 7 mondes (écran titre, carte, niveaux) et un vrai
   marché de nuit pour la boutique, avec ses bocaux de lucioles et ses lanternes ; nouveau comptoir en
-  bois pour Madame Phalène. Le dessin d’avant reste en secours tant que l’image n’est pas chargée.
+  bois pour Madame Phalène, et un coffre à surprises peint (violet, ferrures dorées, serrure étoilée)
+  dont le couvercle bascule pour libérer la lumière. Le dessin d’avant reste en secours tant que l’image n’est pas chargée.
 - **Signaler** un pseudo inapproprié depuis la carte d’un joueur ; les mots grossiers sont refusés.
 - **Hors ligne** : le pseudo est gardé et les résultats attendent, puis partent tout seuls quand le
   réseau revient. Tes résultats d’avant la 3.3 sont envoyés une fois (temps inconnu).

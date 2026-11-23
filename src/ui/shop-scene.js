@@ -147,11 +147,44 @@ export function drawPhalene(g, x, y, s, t, mood = 'idle') {
 }
 
 /** A treasure chest (lid opening from 0 to 1), its seam glowing in `glowCol` (rgba prefix). */
+// The painted chest (assets/shop/chest.webp) is cut in two at its lid.
+const LID = 0.36; // share of the picture's height that is the lid
+
+function drawPaintedChest(g, im, s, open, glowCol, shake) {
+  const w = s * 1.02;
+  const h = (w * im.height) / im.width;
+  const top = s * 0.32 - h;
+  const cut = h * LID;
+  const sy = im.height * LID;
+  // Light escaping from under the lid while it shakes.
+  if (open < 1) A.glow(g, 0, top + cut, s * (0.45 + shake * 0.4), glowCol, 0.3 + shake * 0.6);
+  g.drawImage(im, 0, sy, im.width, im.height - sy, -w / 2, top + cut, w, h - cut);
+  if (open > 0) {
+    // The inside, glowing in the rarity's colour.
+    g.fillStyle = '#1c0b2b';
+    A.ellipse(g, 0, top + cut + s * 0.015, w * 0.42, s * 0.1 * open);
+    g.fill();
+    A.glow(g, 0, top + cut, s * (0.6 + open * 0.5), glowCol, 0.9 * open);
+  }
+  // The lid tips back: it rises and flattens.
+  g.save();
+  g.translate(0, top + cut - open * s * 0.3);
+  g.scale(1 - open * 0.04, 1 - open * 0.45);
+  g.drawImage(im, 0, 0, im.width, sy, -w / 2, -cut, w, cut);
+  g.restore();
+}
+
 export function drawChest(g, x, y, s, open = 0, glowCol = 'rgba(255,220,120,', shake = 0) {
   g.save();
   g.translate(x + Math.sin(shake * 60) * shake * s * 0.04, y);
   g.rotate(Math.sin(shake * 47) * shake * 0.06);
   A.glow(g, 0, -s * 0.2, s * (0.9 + open * 0.8), glowCol, 0.35 + shake * 0.4 + open * 0.5);
+  const im = A.artImage('chest');
+  if (im) {
+    drawPaintedChest(g, im, s, open, glowCol, shake);
+    g.restore();
+    return;
+  }
   // Box.
   const grd = g.createLinearGradient(0, -s * 0.2, 0, s * 0.3);
   grd.addColorStop(0, '#a8643a');
