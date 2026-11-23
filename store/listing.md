@@ -41,6 +41,9 @@ regarde ton plan se dérouler. Chaque pas joue une note : ta solution devient un
 sensible ; les pseudos et résultats des autres joueurs sont visibles dans les classements, sans
 messagerie ni échange entre joueurs).
 
+**Nouveautés 3.7** : de vraies musiques d’ambiance pour le menu, la boutique et trois mondes, en
+boucle douce sous la mélodie de tes Lumignons.
+
 **Nouveautés 3.6** : un huitième monde, le Jardin des Comètes ! Une nouvelle pièce, la comète, qui
 ne guide qu’une seule fois, 11 niveaux, 20 énigmes, et la suite de l’histoire : le ciel s’est éteint…
 

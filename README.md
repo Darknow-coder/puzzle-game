@@ -129,7 +129,8 @@ firestore.rules          règles de sécurité de Firestore (à publier dans la 
 src/editor/              atelier : modèle, codes de partage, vérification (Web Worker), interface
 src/game/art.js          tout le dessin procédural (îles, personnages, pièces, décors)
 src/game/scene.js        écran de jeu : saisie tactile, préparation, animation des parcours
-src/audio.js             sons et musique synthétisés
+src/audio.js             sons et musique synthétisés, boucles d’ambiance enregistrées
+assets/music/            boucles d’ambiance (Daydream), mises en cache à la première écoute
 src/main.js              écrans, menus, sauvegarde, navigation
 tests/                   tests unitaires (node:test) et de bout en bout (Playwright)
 tools/                   solveur en ligne de commande, générateur, vérification, icônes
@@ -153,6 +154,6 @@ tools/                   solveur en ligne de commande, générateur, vérificati
 
 ## Licences
 
-- Code, niveaux, illustrations procédurales, musique et sons : © les auteurs du projet Lumignons,
+- Code, niveaux, illustrations procédurales, musique synthétisée et sons : © les auteurs du projet Lumignons,
   tous droits réservés (voir [`LICENSE`](LICENSE)).
 - Ressources tierces : voir [`THIRD_PARTY.md`](THIRD_PARTY.md) (uniquement la police Fredoka, SIL OFL 1.1).

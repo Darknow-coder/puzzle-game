@@ -1,5 +1,17 @@
 # Journal des versions
 
+## 3.7.0
+
+**Nouveautés**
+
+- **Musiques d’ambiance** : de vraies boucles instrumentales pour le menu et la carte, le Pré des
+  Murmures, le Bois des Champignons, le Jardin des Comètes et la boutique de Madame Phalène (piano,
+  harpe, flûte, kalimba, boîte à musique, accordéon…). Elles tournent sans coupure, dans la tonalité
+  de chaque monde, sous les notes jouées par les pas des Lumignons, et passent de l’une à l’autre en
+  fondu. Les autres mondes gardent leur musique composée en direct, en attendant les leurs.
+- Chaque boucle n’est téléchargée qu’à sa première écoute, puis gardée pour jouer hors ligne (même
+  après une mise à jour du jeu). Le réglage *Musique* les coupe comme avant.
+
 ## 3.6.0
 
 **Nouveautés**

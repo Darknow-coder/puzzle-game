@@ -42,7 +42,7 @@ const check = (ok, what) => {
     await p.click('.toast.update button');
     await p.waitForLoadState('load');
     await p.waitForTimeout(800);
-    const keys = await p.evaluate(() => caches.keys());
+    const keys = (await p.evaluate(() => caches.keys())).filter((k) => k.startsWith('lumignons-')); // the music cache is kept on purpose
     check(!(await p.evaluate(() => !!document.querySelector('.toast.update'))) && keys.join() === 'lumignons-nextrelease', 'reloading runs the new release from its own cache');
     // A burst of ordinary toasts must not push the banner out.
     fs.writeFileSync(SW, original.replace(/const CACHE = '[^']+'/, "const CACHE = 'lumignons-third'"));

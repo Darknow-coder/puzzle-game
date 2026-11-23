@@ -14,6 +14,21 @@ const SCALES = {
   shop: { root: 65, steps: [0, 2, 4, 7, 9], prog: [[0, 4, 7], [2, 5, 9], [-3, 0, 4], [-5, -1, 2]], bpm: 88 },
 };
 
+/**
+ * Recorded ambient loops (assets/music, made with Daydream, royalty-free). A
+ * theme with a track plays it, seamlessly looped, under the Lumignons' notes;
+ * the others, or when a track cannot load, keep the generative music below.
+ */
+export const TRACKS = {
+  title: 'assets/music/title.mp3',
+  meadow: 'assets/music/meadow.mp3',
+  grove: 'assets/music/grove.mp3',
+  comets: 'assets/music/comets.mp3',
+  shop: 'assets/music/shop.mp3',
+};
+const TRACK_GAIN = 0.5;
+const LOOP_S = 120; // every loop is exactly this long; the MP3 padding after it is skipped
+
 const midi = (m) => 440 * Math.pow(2, (m - 69) / 12);
 
 class Sound {
@@ -26,6 +41,9 @@ class Sound {
     this.timer = null;
     this.nextBeat = 0;
     this.beat = 0;
+    this.buffers = new Map(); // url → decoded AudioBuffer (the last two only)
+    this.failed = new Set();
+    this.track = null; // { url, src, gain }
   }
 
   /** Must be called from a user gesture (autoplay policies). */
@@ -54,6 +72,10 @@ class Sound {
       this.musicBus.connect(this.master);
       this.sfxBus.connect(this.reverb);
       this.musicBus.connect(this.reverb);
+      // Recorded loops go straight to the output, without the reverb.
+      this.trackBus = c.createGain();
+      this.trackBus.gain.value = this.musicOn ? TRACK_GAIN : 0;
+      this.trackBus.connect(this.master);
       this.noiseBuf = this.noise(1);
     }
     if (this.ctx.state === 'suspended') this.ctx.resume();
@@ -82,6 +104,7 @@ class Sound {
   setMusic(on) {
     this.musicOn = on;
     if (this.musicBus) this.musicBus.gain.setTargetAtTime(on ? 0.22 : 0, this.ctx.currentTime, 0.2);
+    if (this.trackBus) this.trackBus.gain.setTargetAtTime(on ? TRACK_GAIN : 0, this.ctx.currentTime, 0.2);
   }
   setSound(on) {
     this.soundOn = on;
@@ -351,11 +374,67 @@ class Sound {
     this.nextBeat = this.ctx.currentTime + 0.1;
     this.beat = 0;
     this.timer = setInterval(() => this.schedule(), 120);
+    this.playTrack(TRACKS[theme] && !this.failed.has(TRACKS[theme]) ? TRACKS[theme] : null);
   }
 
   stopMusic() {
     if (this.timer) clearInterval(this.timer);
     this.timer = null;
+    this.playTrack(null);
+  }
+
+  /** True while a recorded loop stands in for the generative pads and melody. */
+  get recorded() {
+    return !!this.track?.ready;
+  }
+
+  /** Cross-fades to the loop at `url` (null: silence), fetched and decoded on demand. */
+  playTrack(url) {
+    const c = this.ctx;
+    if (!c || this.track?.url === url) return;
+    const old = this.track;
+    if (old) {
+      const t = c.currentTime;
+      old.gain.gain.cancelScheduledValues(t);
+      old.gain.gain.setTargetAtTime(0, t, 0.6);
+      if (old.src) old.src.stop(t + 3);
+    }
+    this.track = null;
+    if (!url) return;
+    const tr = { url, src: null, gain: c.createGain(), ready: false };
+    tr.gain.gain.value = 0;
+    tr.gain.connect(this.trackBus);
+    this.track = tr;
+    this.loadTrack(url)
+      .then((buf) => {
+        if (this.track !== tr) return;
+        const src = c.createBufferSource();
+        src.buffer = buf;
+        src.loop = true;
+        src.loopStart = 0;
+        src.loopEnd = Math.min(buf.duration, LOOP_S);
+        src.connect(tr.gain);
+        src.start();
+        tr.src = src;
+        tr.ready = true;
+        tr.gain.gain.setTargetAtTime(1, c.currentTime, 0.8);
+      })
+      .catch(() => {
+        // Offline before it was cached, or no decoder: the generative music plays on.
+        this.failed.add(url);
+        if (this.track === tr) this.track = null;
+      });
+  }
+
+  async loadTrack(url) {
+    if (this.buffers.has(url)) return this.buffers.get(url);
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('track ' + res.status);
+    const buf = await this.ctx.decodeAudioData(await res.arrayBuffer());
+    // A decoded loop weighs tens of megabytes: keep only the last two.
+    this.buffers.set(url, buf);
+    while (this.buffers.size > 2) this.buffers.delete(this.buffers.keys().next().value);
+    return buf;
   }
 
   schedule() {
@@ -367,7 +446,7 @@ class Sound {
       const t = this.nextBeat;
       const bar = Math.floor(this.beat / 4) % sc.prog.length;
       const chord = sc.prog[bar];
-      if (this.beat % 4 === 0) {
+      if (this.beat % 4 === 0 && !this.recorded) {
         // Pad chord.
         for (const n of chord) this.pad(midi(sc.root - 12 + n), t, spb * 4.2);
         this.pad(midi(sc.root - 24 + chord[0]), t, spb * 4.2, 0.05);
@@ -375,7 +454,7 @@ class Sound {
       // Music-box notes, sparse and gentle.
       const seed = Math.sin(this.beat * 12.9898 + sc.root) * 43758.5453;
       const r = seed - Math.floor(seed);
-      if (r < 0.55) {
+      if (r < 0.55 && !this.recorded) {
         const n = chord[Math.floor(r * 10) % 3] + (r < 0.2 ? 12 : 0);
         this.box(midi(sc.root + 12 + n), t + (r < 0.3 ? spb / 2 : 0));
       }

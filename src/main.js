@@ -29,7 +29,7 @@ import { createStory } from './ui/story.js';
 import { enigmaId, packSize, tierOf, enigmaInfo } from './enigmas.js';
 import * as Q from './quests.js';
 
-const VERSION = '3.6.0';
+const VERSION = '3.7.0';
 const $ = (sel, root = document) => root.querySelector(sel);
 const el = (tag, cls, html) => {
   const e = document.createElement(tag);
@@ -2237,6 +2237,7 @@ app.solutions = SOLUTIONS;
 app.openMap = openMap;
 app.game = game;
 app.save = SV;
+app.sound = sound;
 app.titleStep = (c, x, y) => {
   if (app.screen === 'title' && sound.ready() && Math.random() < 0.5) sound.step(c, x, y, 4, 'title');
 };
