@@ -117,7 +117,9 @@ Réponses à donner depuis la version 3.3 (classements en ligne facultatifs, via
   - *Informations personnelles → Nom* : le pseudo (un surnom) ;
   - *Informations personnelles → ID utilisateur* : l’identifiant anonyme de Firebase Authentication ;
   - *Activité dans l’application → Autres actions* : les résultats (étoiles, pièces, essais, temps)
-    et la tenue du Lumignon affiché à côté du pseudo.
+    et la tenue du Lumignon affiché à côté du pseudo ;
+  - *Activité dans l’application → Interactions avec l’application* (depuis la 3.8) : l’heure de la
+    dernière visite, pour afficher « en ligne » ou « vu il y a… » ; le joueur peut la cacher.
 - Aucune donnée de localisation, de contact, de paiement, ni identifiant publicitaire.
 - Le jeu fonctionne sans compte et sans connexion après le premier chargement.
 - URL de la politique de confidentialité : `https://<ton-domaine>/privacy.html`

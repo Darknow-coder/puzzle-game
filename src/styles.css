@@ -3733,3 +3733,25 @@ small.r-legendary {
     animation: none;
   }
 }
+
+/* Player card: online now, or when last seen. */
+.pf-seen {
+  min-height: 1.2em;
+  margin: -4px 0 4px;
+  font-size: 14px;
+  color: var(--ink-dim);
+}
+.pf-seen.on {
+  color: #7eebb0;
+  font-weight: 600;
+}
+.pf-seen.on i {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  margin-right: 6px;
+  border-radius: 50%;
+  background: #3ddc84;
+  box-shadow: 0 0 8px #3ddc84;
+  vertical-align: 1px;
+}

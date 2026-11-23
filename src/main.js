@@ -29,7 +29,7 @@ import { createStory } from './ui/story.js';
 import { enigmaId, packSize, tierOf, enigmaInfo } from './enigmas.js';
 import * as Q from './quests.js';
 
-const VERSION = '3.7.0';
+const VERSION = '3.8.0';
 const $ = (sel, root = document) => root.querySelector(sel);
 const el = (tag, cls, html) => {
   const e = document.createElement(tag);
@@ -2211,6 +2211,11 @@ function boot() {
     online.sync().catch(() => {});
   };
   setTimeout(syncSoon, 2500);
+  // "Online" on the player's card: a beat every few minutes while the game is in view.
+  const beat = () => document.visibilityState === 'visible' && online.heartbeat().catch(() => {});
+  setTimeout(beat, 4000);
+  setInterval(beat, 60 * 1000);
+  document.addEventListener('visibilitychange', beat);
   if (friendLink && app.screen !== 'hello') setTimeout(openFriendLink, 600);
   window.addEventListener('online', () => ((lastSync = 0), syncSoon()));
   document.addEventListener('visibilitychange', () => document.visibilityState === 'visible' && syncSoon());

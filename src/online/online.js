@@ -549,6 +549,58 @@ export function createOnline(deps) {
     });
   }
 
+  // ------------------------------------------------------------------ presence
+  // "Online" or "seen 3 h ago" on a player's card: the game writes the server's
+  // time every few minutes while it is open (and not when the player hides it).
+
+  const ONLINE_MS = 6 * 60 * 1000;
+  const BEAT_MS = 4 * 60 * 1000;
+  let lastBeat = 0;
+  const showsPresence = () => !st().hidePresence;
+
+  /** Tells the server "I'm here" (at most every few minutes). */
+  async function heartbeat({ force = false } = {}) {
+    if (!active() || !showsPresence()) return false;
+    if (!force && Date.now() - lastBeat < BEAT_MS - 15000) return false;
+    lastBeat = Date.now();
+    try {
+      const c = api();
+      const uid = await c.signIn();
+      await c.commit([{ set: `presence/${uid}`, data: {}, serverTime: ['seen'] }]);
+      return true;
+    } catch {
+      lastBeat = 0;
+      return false; // offline, or the profile is not on the server yet
+    }
+  }
+
+  function setShowPresence(on) {
+    st().hidePresence = !on;
+    persist();
+    onChange('presence');
+    if (on) return heartbeat({ force: true });
+    // Hidden: forget the last time seen, too.
+    return serial(async () => {
+      if (!configured || !st().uid) return;
+      try {
+        const c = api();
+        const uid = await c.signIn();
+        await c.commit([{ del: `presence/${uid}` }]);
+      } catch {
+        /* nothing on the server, or offline */
+      }
+    });
+  }
+
+  /** { online, seen } for a player (seen: ms since epoch), or null if unknown or hidden. */
+  async function presenceOf(uid) {
+    const [d] = await api().getAll([`presence/${uid}`]);
+    const seen = d?.data?.seen;
+    if (!seen) return null;
+    const now = api().now();
+    return { seen, online: now - seen < ONLINE_MS };
+  }
+
   /** Removes the profile, every result and the anonymous account from the server. */
   function deleteAll() {
     return serial(async () => {
@@ -558,7 +610,7 @@ export function createOnline(deps) {
         const uid = await c.signIn();
         const [p] = await c.getAll([`players/${uid}`]);
         if (p) {
-          const ops = [{ del: `players/${uid}` }];
+          const ops = [{ del: `presence/${uid}` }, { del: `players/${uid}` }];
           if (p.data.key) ops.push({ del: `names/${p.data.key}` });
           await c.commit(ops);
         }
@@ -728,6 +780,11 @@ export function createOnline(deps) {
     setColor,
     lookChanged,
     setOptOut,
+    heartbeat,
+    setShowPresence,
+    showsPresence,
+    presenceOf,
+    now: () => (client ? client.now() : Date.now()),
     report,
     deleteAll,
     /** Clears cached rankings (after a backup is restored…). */

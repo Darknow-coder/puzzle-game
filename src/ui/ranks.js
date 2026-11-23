@@ -378,6 +378,7 @@ export function createRanks(api) {
         </div>
         <div class="list">
           <div class="row"><span class="grow">${t('ranks.online')}<small>${t('ranks.onlineHelp')}</small></span><button class="toggle ${me.optOut ? '' : 'on'}" data-a="toggle" aria-label="${t('ranks.online')}"></button></div>
+          ${me.optOut ? '' : `<div class="row"><span class="grow">${t('ranks.presence')}<small>${t('ranks.presenceHelp')}</small></span><button class="toggle ${online.showsPresence() ? 'on' : ''}" data-a="presence" aria-label="${t('ranks.presence')}"></button></div>`}
         </div>
         ${online.configured ? '' : `<p class="pf-soon">${t('ranks.soon')}</p>`}
         ${online.pendingCount() && online.configured && me.active ? `<p class="pf-soon">${t('ranks.pendingN', online.pendingCount())}</p>` : ''}
@@ -392,6 +393,14 @@ export function createRanks(api) {
         api.onProfileChange();
         render();
       };
+      const pb = box.querySelector('[data-a=presence]');
+      if (pb) {
+        pb.onclick = () => {
+          click();
+          online.setShowPresence(!online.showsPresence());
+          render();
+        };
+      }
       box.querySelector('[data-a=delete]').onclick = () => {
         click();
         confirmBox(t('ranks.deleteConfirm'), async () => {
@@ -483,10 +492,24 @@ export function createRanks(api) {
     return wrap;
   }
 
+  /** "5 min", "3 h", "hier"… since a time in ms, by the server's clock. */
+  function seenAgo(ms) {
+    const now = online.now ? online.now() : Date.now();
+    const min = Math.max(1, Math.round((now - ms) / 60000));
+    const fr = lang() === 'fr';
+    if (min < 60) return fr ? `il y a ${min} min` : `${min} min ago`;
+    const h = Math.round(min / 60);
+    if (h < 24) return fr ? `il y a ${h} h` : `${h} h ago`;
+    const d = Math.round(h / 24);
+    if (d === 1) return fr ? 'hier' : 'yesterday';
+    if (d < 31) return fr ? `il y a ${d} jours` : `${d} days ago`;
+    return fr ? 'il y a longtemps' : 'a long time ago';
+  }
+
   function openCard(r) {
     const box = el('div', 'rk-card');
     box.innerHTML = `<button class="close-x" data-a="close" aria-label="${t('close')}">${ICONS.close}</button>
-      <div class="pf-ava-slot"></div><h2>${esc(r.name)}</h2><div class="pf-rank"><span class="rk-dots"><i></i><i></i><i></i></span></div>
+      <div class="pf-ava-slot"></div><h2>${esc(r.name)}</h2><div class="pf-seen"></div><div class="pf-rank"><span class="rk-dots"><i></i><i></i><i></i></span></div>
       <div class="actions col">
         <button class="btn btn-primary btn-small" data-a="friend"></button>
         <button class="btn btn-ghost btn-small" data-a="report">${FLAG_SVG}${t('ranks.report')}</button>
@@ -525,6 +548,16 @@ export function createRanks(api) {
         m.close();
       });
     };
+    // Online now, or when last seen (nothing for a player who hides it).
+    online
+      .presenceOf(r.uid)
+      .then((p) => {
+        const ps = box.querySelector('.pf-seen');
+        if (!ps || !p) return;
+        ps.className = 'pf-seen' + (p.online ? ' on' : '');
+        ps.innerHTML = p.online ? `<i></i>${t('ranks.onlineNow')}` : t('ranks.seen', seenAgo(p.seen));
+      })
+      .catch(() => {});
     online
       .playerCard(r.uid)
       .then((c) => {

@@ -119,6 +119,18 @@ service cloud.firestore {
       allow delete: if isMe(uid);
     }
 
+    // ------------------------------------------------------------ presence
+    // When a player was last seen with the game open: only the server's clock,
+    // only for a player with a profile, only by themselves.
+    match /presence/{uid} {
+      allow read: if true;
+      allow create, update: if isMe(uid) && notBanned()
+        && request.resource.data.keys().hasOnly(['seen'])
+        && request.resource.data.seen == request.time
+        && exists(playerPath(uid));
+      allow delete: if isMe(uid);
+    }
+
     // ------------------------------------------------------------ results
     // Same ranking key as src/online/score.js: more stars, fewer pieces, no hint,
     // fewer tries, less time.

@@ -56,6 +56,7 @@ ordinateur) → Enregistrer. La clé ne fonctionnera plus depuis d’autres site
 | `names/{pseudo plié}` | à qui appartient un pseudo (« Lune-Rêveuse » et « lune reveuse » sont le même) | son propriétaire |
 | `players/{uid}` | pseudo, Lumignon préféré et ce qu’il porte, total d’étoiles | le joueur |
 | `boards/{niveau}/entries/{uid}` | meilleur résultat : étoiles, pièces, indice, essais, temps | le joueur |
+| `presence/{uid}` | heure de la dernière visite (`seen`, heure du serveur), pour « en ligne » / « vu il y a… » | le joueur lui-même |
 | `reports/{id}` | pseudos signalés par les joueurs (illisibles par le jeu) | tout joueur |
 | `banned/{uid}` | joueurs bannis | personne (console seulement) |
 

@@ -1,5 +1,17 @@
 # Journal des versions
 
+## 3.8.0
+
+**Nouveautés**
+
+- **En ligne ou vu il y a…** : en touchant un joueur dans un classement, sa carte indique s’il est
+  **en ligne** (point vert) ou depuis quand on ne l’a pas vu (« vu il y a 3 h », « hier »…).
+- Le jeu le signale discrètement, toutes les quelques minutes pendant qu’il est ouvert. Dans *Mon
+  profil*, **Montrer quand je joue** permet de le cacher (l’heure de la dernière visite est alors
+  effacée du serveur). Supprimer ses données en ligne l’efface aussi.
+- Règles Firebase : une nouvelle collection `presence`, que seul le joueur peut écrire, avec l’heure
+  du serveur. Les règles sont à republier.
+
 ## 3.7.0
 
 **Nouveautés**

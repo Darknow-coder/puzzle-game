@@ -344,6 +344,34 @@ test('énigmes have their own rankings, without changing the total of stars', as
   await denied(c.commit([{ set: `boards/e2-21/entries/${uid}`, data: { ...ok, min: 5, par: 8, v: 1 }, create: true, serverTime: ['at'] }]), 'no such énigme');
 });
 
+test('presence: "online" or last seen, written only by the player, hidden on request', async () => {
+  const A = service();
+  // No profile on the server yet: nothing to show.
+  assert.equal(await A.online.heartbeat({ force: true }), false);
+  await A.online.choose('Veilleur');
+  await A.online.sync();
+  assert.equal(await A.online.heartbeat({ force: true }), true);
+  const B = service();
+  await B.online.choose('Curieux');
+  const p = await B.online.presenceOf(A.online.me().uid);
+  assert.ok(p && p.online, 'seen just now: online');
+  // Nobody else can write it, nor set a time of their own.
+  const uidA = A.online.me().uid;
+  const other = await rawPlayer('Farceur');
+  await denied(other.c.commit([{ set: `presence/${uidA}`, data: {}, serverTime: ['seen'] }]), 'foreign presence');
+  await denied(other.c.commit([{ set: `presence/${other.uid}`, data: { seen: new Date(Date.now() + 86400000) } }]), 'forged time');
+  await denied(other.c.commit([{ set: `presence/${other.uid}`, data: { note: 'x' }, serverTime: ['seen'] }]), 'extra field');
+  // Hidden: the last time seen is gone, and no new beat is sent.
+  await A.online.setShowPresence(false);
+  assert.equal(await B.online.presenceOf(uidA), null);
+  assert.equal(await A.online.heartbeat({ force: true }), false);
+  // Deleting everything removes it too.
+  await A.online.setShowPresence(true);
+  assert.ok(await B.online.presenceOf(uidA));
+  await A.online.deleteAll();
+  assert.equal(await B.online.presenceOf(uidA), null);
+});
+
 test('a pseudo taken meanwhile is reported to the player', async () => {
   const A = service();
   // Chosen offline (as far as the server is concerned): someone takes it first.
