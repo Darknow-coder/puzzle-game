@@ -67,10 +67,10 @@ const STEPS = [
   },
   {
     sel: ['[data-act=achievements]', '[data-act=notebook]'],
-    title: { fr: 'Succès et carnet', en: 'Achievements and notebook' },
+    title: { fr: 'Quêtes et carnet', en: 'Quests and notebook' },
     text: {
-      fr: 'Les succès rapportent des éclats. Le carnet explique chaque élément rencontré sur les îles.',
-      en: 'Achievements pay glimmers. The notebook explains every element met on the islands.',
+      fr: 'Chaque semaine, trois quêtes rapportent des éclats, et toutes réussies, un coffre offert ! Tes succès y sont aussi. Le carnet explique chaque élément rencontré sur les îles.',
+      en: 'Every week, three quests pay glimmers, and all three together a free chest! Your achievements are there too. The notebook explains every element met on the islands.',
     },
   },
   {

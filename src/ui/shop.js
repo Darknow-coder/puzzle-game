@@ -550,9 +550,9 @@ export function createShop(api) {
 
   // ------------------------------------------------------------ chest ceremony
 
-  function openChest() {
+  function openChest(free = false) {
     sound.unlock();
-    const r = W.openChest();
+    const r = W.openChest(Math.random, { free });
     if (!r.ok) {
       sound.sfx('invalid');
       if (r.why === 'coins') {
@@ -561,8 +561,10 @@ export function createShop(api) {
       }
       return;
     }
-    coinFlight(8);
-    setPurse(W.wallet().coins);
+    if (!free) {
+      coinFlight(8);
+      setPurse(W.wallet().coins);
+    }
     const it = r.item;
     const [hex, prefix] = RARITY_COLORS[it.rarity];
     const ov = el('div', 'chest-overlay');
@@ -802,5 +804,13 @@ export function createShop(api) {
     }
   }
 
-  return { open, pill, quickBuyHint, welcome, coins, stageTap, attention, say, refresh: () => root()?.firstChild && build() };
+  /** The chest of the week (weekly quests): the shop opens and the chest is free. False when nothing is left to win. */
+  function freeChest() {
+    if (!W.chestState().left) return false;
+    open('featured');
+    setTimeout(() => openChest(true), 450);
+    return true;
+  }
+
+  return { open, pill, quickBuyHint, welcome, coins, stageTap, attention, say, freeChest, refresh: () => root()?.firstChild && build() };
 }

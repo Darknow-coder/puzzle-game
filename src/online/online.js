@@ -575,8 +575,116 @@ export function createOnline(deps) {
     });
   }
 
+  // ------------------------------------------------------------------ friends
+  // A friend list kept on this device (and in backups): following someone needs
+  // nothing from them, since pseudos and results are public anyway.
+
+  const MAX_FRIENDS = 100;
+  const friendList = () => (save.data.friends ||= []);
+
+  /** A player by pseudo (any spelling): { uid, name, … } or null. */
+  async function findPlayer(name) {
+    const c = api();
+    const n = await c.get(`names/${nameKey(name)}`);
+    if (!n) return null;
+    const [p] = await c.getAll([`players/${n.data.uid}`]);
+    if (!p) return null;
+    players.set(n.data.uid, { at: Date.now(), p: p.data });
+    return { uid: n.data.uid, ...whoFields(p.data) };
+  }
+
+  /** 'added' | 'already' | 'self' | 'full' */
+  function addFriend(uid, name) {
+    const list = friendList();
+    if (uid === st().uid) return 'self';
+    const f = list.find((x) => x.uid === uid);
+    if (f) {
+      f.name = name || f.name;
+      persist();
+      return 'already';
+    }
+    if (list.length >= MAX_FRIENDS) return 'full';
+    list.push({ uid, name, at: Date.now() });
+    persist();
+    onChange('friends');
+    return 'added';
+  }
+
+  function removeFriend(uid) {
+    const list = friendList();
+    const i = list.findIndex((x) => x.uid === uid);
+    if (i >= 0) list.splice(i, 1);
+    persist();
+    onChange('friends');
+  }
+
+  const isFriend = (uid) => friendList().some((x) => x.uid === uid);
+
+  /** A board among friends (and me): rows ranked like the full board. */
+  async function friendsBoard(bid) {
+    const c = api();
+    const myUid = st().uid;
+    const uids = [...new Set([...friendList().map((f) => f.uid), ...(myUid ? [myUid] : [])])];
+    const docs = uids.length ? await c.getAll(uids.map((u) => `boards/${bid}/entries/${u}`)) : [];
+    const profiles = await profilesOf(uids);
+    const entries = uids.map((u, i) => ({ u, d: docs[i] })).filter((x) => x.d && profiles.get(x.u));
+    entries.sort((a, b) => a.d.data.key - b.d.data.key);
+    let rank = 0;
+    let lastKey = null;
+    const rows = entries.map(({ u, d }, i) => {
+      if (d.data.key !== lastKey) {
+        rank = i + 1;
+        lastKey = d.data.key;
+      }
+      const p = profiles.get(u);
+      // Names follow the friend's current pseudo.
+      const f = friendList().find((x) => x.uid === u);
+      if (f && f.name !== p.name) f.name = p.name;
+      return { rank, uid: u, me: u === myUid, ...whoFields(p), stars: d.data.stars, pieces: d.data.pieces, helped: !!d.data.helped, tries: d.data.tries, ms: d.data.ms, key: d.data.key };
+    });
+    const rec = boards()[bid];
+    const mineRow = rows.find((r) => r.me);
+    return { rows, me: mineRow ? { rank: mineRow.rank } : null, total: rows.length, mine: rec?.best || null, waiting: !!(rec?.best && rec.sent !== rec.best.key), friends: true };
+  }
+
+  /** Friends (and me) by total of stars. */
+  async function friendsGlobal() {
+    const myUid = st().uid;
+    const uids = [...new Set([...friendList().map((f) => f.uid), ...(myUid ? [myUid] : [])])];
+    const profiles = await profilesOf(uids);
+    const list = uids.filter((u) => profiles.get(u)).map((u) => ({ uid: u, me: u === myUid, ...whoFields(profiles.get(u)), stars: profiles.get(u).stars | 0 }));
+    list.sort((a, b) => b.stars - a.stars);
+    let rank = 0;
+    let last = null;
+    list.forEach((r, i) => {
+      if (r.stars !== last) {
+        rank = i + 1;
+        last = r.stars;
+      }
+      r.rank = rank;
+    });
+    const mineRow = list.find((r) => r.me);
+    return { rows: list, me: mineRow ? { rank: mineRow.rank, stars: mineRow.stars } : null, total: list.length, friends: true };
+  }
+
+  /** One player's result on a board (for a duel), or null. */
+  async function entryOf(uid, bid) {
+    const c = api();
+    const [e] = await c.getAll([`boards/${bid}/entries/${uid}`]);
+    return e ? e.data : null;
+  }
+
   return {
     configured,
+    friends: () => friendList().slice(),
+    findPlayer,
+    addFriend,
+    removeFriend,
+    isFriend,
+    friendsBoard,
+    friendsGlobal,
+    entryOf,
+    profile: async (uid) => (await profilesOf([uid])).get(uid),
     get status() {
       return status;
     },

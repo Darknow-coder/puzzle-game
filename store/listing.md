@@ -37,6 +37,9 @@ regarde ton plan se dérouler. Chaque pas joue une note : ta solution devient un
 sensible ; les pseudos et résultats des autres joueurs sont visibles dans les classements, sans
 messagerie ni échange entre joueurs).
 
+**Nouveautés 3.4** : des quêtes chaque semaine (éclats et coffre offert), des amis à ajouter par
+pseudo ou par lien, des classements entre amis et des défis à envoyer depuis l’écran de victoire.
+
 **Nouveautés 3.3** : les classements ! Un pseudo à choisir dès le premier lancement (avec ton Lumignon
 préféré), un classement par niveau, un pour le défi du jour et un classement général, ta place sur
 l’écran de victoire, et les Lumignons habillés des autres joueurs.

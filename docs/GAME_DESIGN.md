@@ -230,6 +230,19 @@ accueille, commente ce qu’on essaie, félicite les achats, encourage quand la 
 - **Serveur** : Firebase (offre gratuite Spark) en REST, sans SDK. Les règles de sécurité vérifient
   chaque écriture ; voir [`FIREBASE.md`](FIREBASE.md).
 
+## 7 septies. Version 3.4 : quêtes et amis
+
+- **Quêtes de la semaine** : trois objectifs du lundi au dimanche, tirés d’une réserve par le numéro de la
+  semaine (les mêmes pour tous ceux qui peuvent les faire : pas de quête du défi du jour avant le niveau
+  1-5, pas de quête « ami » sans ami). Elles poussent à varier : premier coup, sans indice, étoiles,
+  lucioles, défi du jour, atelier. Un niveau ne compte qu’une fois par quête : rejouer ne « farme » pas.
+  60 ✦ chacune, et un coffre offert pour les trois (200 ✦ si toute la boutique est déjà à soi).
+- **Amis** : une liste gardée sur l’appareil (et dans le code de sauvegarde) : suivre quelqu’un ne lui
+  demande rien, puisque pseudos et résultats sont publics. Classements entre amis par lecture directe
+  des résultats de chacun. Les **défis** passent par un lien (`#defi=…`) : celui qui le reçoit voit le
+  résultat à battre et joue le niveau ; il devient ami de l’autre. La réussite « devant un ami » nourrit
+  une quête.
+
 ## 8. Conception et vérification des niveaux
 
 La campagne compte **77 niveaux** (7 mondes × 10 + 7 étoiles filantes). La liste complète, avec

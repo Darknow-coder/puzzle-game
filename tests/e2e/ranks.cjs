@@ -35,11 +35,10 @@ async function adminList(collection) {
   const errors = [];
   async function player({ firebase = true, save = null } = {}) {
     const ctx = await b.newContext({ ...devices['Pixel 7'], locale: 'fr-FR' });
-    if (firebase) {
-      await ctx.addInitScript(() => {
-        window.__LUMI_FIREBASE__ = { apiKey: 'demo-key', projectId: 'demo-lumignons', emulator: { auth: 'http://127.0.0.1:9099', firestore: 'http://127.0.0.1:8085' } };
-      });
-    }
+    // Always set: the emulators, or no project at all (never the real one).
+    await ctx.addInitScript((fb) => {
+      window.__LUMI_FIREBASE__ = fb ? { apiKey: 'demo-key', projectId: 'demo-lumignons', emulator: { auth: 'http://127.0.0.1:9099', firestore: 'http://127.0.0.1:8085' } } : { apiKey: '', projectId: '' };
+    }, firebase);
     if (save) {
       await ctx.addInitScript((s) => {
         if (!localStorage.getItem('lumignons.save.v1')) localStorage.setItem('lumignons.save.v1', s);
@@ -225,6 +224,58 @@ async function adminList(collection) {
     await D.p.waitForFunction(() => window.lumignons.online.pendingCount() === 0 && window.lumignons.online.status === 'idle', null, { timeout: 15000 });
     const g = await D.p.evaluate(async () => (await window.lumignons.online.globalBoard({ force: true })).rows.map((r) => `${r.name}:${r.stars}`));
     check(g.includes('Ancienne:5'), `past results are sent once (${g})`);
+
+    // --- 10. Friends: add by pseudo, rankings among friends, a duel link.
+    const F = await player({ save: { v: 1, levels: {}, online: { asked: true }, tips: { tour: 1 }, settings: {} } });
+    await F.p.goto(BASE);
+    await F.p.waitForSelector('#screen-title.active');
+    await F.p.evaluate(() => window.lumignons.online.choose('Plume Agile'));
+    await F.p.waitForFunction(() => window.lumignons.online.status === 'idle' && window.lumignons.online.me().uid, null, { timeout: 8000 });
+    await F.p.click('#screen-title [data-act=ranks]');
+    await F.p.click('.rk-tabs [data-tab=friends]');
+    await F.p.waitForSelector('.fr-input');
+    check((await F.p.textContent('.rk-friends')).includes('Pas encore d’amis'), 'the friends tab explains how to add friends');
+    await F.p.fill('.fr-input', 'personne qui existe pas');
+    await F.p.click('.fr-add button');
+    await F.p.waitForFunction(() => document.querySelector('.fr-msg').textContent.includes('Personne'), null, { timeout: 8000 });
+    check(true, 'an unknown pseudo is said so');
+    await F.p.fill('.fr-input', 'pip le malin');
+    await F.p.click('.fr-add button');
+    await F.p.waitForSelector('.fr-list .fr-row', { timeout: 8000 });
+    check((await F.p.textContent('.fr-list')).includes('Pip le Malin'), 'a friend is added by pseudo, whatever the spelling');
+    await closeModals(F.p);
+    // F solves 1-1 slower than Pip le Malin: second among friends.
+    await win(F.p, '1-1', { wait: 3000 });
+    line = await rankText(F.p);
+    await F.p.waitForFunction(() => /Amis/.test(document.querySelector('.rank-line').textContent), null, { timeout: 8000 }).catch(() => {});
+    line = (await F.p.textContent('.rank-line')).replace(/\s+/g, ' ');
+    check(/Amis : 2e sur 2/.test(line), `the victory card shows the place among friends (${line})`);
+    check(!!(await F.p.$('.duel-row')), 'and offers to challenge a friend');
+    await F.p.click('.rank-line .rk-see');
+    await F.p.waitForSelector('.rk-scope [data-scope=friends]');
+    await F.p.click('.rk-scope [data-scope=friends]');
+    names = await boardNames(F.p);
+    check(names.join('|') === 'Pip le Malin|Plume Agile', `the level's ranking among friends (${names})`);
+    await F.p.click('.rk-tabs [data-tab=global]');
+    await F.p.waitForSelector('.rk-body .rk-board .rk-total');
+    check((await F.p.$$('.rk-body .rk-board .rk-row')).length === 2, 'and the overall ranking among friends');
+    await closeModals(F.p);
+    // A duel link opens the level, with the challenger's result, and makes them friends.
+    const fuid = await F.p.evaluate(() => window.lumignons.online.me().uid);
+    const G = await player({ save: { v: 1, levels: {}, online: { name: 'Grillon Farceur', asked: true }, tips: { tour: 1 }, settings: {} } });
+    await G.p.goto(BASE + '#defi=' + fuid + '.1-1');
+    await G.p.waitForSelector('.duel [data-a=go]', { timeout: 10000 });
+    check((await G.p.textContent('.duel')).includes('Plume Agile te défie') && (await G.p.textContent('.duel')).includes('1 essai'), 'a duel link shows who challenges, and their result');
+    check(await G.p.evaluate((u) => window.lumignons.online.isFriend(u), fuid), 'the challenger becomes a friend');
+    await G.p.click('.duel [data-a=go]');
+    await G.p.waitForFunction(() => window.lumignons.screen === 'game' && window.lumignons.game.L.id === '1-1', null, { timeout: 5000 });
+    check(true, 'and "Take the challenge" opens the level');
+    // An invite link adds a friend after asking.
+    const H = await player({ save: { v: 1, levels: {}, online: { name: 'Hibou Sage', asked: true }, tips: { tour: 1 }, settings: {} } });
+    await H.p.goto(BASE + '#ami=' + fuid);
+    await H.p.waitForSelector('.rk-card [data-a=yes]', { timeout: 10000 });
+    await H.p.click('.rk-card [data-a=yes]');
+    check(await H.p.evaluate((u) => window.lumignons.online.isFriend(u), fuid), 'an invite link adds a friend');
 
     // --- 9. No Firebase project: everything stays local, nothing breaks.
     const E = await player({ firebase: false });

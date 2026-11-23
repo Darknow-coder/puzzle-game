@@ -12,6 +12,8 @@ const DICE_SVG =
   '<svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="4"/><g fill="currentColor" stroke="none"><circle cx="9" cy="9" r="1.4"/><circle cx="15" cy="15" r="1.4"/><circle cx="15" cy="9" r="1.4"/><circle cx="9" cy="15" r="1.4"/></g></svg>';
 const BULB_SVG = '<svg viewBox="0 0 24 24" class="rk-bulb"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-4 10.5c.8.8 1 1.5 1 2.5h6c0-1 .2-1.7 1-2.5A6 6 0 0 0 12 3Z"/></svg>';
 const FLAG_SVG = '<svg viewBox="0 0 24 24"><path d="M5 21V4M5 4h11l-2 4 2 4H5"/></svg>';
+export const FRIEND_SVG = '<svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.6-3.6 3.2-5.5 6.5-5.5s5.9 1.9 6.5 5.5M18 8v6M15 11h6"/></svg>';
+const SWORDS_SVG = '<svg viewBox="0 0 24 24"><path d="M4 4l9 9M4 4h4M4 4v4M20 4l-9 9M20 4h-4M20 4v4M8 15l-3 3 1 1 3-3M16 15l3 3-1 1-3-3"/></svg>';
 
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 
@@ -469,14 +471,14 @@ export function createRanks(api) {
     });
     wrap.appendChild(list);
     if (!data.rows.length) {
-      wrap.appendChild(messageView(global ? t('ranks.emptyGlobal') : t('ranks.empty')));
+      wrap.appendChild(messageView(data.friends ? t('ranks.friendsEmptyBoard') : global ? t('ranks.emptyGlobal') : t('ranks.empty')));
     }
     const inTop = data.rows.some((r) => r.me);
     if (!inTop && online.me().name && !online.me().optOut) {
       if (global && data.me) wrap.appendChild(rowEl(myRow(data.me.rank, { stars: data.me.stars ?? 0 }, false), { global, pinned: true }));
       else if (!global && data.mine) wrap.appendChild(rowEl(myRow(data.me?.rank ?? null, data.mine, data.waiting), { pinned: true }));
     }
-    const foot = el('div', 'rk-foot', `<b>${t('ranks.players', data.total)}</b> · ${global ? t('ranks.globalCriteria') : t('ranks.criteria')}`);
+    const foot = el('div', 'rk-foot', data.friends ? `<b>${t('ranks.tabFriends')}</b> · ${global ? t('ranks.globalCriteria') : t('ranks.criteria')}` : `<b>${t('ranks.players', data.total)}</b> · ${global ? t('ranks.globalCriteria') : t('ranks.criteria')}`);
     wrap.appendChild(foot);
     return wrap;
   }
@@ -485,10 +487,32 @@ export function createRanks(api) {
     const box = el('div', 'rk-card');
     box.innerHTML = `<button class="close-x" data-a="close" aria-label="${t('close')}">${ICONS.close}</button>
       <div class="pf-ava-slot"></div><h2>${esc(r.name)}</h2><div class="pf-rank"><span class="rk-dots"><i></i><i></i><i></i></span></div>
-      <div class="actions col"><button class="btn btn-ghost btn-small" data-a="report">${FLAG_SVG}${t('ranks.report')}</button></div>`;
+      <div class="actions col">
+        <button class="btn btn-primary btn-small" data-a="friend"></button>
+        <button class="btn btn-ghost btn-small" data-a="report">${FLAG_SVG}${t('ranks.report')}</button>
+      </div>`;
     box.querySelector('.pf-ava-slot').appendChild(avatar(r, 96, 'pf-ava'));
     const m = openModal(box);
     box.querySelector('[data-a=close]').onclick = () => (click(), m.close());
+    const fb = box.querySelector('[data-a=friend]');
+    const paintFriend = () => {
+      const is = online.isFriend(r.uid);
+      fb.className = 'btn btn-small ' + (is ? 'btn-ghost' : 'btn-primary');
+      fb.innerHTML = is ? `${ICONS.close}${t('ranks.remove')}` : `${FRIEND_SVG}${t('ranks.addFriend')}`;
+    };
+    paintFriend();
+    fb.onclick = () => {
+      click();
+      if (online.isFriend(r.uid)) {
+        online.removeFriend(r.uid);
+        toast(t('ranks.removed', esc(r.name)), 2000);
+      } else {
+        online.addFriend(r.uid, r.name);
+        sound.sfx('unlock');
+        toast(t('ranks.added', esc(r.name)), 2000);
+      }
+      paintFriend();
+    };
     box.querySelector('[data-a=report]').onclick = () => {
       click();
       confirmBox(t('ranks.reportConfirm', esc(r.name)), async () => {
@@ -520,12 +544,13 @@ export function createRanks(api) {
     const box = el('div', 'ranks');
     let tab = opts.tab || (opts.board && isDailyBoard(opts.board) ? 'daily' : 'levels');
     let level = opts.board && !isDailyBoard(opts.board) ? opts.board : api.lastLevel();
+    let scope = opts.scope || 'all';
     let token = 0;
     box.innerHTML = `
       <button class="close-x" data-a="close" aria-label="${t('close')}">${ICONS.close}</button>
       <h2>${PODIUM_SVG}${t('ranks.title')}</h2>
       <div class="rk-tabs" role="tablist">
-        ${['levels', 'daily', 'global'].map((k) => `<button role="tab" data-tab="${k}">${t('ranks.tab.' + k)}</button>`).join('')}
+        ${['levels', 'daily', 'global', 'friends'].map((k) => `<button role="tab" data-tab="${k}">${t('ranks.tab.' + k)}</button>`).join('')}
       </div>
       <div class="rk-pick"></div>
       <div class="rk-body"></div>`;
@@ -552,7 +577,8 @@ export function createRanks(api) {
       }
       body.innerHTML = skeleton();
       try {
-        const data = bid === 'global' ? await online.globalBoard({ force }) : await online.board(bid, { force });
+        const friends = scope === 'friends';
+        const data = friends ? (bid === 'global' ? await online.friendsGlobal() : await online.friendsBoard(bid)) : bid === 'global' ? await online.globalBoard({ force }) : await online.board(bid, { force });
         if (mine !== token || !body.isConnected) return;
         body.innerHTML = '';
         data.rows.forEach((r) => (r.board = bid));
@@ -568,10 +594,11 @@ export function createRanks(api) {
       const worlds = api.worlds();
       const wi = Math.max(0, worlds.findIndex((w) => w.levels.some((l) => l.id === level) || w.bonus.id === level));
       const w = worlds[wi];
-      pick.innerHTML = `
+      pick.innerHTML = `${scopeSwitch()}
         <div class="rk-worlds">${worlds.map((x, i) => `<button data-w="${i}" class="${i === wi ? 'on' : ''}" style="--wc:${A.WORLD_STYLES[x.id]?.grass?.[0] || '#8fd18a'}" aria-label="${t('world')} ${i + 1}">${i + 1}</button>`).join('')}</div>
         <div class="rk-levels">${[...w.levels, w.bonus].map((lv, i) => `<button data-l="${lv.id}" class="${lv.id === level ? 'on' : ''}${api.isDone(lv.id) ? ' done' : ''}">${i < w.levels.length ? i + 1 : '★'}</button>`).join('')}</div>
         <div class="rk-sub">${api.levelTitle(level)}</div>`;
+      bindScope();
       pick.querySelectorAll('[data-w]').forEach((b) => {
         b.onclick = () => {
           click();
@@ -590,12 +617,35 @@ export function createRanks(api) {
       show(level);
     }
 
+    /** "Everyone / Friends" switch above a ranking. */
+    function scopeSwitch() {
+      if (!online.configured) return '';
+      return `<div class="rk-scope"><button data-scope="all" class="${scope === 'all' ? 'on' : ''}">${t('ranks.everyone')}</button><button data-scope="friends" class="${scope === 'friends' ? 'on' : ''}">${FRIEND_SVG}${t('ranks.friendsOnly')}</button></div>`;
+    }
+    function bindScope() {
+      pick.querySelectorAll('[data-scope]').forEach((b) => {
+        b.onclick = () => {
+          click();
+          scope = b.dataset.scope;
+          render();
+        };
+      });
+    }
+
+    function renderFriends() {
+      token++;
+      pick.innerHTML = '';
+      body.innerHTML = '';
+      body.appendChild(friendsView(() => render()));
+    }
+
     function render() {
       box.querySelectorAll('[data-tab]').forEach((b) => {
         const on = b.dataset.tab === tab;
         b.classList.toggle('on', on);
         b.setAttribute('aria-selected', on ? 'true' : 'false');
       });
+      if (tab === 'friends') return renderFriends();
       if (tab === 'levels') renderLevels();
       else if (tab === 'daily') {
         const d = api.dailyToday();
@@ -605,14 +655,194 @@ export function createRanks(api) {
           body.appendChild(messageView(t('ranks.dailyLocked'), { icon: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5 19 19M5 19l1.5-1.5M17.5 6.5 19 5"/></svg>' }));
           return;
         }
-        pick.innerHTML = `<div class="rk-sub">${d.label}</div>`;
+        pick.innerHTML = `${scopeSwitch()}<div class="rk-sub">${d.label}</div>`;
+        bindScope();
         show(d.bid);
       } else {
-        pick.innerHTML = '';
+        pick.innerHTML = scopeSwitch();
+        bindScope();
         show('global');
       }
     }
     render();
+  }
+
+  // ------------------------------------------------------------ friends
+
+  const shareLink = (hash) => {
+    const base = /^https?:$/.test(location.protocol) ? location.origin + location.pathname : 'https://darknow-coder.github.io/puzzle-game/';
+    return base + '#' + hash;
+  };
+
+  /** Shares a link (system sheet, else clipboard). */
+  async function share(text, url) {
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: 'Lumignons', text, url });
+        return;
+      }
+    } catch (e) {
+      if (e?.name === 'AbortError') return;
+    }
+    try {
+      await navigator.clipboard.writeText(`${text} ${url}`);
+      toast(t('ranks.linkCopied'), 2400);
+    } catch {
+      toast(url, 6000);
+    }
+  }
+
+  function invite() {
+    const me = online.me();
+    if (!me.uid || !me.name) return toast(t('ranks.needName'), 2400);
+    share(t('ranks.inviteText', me.name), shareLink('ami=' + me.uid));
+  }
+
+  /** The friends tab: add by pseudo, invite link, the list. */
+  function friendsView(refresh) {
+    const wrap = el('div', 'rk-friends');
+    const me = online.me();
+    if (!online.configured) {
+      wrap.appendChild(messageView(t('ranks.soon')));
+      return wrap;
+    }
+    wrap.innerHTML = `
+      <form class="fr-add">
+        <input class="fr-input" type="text" maxlength="24" autocomplete="off" autocapitalize="words" spellcheck="false" placeholder="${t('ranks.addPlaceholder')}" aria-label="${t('ranks.addPlaceholder')}">
+        <button class="btn btn-primary btn-small" type="submit">${FRIEND_SVG}${t('ranks.add')}</button>
+      </form>
+      <div class="fr-msg" aria-live="polite"></div>
+      <button class="btn btn-ghost btn-small fr-invite" type="button">${ICONS.share || ''}${t('ranks.invite')}</button>
+      <div class="rk-list fr-list"></div>`;
+    const msg = wrap.querySelector('.fr-msg');
+    const input = wrap.querySelector('.fr-input');
+    wrap.querySelector('.fr-invite').onclick = () => (click(), invite());
+    wrap.querySelector('.fr-add').onsubmit = async (e) => {
+      e.preventDefault();
+      const name = input.value.trim();
+      if (!name) return;
+      click();
+      msg.className = 'fr-msg';
+      msg.textContent = t('ranks.checking');
+      try {
+        const p = await online.findPlayer(name);
+        if (!p) {
+          msg.className = 'fr-msg bad';
+          msg.textContent = t('ranks.notFound');
+          return;
+        }
+        const r = online.addFriend(p.uid, p.name);
+        if (r === 'self') {
+          msg.className = 'fr-msg bad';
+          msg.textContent = t('ranks.itsYou');
+          return;
+        }
+        msg.className = 'fr-msg ok';
+        msg.textContent = r === 'already' ? t('ranks.already') : t('ranks.added', p.name);
+        if (r === 'added') sound.sfx('unlock');
+        input.value = '';
+        fill();
+      } catch {
+        msg.className = 'fr-msg bad';
+        msg.textContent = t('ranks.offline');
+      }
+    };
+    const list = wrap.querySelector('.fr-list');
+    async function fill() {
+      const friends = online.friends();
+      list.innerHTML = '';
+      if (!friends.length) {
+        list.appendChild(messageView(t('ranks.noFriends'), { icon: FRIEND_SVG }));
+        return;
+      }
+      let data = null;
+      try {
+        data = await online.friendsGlobal();
+      } catch {
+        data = null;
+      }
+      const byUid = new Map((data?.rows || []).map((r) => [r.uid, r]));
+      for (const f of friends) {
+        const r = byUid.get(f.uid) || { uid: f.uid, name: f.name, color: 0, stars: '–' };
+        const row = el('div', 'rk-row fr-row');
+        row.innerHTML = `<span class="rk-ava-slot"></span><span class="rk-who"><b>${esc(r.name)}</b></span><span class="rk-total">★ ${r.stars}</span><button class="fr-del" type="button" aria-label="${t('ranks.remove')}">${ICONS.close}</button>`;
+        row.querySelector('.rk-ava-slot').replaceWith(avatar(r, 40));
+        row.querySelector('.rk-who').onclick = () => (click(), openCard({ ...r, uid: f.uid }));
+        row.querySelector('.fr-del').onclick = () => {
+          click();
+          online.removeFriend(f.uid);
+          toast(t('ranks.removed', esc(r.name)), 2000);
+          fill();
+        };
+        list.appendChild(row);
+      }
+    }
+    if (!me.name) msg.textContent = t('ranks.needName');
+    fill();
+    return wrap;
+  }
+
+  /** A link opened the game: "#ami=uid" (add a friend) or "#defi=uid.board" (a duel). */
+  async function openLink(hash) {
+    if (!online.configured) return false;
+    const ami = hash.match(/ami=([A-Za-z0-9]{6,40})/);
+    const duel = hash.match(/defi=([A-Za-z0-9]{6,40})\.([\w-]{3,40})/);
+    const uid = ami?.[1] || duel?.[1];
+    if (!uid) return false;
+    let p;
+    try {
+      p = await online.profile(uid);
+    } catch {
+      toast(t('ranks.offline'), 2600);
+      return true;
+    }
+    if (!p) return true;
+    if (uid === online.me().uid) return true;
+    if (ami) {
+      const box = el('div', 'rk-card');
+      box.innerHTML = `<div class="pf-ava-slot"></div><h2>${esc(p.name)}</h2><p>${t('ranks.addFromLink', esc(p.name))}</p>
+        <div class="actions"><button class="btn btn-ghost" data-a="no">${t('no')}</button><button class="btn btn-primary" data-a="yes">${FRIEND_SVG}${t('ranks.add')}</button></div>`;
+      box.querySelector('.pf-ava-slot').appendChild(avatar({ ...p, flame: p.flame }, 96, 'pf-ava'));
+      const m = openModal(box);
+      box.querySelector('[data-a=no]').onclick = () => (click(), m.close());
+      box.querySelector('[data-a=yes]').onclick = () => {
+        click();
+        online.addFriend(uid, p.name);
+        sound.sfx('unlock');
+        toast(t('ranks.added', esc(p.name)), 2400);
+        m.close();
+      };
+      return true;
+    }
+    const bid = duel[2];
+    let e = null;
+    try {
+      e = await online.entryOf(uid, bid);
+    } catch {
+      e = null;
+    }
+    online.addFriend(uid, p.name);
+    const label = api.boardLabel(bid);
+    const box = el('div', 'rk-card duel');
+    box.innerHTML = `<div class="pf-ava-slot"></div><div class="eyebrow">${SWORDS_SVG} ${t('ranks.friendAdded')}</div><h2>${t('ranks.duelTitle', esc(p.name))}</h2>
+      <p>${t('ranks.duelText', label, e ? statLine(e) : t('ranks.duelNoResult'))}</p>
+      <div class="actions"><button class="btn btn-ghost" data-a="no">${t('back')}</button><button class="btn btn-primary" data-a="go">${t('ranks.duelGo')}</button></div>`;
+    box.querySelector('.pf-ava-slot').appendChild(avatar(p, 96, 'pf-ava'));
+    const m = openModal(box);
+    box.querySelector('[data-a=no]').onclick = () => (click(), m.close());
+    box.querySelector('[data-a=go]').onclick = () => {
+      click();
+      m.close();
+      api.playBoard(bid);
+    };
+    return true;
+  }
+
+  /** Sends a duel on a board, with my result. */
+  function challenge(bid, entry) {
+    const me = online.me();
+    if (!me.uid || !me.name) return toast(t('ranks.needName'), 2400);
+    share(t('ranks.challengeText', me.name, api.boardLabel(bid), entry ? statLine(entry).replace(/<[^>]+>/g, '').trim() : ''), shareLink(`defi=${me.uid}.${bid}`));
   }
 
   // ------------------------------------------------------ victory card
@@ -653,8 +883,22 @@ export function createRanks(api) {
           const s = await online.standing(bid);
           if (!slot.isConnected || !s) return;
           const place = `<b>${ordinal(s.rank, lang())}</b> ${t('ranks.outOf', s.total)}`;
-          set(win.improved ? `${t('ranks.newBest')} ${place}` : `${t('ranks.yourBest')} : ${place}`, s.rank === 1 ? 'gold' : s.rank <= 3 ? 'podium' : '');
+          const head = win.improved ? `${t('ranks.newBest')} ${place}` : `${t('ranks.yourBest')} : ${place}`;
+          const cls = s.rank === 1 ? 'gold' : s.rank <= 3 ? 'podium' : '';
+          set(head, cls);
           if (win.improved && s.rank <= 3) setTimeout(() => sound.sfx('fanfare', s.rank === 1 ? 3 : 2), 250);
+          duelButton(slot, bid, win.entry);
+          // Among friends: place, and who was overtaken.
+          if (online.friends().length) {
+            const f = await online.friendsBoard(bid).catch(() => null);
+            if (!slot.isConnected || !f?.me) return;
+            const mineKey = f.rows.find((x) => x.me)?.key;
+            const behind = f.rows.filter((x) => !x.me && x.key > mineKey);
+            const extra = `<small class="rk-run rk-fr">${FRIEND_SVG}${t('ranks.friendsRank', ordinal(f.me.rank, lang()), f.total)}${behind.length ? ' · ' + t('ranks.ahead', esc(behind[0].name)) : ''}</small>`;
+            set(head + extra, cls);
+            duelButton(slot, bid, win.entry);
+            if (win.improved && behind.length) api.onFriendAhead?.(bid);
+          }
         } else if (r === 'offline') set(t('ranks.waiting'), 'soft');
         else if (r === 'taken') {
           set(t('ranks.takenBanner'), 'soft');
@@ -685,5 +929,14 @@ export function createRanks(api) {
     return b;
   }
 
-  return { hello, pseudoDialog, openProfile, openRanks, victory, chip, avatar };
+  /** "Challenge a friend" under the victory card's ranking line. */
+  function duelButton(slot, bid, entry) {
+    if (slot.nextElementSibling?.classList.contains('duel-row')) return;
+    const b = el('button', 'btn btn-ghost btn-small duel-row', `${SWORDS_SVG}${t('ranks.challenge')}`);
+    b.type = 'button';
+    b.onclick = () => (click(), challenge(bid, entry));
+    slot.after(b);
+  }
+
+  return { hello, pseudoDialog, openProfile, openRanks, victory, chip, avatar, openLink, invite };
 }

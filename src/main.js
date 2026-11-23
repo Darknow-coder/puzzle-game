@@ -19,13 +19,15 @@ import { makeShareCard, shareImage } from './share.js';
 import * as Wallet from './wallet.js';
 import { winReward, dailyReward, REWARD, HINT_PRICE } from './economy.js';
 import { createShop, COIN_SVG } from './ui/shop.js';
+import { drawChest } from './ui/shop-scene.js';
 import { ShopScene } from './ui/shop-scene.js';
 import { createOnline } from './online/online.js';
 import { levelBoard, dailyBoard } from './online/score.js';
 import { createRanks, PODIUM_SVG } from './ui/ranks.js';
 import { createTour } from './ui/tour.js';
+import * as Q from './quests.js';
 
-const VERSION = '3.3.0';
+const VERSION = '3.4.0';
 const $ = (sel, root = document) => root.querySelector(sel);
 const el = (tag, cls, html) => {
   const e = document.createElement(tag);
@@ -198,7 +200,20 @@ function pushNav(name) {
 window.addEventListener('hashchange', () => {
   const shared = location.hash.match(/play=(LUMI1\.[A-Za-z0-9_-]+)/);
   if (shared) atelier.playShared(shared[1]);
+  openFriendLink();
 });
+
+/** "#ami=…" (add a friend) or "#defi=…" (a duel) in the address. */
+function openFriendLink() {
+  const h = location.hash;
+  if (!/(ami|defi)=/.test(h)) return;
+  try {
+    history.replaceState(null, '', location.pathname + location.search);
+  } catch {
+    /* ignore */
+  }
+  ranks.openLink(h);
+}
 window.addEventListener('popstate', () => {
   if (/play=LUMI1/.test(location.hash)) return; // handled by hashchange
   if (navDepth > 0) navDepth--;
@@ -256,7 +271,7 @@ function buildTitle() {
       <div class="title-row">
         <button class="tile-btn shop-tile" data-act="shop">${ICONS.bag}<span>${t('shop')}</span>${Wallet.giftState().available ? '<i class="gift-dot"></i>' : ''}</button>
         <button class="tile-btn" data-act="ranks">${ICONS.podium}<span>${t('podium')}</span></button>
-        <button class="tile-btn" data-act="achievements">${ICONS.trophy}<span>${t('achievements')}</span></button>
+        <button class="tile-btn" data-act="achievements">${ICONS.trophy}<span>${t('quests.tile')}</span>${Q.toClaim(SV.save, questCtx()) ? '<i class="gift-dot"></i>' : ''}</button>
         <button class="tile-btn" data-act="notebook">${ICONS.book}<span>${t('notebook')}</span></button>
         <button class="tile-btn" data-act="settings">${ICONS.gear}<span>${t('settings')}</span></button>
       </div>
@@ -282,7 +297,7 @@ function buildTitle() {
     atelier.openList();
   };
   root.querySelectorAll('[data-act=shop]').forEach((b) => (b.onclick = () => (click(), shop.open('featured'))));
-  root.querySelector('[data-act=achievements]').onclick = () => (click(), openAchievements());
+  root.querySelector('[data-act=achievements]').onclick = () => (click(), openQuests());
   root.querySelector('[data-act=ranks]').onclick = () => (click(), ranks.openRanks());
   const me = root.querySelector('.title-me');
   if (online.me().name || !online.me().optOut) me.appendChild(ranks.chip());
@@ -442,6 +457,7 @@ function updateMapSky() {
 
 let current = null;
 let tipTimer = 0;
+let sessionTries = 0; // Go presses since the level was opened (for "first try" quests)
 
 function levelLabel(f) {
   if (f.custom) return '✎';
@@ -465,6 +481,7 @@ function startDaily() {
   const wi = Math.max(0, THEMES.indexOf(d.theme));
   const world = WORLDS[wi] || { id: d.theme };
   current = { daily: d, def: d.def, world, wi, li: 0, bonus: false };
+  sessionTries = 0;
   online.track(dailyBoard(d));
   closeAllModals();
   hideFail();
@@ -530,6 +547,7 @@ function startLevel(id) {
   const f = SV.findLevel(id);
   if (!f) return;
   current = f;
+  sessionTries = 0;
   SV.save.data.last = id;
   online.track(id, SV.levelRecord(id));
   SV.persist();
@@ -722,7 +740,23 @@ app.onRunStart = () => {
   if (!current.custom && !current.daily) SV.recordTry(current.def.id);
   const bid = boardOf(current);
   if (bid) online.addTry(bid);
+  sessionTries++;
 };
+
+/** What the weekly quests need to know about the player. */
+function questCtx() {
+  return { starsLeft: SV.summary().totalLevels * 3 - SV.totalStars(), dailyOpen: SV.isDone('1-5'), friends: online.friends().length };
+}
+
+/** A quest event; finished quests are returned (to show them on the victory card). */
+function questEvent(ev) {
+  const done = Q.recordQuest(SV.save, questCtx(), ev);
+  SV.persist();
+  return done.map((q) => ({ id: q.id, text: q.text[getLang()] ? q.text[getLang()](q.goal) : q.text.fr(q.goal) }));
+}
+app.onQuest = questEvent;
+app.quests = Q;
+app.questCtx = () => questCtx();
 
 app.onFail = (cause, name, replayed = false) => {
   if (!replayed) {
@@ -761,6 +795,10 @@ app.onWin = (res) => {
     const unlocks = SV.collectUnlocks();
     const reward = payReward(first ? dailyReward(SV.save.data.daily.streak) : { total: 0, lines: [] }, unlocks, 'daily', current.daily.key);
     const ranked = online.win(boardOf(current), { stars, pieces: res.pieces });
+    unlocks.quests = [
+      ...questEvent({ type: 'daily', day: current.daily.key }),
+      ...questEvent({ type: 'win', board: boardOf(current), stars, newStars: 0, hint: res.hintsUsed > 0, firstTry: sessionTries === 1, fireflies: res.fireflies }),
+    ];
     SV.persistNow();
     showVictory(stars, res, unlocks, 0, reward, ranked);
     app.hudChanged();
@@ -785,6 +823,7 @@ app.onWin = (res) => {
   const worldDone = !wasComplete && SV.worldComplete(current.world);
   const reward = payReward(winReward({ firstClear, bonus: !!current.bonus, prevStars, stars, worldDone }), unlocks, 'win', id);
   const ranked = levelBoard(id) ? online.win(id, { stars, pieces: res.pieces }) : null;
+  unlocks.quests = questEvent({ type: 'win', board: id, stars, newStars: gained, hint: res.hintsUsed > 0, firstTry: sessionTries === 1, fireflies: res.fireflies });
   SV.persistNow();
   showVictory(stars, res, unlocks, gained, reward, ranked);
   app.hudChanged();
@@ -1222,7 +1261,7 @@ function showVictory(stars, res, unlocks, gained, reward = null, ranked = null) 
     </div>`;
   const ul = box.querySelector('.unlock-list');
   let shown = 0;
-  const totalUnlocks = unlocks.hats.length + unlocks.worlds.length + unlocks.achievements.length;
+  const totalUnlocks = unlocks.hats.length + unlocks.worlds.length + unlocks.achievements.length + (unlocks.quests?.length || 0);
   const addUnlock = (label, name, drawFn) => {
     if (shown >= 3) {
       if (shown === 3) {
@@ -1256,6 +1295,13 @@ function showVictory(stars, res, unlocks, gained, reward = null, ranked = null) 
     addUnlock(t('newHat'), tr(h.name), (g) => {
       g.scale(2, 2);
       A.drawLumi(g, 18, 33, 30, { color: 0, dir: 2, t: 1, hat: h.id, noShadow: true });
+    });
+  }
+  for (const q of unlocks.quests || []) {
+    addUnlock(t('quests.completed'), q.text, (g) => {
+      g.scale(2, 2);
+      g.fillStyle = '#7eebb0';
+      A.star(g, 18, 18, 14, 5, 0.45);
     });
   }
   for (const a of unlocks.achievements) {
@@ -1309,7 +1355,7 @@ function showVictory(stars, res, unlocks, gained, reward = null, ranked = null) 
       } else s.classList.add('off');
     }, 350 + i * 330);
   });
-  if (unlocks.hats.length || unlocks.worlds.length || unlocks.achievements.length) setTimeout(() => sound.sfx('unlock'), 1400);
+  if (totalUnlocks) setTimeout(() => sound.sfx('unlock'), 1400);
   box.querySelector('[data-a=replay]').onclick = () => {
     click();
     m.close();
@@ -1596,18 +1642,110 @@ function openCredits() {
   box.querySelector('[data-a=ok]').onclick = () => (click(), m.close());
 }
 
-function openAchievements() {
-  const box = el('div');
+/** Achievements, as rows (inside the quests window). */
+function achievementsHtml() {
   const sum = SV.summary();
   const got = SV.save.data.achievements;
-  box.innerHTML = `<button class="close-x" data-a="close" aria-label="${t('close')}">${ICONS.close}</button><h2>${t('achievements')}</h2><p>${Object.keys(got).length} / ${ACHIEVEMENTS.length}</p>
+  return `<p>${Object.keys(got).length} / ${ACHIEVEMENTS.length}</p>
     <div class="list">${ACHIEVEMENTS.map((a) => {
       const pr = a.progress ? a.progress(sum) : null;
       const has = !!got[a.id];
       return `<div class="row ach ${has ? 'got' : ''}"><span class="ach-ico">${a.icon}</span><span class="grow">${tr(a.name)}<small>${tr(a.desc)}</small>${pr && !has ? `<div class="bar"><i style="width:${Math.min(100, (pr[0] / pr[1]) * 100)}%"></i></div>` : ''}</span><b class="ach-pay">${has ? '✓' : `+${REWARD.achievement}`} ✦</b></div>`;
     }).join('')}</div>`;
+}
+
+/** Weekly quests (and achievements): progress, rewards, the chest of the week. */
+function openQuests(tab = 'week') {
+  const box = el('div', 'quests');
   const m = openModal(box);
-  box.querySelector('[data-a=close]').onclick = () => (click(), m.close());
+  const render = () => {
+    const ctx = questCtx();
+    const list = Q.questList(SV.save, ctx, getLang());
+    const st = Q.weekState(SV.save, ctx);
+    const left = Q.untilNextWeek();
+    const days = Math.floor(left / 86400e3);
+    const hours = Math.max(1, Math.ceil((left % 86400e3) / 3600e3));
+    const ready = Q.bonusReady(SV.save, ctx);
+    box.innerHTML = `
+      <button class="close-x" data-a="close" aria-label="${t('close')}">${ICONS.close}</button>
+      <h2>${t('quests.tile')}</h2>
+      <div class="rk-tabs q-tabs" role="tablist">
+        <button role="tab" data-tab="week" class="${tab === 'week' ? 'on' : ''}">${t('quests.tab.week')}</button>
+        <button role="tab" data-tab="achievements" class="${tab === 'achievements' ? 'on' : ''}">${t('quests.tab.achievements')}</button>
+      </div>
+      ${
+        tab === 'week'
+          ? `<p class="q-intro">${t('quests.intro', Q.QUEST_REWARD)}</p>
+        <div class="q-list">${list
+          .map(
+            (q) => `<div class="q-card ${q.done ? 'done' : ''} ${q.claimed ? 'claimed' : ''}">
+              <div class="q-head"><span class="q-mark">${q.claimed ? '✓' : q.done ? '★' : ''}</span><b>${q.text}</b></div>
+              <div class="q-bar"><i style="width:${(q.have / q.goal) * 100}%"></i><span>${q.have} / ${q.goal}</span></div>
+              ${q.claimed ? `<div class="q-state">${t('quests.done')}</div>` : q.done ? `<button class="btn btn-primary btn-small q-claim" data-id="${q.id}">${t('quests.claim', Q.QUEST_REWARD)}</button>` : ''}
+            </div>`,
+          )
+          .join('')}</div>
+        <div class="q-chest ${ready ? 'ready' : ''} ${st.bonus ? 'taken' : ''}">
+          <canvas class="q-chest-cv"></canvas>
+          <div class="grow"><b>${t('quests.chest')}</b><small>${st.bonus ? t('quests.chestTaken') : ready ? t('quests.chestText') : t('quests.chestLocked')}</small></div>
+          ${ready ? `<button class="btn btn-primary btn-small q-open">${t('quests.chestOpen')}</button>` : ''}
+        </div>
+        <p class="q-renew">${t('quests.renew', days, hours)}</p>`
+          : achievementsHtml()
+      }`;
+    box.querySelector('[data-a=close]').onclick = () => (click(), m.close());
+    box.querySelectorAll('[data-tab]').forEach((b) => (b.onclick = () => (click(), (tab = b.dataset.tab), render())));
+    const cv = box.querySelector('.q-chest-cv');
+    if (cv) {
+      cv.width = 128;
+      cv.height = 112;
+      A.paint(cv, (g) => {
+        g.scale(2, 2);
+        drawChest(g, 32, 40, 44, 0, 'rgba(255,220,120,', 0);
+      });
+    }
+    box.querySelectorAll('.q-claim').forEach((b) => {
+      b.onclick = () => {
+        sound.unlock();
+        const n = Q.claimQuest(SV.save, questCtx(), b.dataset.id);
+        if (!n) return;
+        Wallet.earn(n, 'quest', b.dataset.id);
+        SV.persist();
+        sound.sfx('coin');
+        sound.sfx('buy');
+        toast(t('quests.claimed', n), 1600);
+        refreshCoins();
+        render();
+        refreshTitleDots();
+      };
+    });
+    const ob = box.querySelector('.q-open');
+    if (ob) {
+      ob.onclick = () => {
+        click();
+        if (!Q.takeBonus(SV.save, questCtx())) return;
+        SV.persist();
+        m.close();
+        if (!shop.freeChest()) {
+          Wallet.earn(Q.WEEK_BONUS_COINS, 'weekChest');
+          toast(t('quests.bonusCoins', Q.WEEK_BONUS_COINS), 2800);
+          refreshCoins();
+        }
+        refreshTitleDots();
+      };
+    }
+  };
+  render();
+}
+
+/** The red dot on the quests tile. */
+function refreshTitleDots() {
+  const tile = $('#screen-title [data-act=achievements]');
+  if (!tile) return;
+  const want = Q.toClaim(SV.save, questCtx()) > 0;
+  const dot = tile.querySelector('.gift-dot');
+  if (want && !dot) tile.insertAdjacentHTML('beforeend', '<i class="gift-dot"></i>');
+  if (!want && dot) dot.remove();
 }
 
 function openNotebook() {
@@ -1793,6 +1931,10 @@ const atelier = createAtelier({
   scene: editorScene,
   startCustom,
   layoutEditor,
+  onVerified: (entry) => {
+    const done = questEvent({ type: 'atelier', id: entry.id });
+    for (const q of done) toast(`${t('quests.completed')} · ${q.text}`, 3000);
+  },
   back: () => {
     if (navDepth > 0) history.back();
     else {
@@ -1883,7 +2025,24 @@ const ranks = createRanks({
     return { bid: dailyBoard(d), label: `☀ ${date}` };
   },
   onProfileChange: () => refreshMe(),
+  boardLabel: (bid) => {
+    const f = SV.findLevel(bid);
+    return f ? levelLabel(f) : t('daily');
+  },
+  playBoard: (bid) => {
+    if (SV.findLevel(bid)) startLevel(bid);
+    else if (bid === ranks_todayBoard()) startDaily();
+    else toast(t('ranks.error'), 2400);
+  },
+  onFriendAhead: (bid) => {
+    const done = questEvent({ type: 'friend', board: bid });
+    for (const q of done) toast(`${t('quests.completed')} · ${q.text}`, 3000);
+  },
 });
+function ranks_todayBoard() {
+  const d = dailyFor(WORLDS.filter((w, i) => SV.worldUnlocked(i)).map((w) => w.id));
+  return d ? dailyBoard(d) : null;
+}
 
 const tour = createTour({
   tr,
@@ -1939,7 +2098,8 @@ function boot() {
   online.migrate(SV.save.data.levels, SOLUTIONS);
   const welcome = Wallet.takeWelcome();
   const showWelcome = (ms) => welcome && !location.hash && setTimeout(() => shop.welcome(welcome), ms);
-  if (online.needsName() && !online.me().asked && !location.hash) {
+  const friendLink = /(ami|defi)=/.test(location.hash);
+  if (online.needsName() && !online.me().asked && (!location.hash || friendLink)) {
     // First launch: the pseudo first, then straight into the tutorial.
     const fresh = SV.summary().completed === 0;
     ranks.hello({
@@ -1947,7 +2107,8 @@ function boot() {
       onDone: ({ name }) => {
         buildTitle();
         showScreen('title');
-        if (fresh) startLevel(WORLDS[0].levels[0].id);
+        if (friendLink) openFriendLink();
+        else if (fresh) startLevel(WORLDS[0].levels[0].id);
         else {
           if (name) toast(t('ranks.welcomeBack', escapeHtml(name)), 2400);
           showWelcome(600);
@@ -1967,6 +2128,7 @@ function boot() {
     online.sync().catch(() => {});
   };
   setTimeout(syncSoon, 2500);
+  if (friendLink && app.screen !== 'hello') setTimeout(openFriendLink, 600);
   window.addEventListener('online', () => ((lastSync = 0), syncSoon()));
   document.addEventListener('visibilitychange', () => document.visibilityState === 'visible' && syncSoon());
   const unlockAudio = () => sound.unlock();

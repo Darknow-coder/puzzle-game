@@ -1,5 +1,23 @@
 # Journal des versions
 
+## 3.4.0
+
+**Nouveautés**
+
+- **Quêtes de la semaine** (tuile *Quêtes* de l’écran titre, qui remplace *Succès*) : chaque lundi, trois
+  défis tirés au sort, les mêmes pour tous (réussir 5 niveaux différents, 3 du premier coup, sans
+  indice, gagner des étoiles, attraper des lucioles, le défi du jour plusieurs jours, passer devant un
+  ami, créer un niveau vérifié…). Chacune rapporte **60 ✦** ; les trois réussies ouvrent le **coffre de
+  la semaine**, offert. Rejouer le même niveau ne compte qu’une fois. Une quête accomplie s’affiche sur
+  l’écran de victoire, un point rouge signale une récompense à récupérer. Les succès sont dans la même
+  fenêtre.
+- **Amis** (onglet *Amis* du Podium) : ajoute un ami par son pseudo, quelle que soit l’écriture, ou
+  envoie-lui ton **lien d’ami**. Chaque classement (niveau, défi du jour, général) se regarde aussi
+  « entre amis ». La carte d’un joueur permet de l’ajouter ou de le retirer.
+- **Sur l’écran de victoire** : ta place entre amis (« Amis : 1ᵉʳ sur 4 · devant Pip ») et un bouton
+  **Défier un ami** qui envoie un lien vers le niveau avec ton résultat. Le lien ouvert, l’ami voit
+  « Lune te défie ! », ton score, et joue le niveau d’un toucher.
+
 ## 3.3.0
 
 **Nouveautés**

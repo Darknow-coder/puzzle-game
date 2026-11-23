@@ -616,6 +616,7 @@ export function createAtelier(api) {
     entry.verified = v;
     store(entry);
     sound.sfx(v.status === 'ok' ? 'star' : 'invalid', 2);
+    if (v.status === 'ok') api.onVerified?.(entry);
     updateStatus();
   }
 

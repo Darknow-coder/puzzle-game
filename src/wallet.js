@@ -187,14 +187,15 @@ export function chestState() {
 }
 
 /** Opens a chest: {ok, item, milestones} or {ok: false, why: 'empty' | 'coins', missing}. */
-export function openChest(rng = Math.random) {
+export function openChest(rng = Math.random, { free = false } = {}) {
   const w = wallet();
   const left = unownedShop();
   if (!left.length) return { ok: false, why: 'empty' };
-  if (w.coins < CHEST_PRICE) return { ok: false, why: 'coins', missing: CHEST_PRICE - w.coins };
+  if (!free && w.coins < CHEST_PRICE) return { ok: false, why: 'coins', missing: CHEST_PRICE - w.coins };
   const st = chestState();
   const item = drawChest(left, rng, st.guaranteed);
-  spend(CHEST_PRICE, 'chest', item.id);
+  if (free) note(0, 'weekChest', item.id);
+  else spend(CHEST_PRICE, 'chest', item.id);
   grant(item.id);
   w.chest.opened++;
   w.chest.sinceHigh = item.rarity === 'epic' || item.rarity === 'legendary' ? 0 : w.chest.sinceHigh + 1;

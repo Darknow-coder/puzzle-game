@@ -25,6 +25,8 @@ puis appuie sur **Go !** et regarde ton plan se dérouler… en musique.
   général ; la place s’affiche sur l’écran de victoire. Classés par étoiles, pièces, sans indice,
   essais puis temps. Firebase (offre gratuite) en REST, règles de sécurité testées, tout fonctionne
   hors ligne et attend le réseau. Mise en place : [`docs/FIREBASE.md`](docs/FIREBASE.md).
+- **Quêtes de la semaine** (trois défis renouvelés chaque lundi, éclats et coffre offert) et **amis**
+  (ajout par pseudo ou lien, classements entre amis, défis par lien depuis l’écran de victoire).
 - Pensé pour le tactile (toucher, glisser, appui long), jouable à la souris et au clavier.
 - Installable comme une application (PWA) et jouable **hors ligne**. Français / anglais.
 - Zéro dépendance : HTML, CSS, JavaScript, Canvas 2D et Web Audio. Aucune image ni aucun son externe.
@@ -102,6 +104,7 @@ src/data/daily.js        généré : les 427 puzzles du défi du jour (solution 
 src/daily.js             choix du puzzle du jour et série de jours
 src/share.js             image souvenir d’un niveau réussi
 src/backup.js            codes de sauvegarde de la progression
+src/quests.js            quêtes de la semaine : tirage, progression, récompenses
 src/economy.js           tous les montants de l’économie (gains, prix, cadeau du jour)
 src/wallet.js            la bourse : éclats, jetons d’indice, achats, cadeau du jour, journal
 src/data/cosmetics.js    les 37 objets de la boutique (emplacement, rareté, prix), chances du coffre
