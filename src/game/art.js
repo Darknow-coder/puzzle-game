@@ -314,7 +314,7 @@ export function glow(ctx, x, y, r, colorPrefix, alpha = 1) {
 // loaded, or if it cannot load, the procedural sky below is drawn instead.
 const SKY_ART = {};
 let artTimer = 0;
-export function loadSkyArt(base = 'assets/skies/', keys = ['meadow', 'pond', 'grove', 'ruins', 'gloom', 'peak', 'dawn', 'shop']) {
+export function loadSkyArt(base = 'assets/skies/', keys = ['meadow', 'pond', 'grove', 'ruins', 'gloom', 'peak', 'dawn', 'comets', 'shop']) {
   if (typeof Image === 'undefined') return;
   for (const k of keys) {
     const im = new Image();
@@ -731,10 +731,34 @@ export function propSprite(kind, S, worldKey, variant, dpr = 1) {
   g.scale(dpr, dpr);
   const cx = w / 2;
   const by = h - S * 0.18; // ground contact
-  drawProp(g, kind, cx, by, S, variant);
+  const im = SKY_ART['prop-' + kind];
+  if (im) drawPaintedProp(g, im, kind, cx, by, S, variant);
+  else drawProp(g, kind, cx, by, S, variant);
   spr = { canvas: c, w, h, ax: cx, ay: by };
   propCache.set(key, spr);
   return spr;
+}
+
+// Painted props (assets/props, made with tools/imagegen and cut out): how tall
+// each one stands, in cells. Until one has loaded, the drawn prop is used.
+export const PAINTED_PROPS = {
+  tree: 1.45, bush: 0.9, rock: 0.8, flowers: 0.75, reeds: 1.05, stump: 0.75, bigshroom: 1.3, fern: 0.95,
+  pillar: 1.45, block: 0.9, brokenpillar: 1.1, darktree: 1.55, thorns: 0.95, pine: 1.55, snowrock: 0.85,
+  crystal: 1.15, prism: 1.2, starrock: 0.95, telescope: 1.15,
+};
+function drawPaintedProp(g, im, kind, x, y, S, v) {
+  const hh = S * (PAINTED_PROPS[kind] || 1);
+  let ww = (im.width / im.height) * hh;
+  let h2 = hh;
+  if (ww > S * 1.22) {
+    h2 *= (S * 1.22) / ww;
+    ww = S * 1.22;
+  }
+  g.save();
+  g.translate(x, y + S * 0.06);
+  if (v % 2) g.scale(-1, 1); // a little variety: every other one faces the other way
+  g.drawImage(im, -ww / 2, -h2, ww, h2);
+  g.restore();
 }
 
 function shadow(g, x, y, rx, ry, a = 0.25) {

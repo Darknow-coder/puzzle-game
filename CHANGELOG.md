@@ -1,5 +1,21 @@
 # Journal des versions
 
+## 3.9.0
+
+**Graphismes**
+
+- **Les objets des îles sont peints** : arbres, buissons, rochers, fleurs, roseaux, souches,
+  champignons géants, fougères, colonnes et blocs des ruines, arbres sombres et ronces, sapins et
+  rochers enneigés, cristaux, prismes, rochers-étoiles et lunettes d’astronome. Dix-neuf illustrations
+  détourées, dans le style des fonds, à la place des dessins plats (un sur deux est retourné pour
+  varier).
+- **Le Jardin des Comètes a son fond peint** : une mer de nuages sous la voie lactée et ses étoiles
+  filantes.
+- **L’histoire est illustrée** : les sept pages du chapitre 8 et de l’épilogue sont de vraies
+  peintures, animées d’un lent zoom.
+- Tant qu’une image n’est pas chargée (ou hors ligne avant le premier chargement), le jeu dessine
+  l’ancienne version : rien ne manque jamais.
+
 ## 3.8.1
 
 - La carte d’un joueur qui n’a pas encore la 3.8 indique quand il a joué pour la dernière fois

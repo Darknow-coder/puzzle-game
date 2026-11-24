@@ -64,6 +64,20 @@ export const STORIES = {
   },
 };
 
+// Painted pages (assets/story, made with tools/imagegen); until one has
+// loaded, or if it cannot, the page is drawn live instead.
+const ART = {};
+function art(scene) {
+  if (typeof Image === 'undefined') return null;
+  if (!(scene in ART)) {
+    const im = new Image();
+    ART[scene] = null;
+    im.onload = () => (ART[scene] = im);
+    im.src = `assets/story/${scene}.webp`;
+  }
+  return ART[scene];
+}
+
 const W = 300;
 const H = 190;
 const STARS = A.makeStars(140, 31);
@@ -257,7 +271,14 @@ export function createStory({ el, openModal, tr, getLang, click, sound }) {
         g.setTransform(2, 0, 0, 2, 0, 0);
         g.globalAlpha = 1;
         g.clearRect(0, 0, W, H);
-        SCENES[story.pages[page].scene](g, (now - t0) / 1000);
+        const scene = story.pages[page].scene;
+        const t = (now - t0) / 1000;
+        const im = art(scene);
+        if (im) {
+          // A slow zoom keeps the painting alive.
+          const k = 1.02 + 0.04 * (0.5 - 0.5 * Math.cos(t * 0.25));
+          g.drawImage(im, (W - W * k) / 2, (H - H * k) / 2, W * k, H * k);
+        } else SCENES[scene](g, t);
       }
       raf = requestAnimationFrame(frame);
     };
@@ -277,6 +298,7 @@ export function createStory({ el, openModal, tr, getLang, click, sound }) {
       } else m.close();
     };
     box.querySelector('[data-a=skip]').onclick = () => (click(), m.close());
+    story.pages.forEach((p) => art(p.scene)); // start loading every page now
     show();
     raf = requestAnimationFrame(frame);
     return m;
