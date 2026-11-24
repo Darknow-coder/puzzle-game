@@ -29,7 +29,7 @@ import { createStory } from './ui/story.js';
 import { enigmaId, packSize, tierOf, enigmaInfo } from './enigmas.js';
 import * as Q from './quests.js';
 
-const VERSION = '3.9.0';
+const VERSION = '3.10.0';
 const $ = (sel, root = document) => root.querySelector(sel);
 const el = (tag, cls, html) => {
   const e = document.createElement(tag);
@@ -47,7 +47,7 @@ const ICONS = {
   bag: '<svg viewBox="0 0 24 24"><path d="M5 8h14l-1.2 12H6.2L5 8Z"/><path d="M9 10V6.5a3 3 0 0 1 6 0V10"/></svg>',
   trophy: '<svg viewBox="0 0 24 24"><path d="M8 4h8v5a4 4 0 0 1-8 0zM8 6H5a3 3 0 0 0 3 4M16 6h3a3 3 0 0 1-3 4M12 13v4M8 21h8M9 17h6"/></svg>',
   book: '<svg viewBox="0 0 24 24"><path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2zM4 21V5M8 7h7"/></svg>',
-  gear: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1 7 17M17 7l2.1-2.1"/></svg>',
+  gear: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2"/><path d="M10.3 2.8h3.4l.5 2.4 1.9.8 2-1.4 2.4 2.4-1.4 2 .8 1.9 2.4.5v3.4l-2.4.5-.8 1.9 1.4 2-2.4 2.4-2-1.4-1.9.8-.5 2.4h-3.4l-.5-2.4-1.9-.8-2 1.4-2.4-2.4 1.4-2-.8-1.9-2.4-.5v-3.4l2.4-.5.8-1.9-1.4-2 2.4-2.4 2 1.4 1.9-.8z"/></svg>',
   map: '<svg viewBox="0 0 24 24"><path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2zM9 4v14M15 6v14"/></svg>',
   retry: '<svg viewBox="0 0 24 24"><path d="M4 12a8 8 0 1 0 2.4-5.7M4 4v5h5"/></svg>',
   next: '<svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg>',
@@ -130,7 +130,7 @@ function layoutShop() {
   const head = r.querySelector('.shop-head');
   const tabs = r.querySelector('.shop-tabs2');
   if (!head || !tabs) return;
-  const chips = r.querySelector('.who');
+  const chips = r.querySelector('.shop-stage:not(.no-who) .who');
   const bottom = (chips || tabs).getBoundingClientRect().top - 4;
   shopScene.resize(W, H, DPR, head.getBoundingClientRect().bottom, bottom);
 }
@@ -262,20 +262,19 @@ function buildTitle() {
   const started = s.completed > 0;
   root.innerHTML = `
     <div class="title-me"></div>
-    <div class="title-top">${shop.pill()}</div>
+    <div class="title-top">${shop.pill()}<button class="icon-btn title-gear" data-act="settings" aria-label="${t('settings')}">${ICONS.gear}</button></div>
     <div class="logo"><h1>Lumignons</h1><p>${t('tagline')}</p></div>
     <div class="title-actions">
       <button class="btn btn-primary" data-act="play">${ICONS.play}${started ? t('continue') : t('play')}</button>
-      <div class="title-duo">
-        <button class="btn btn-ghost daily-btn" data-act="daily">${ICONS.sun}<span>${t('daily')}</span>${dailyBadge()}</button>
-        <button class="btn btn-ghost" data-act="atelier">${ICONS.pencil}${t('atelier')}</button>
-      </div>
       <div class="title-row">
-        <button class="tile-btn shop-tile" data-act="shop">${ICONS.bag}<span>${t('shop')}</span>${Wallet.giftState().available ? '<i class="gift-dot"></i>' : ''}</button>
-        <button class="tile-btn" data-act="ranks">${ICONS.podium}<span>${t('podium')}</span></button>
+        <button class="tile-btn daily-btn" data-act="daily">${ICONS.sun}<span>${t('dailyShort')}</span>${dailyBadge()}</button>
         <button class="tile-btn" data-act="achievements">${ICONS.trophy}<span>${t('quests.tile')}</span>${Q.toClaim(SV.save, questCtx()) ? '<i class="gift-dot"></i>' : ''}</button>
-        <button class="tile-btn" data-act="notebook">${ICONS.book}<span>${t('notebook')}</span></button>
-        <button class="tile-btn" data-act="settings">${ICONS.gear}<span>${t('settings')}</span></button>
+        <button class="tile-btn" data-act="ranks">${ICONS.podium}<span>${t('podium')}</span></button>
+        <button class="tile-btn shop-tile" data-act="shop">${ICONS.bag}<span>${t('shop')}</span>${Wallet.giftState().available ? '<i class="gift-dot"></i>' : ''}</button>
+      </div>
+      <div class="title-more">
+        <button data-act="atelier">${ICONS.pencil}${t('atelier')}</button>
+        <button data-act="notebook">${ICONS.book}${t('notebook')}</button>
       </div>
       <div class="title-progress">${started ? `★ ${s.stars} / ${s.totalLevels * 3} · ${s.completed}/${s.totalLevels} ${t('level').toLowerCase()}s` : '&nbsp;'}</div>
       ${deferredInstall ? `<button class="install-btn" data-act="install">${t('install')}</button>` : ''}

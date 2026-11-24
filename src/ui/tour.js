@@ -13,8 +13,8 @@ const STEPS = [
     sel: '[data-act=play]',
     title: { fr: 'Jouer', en: 'Play' },
     text: {
-      fr: 'La carte des 7 mondes. Chaque monde ouvre le suivant, avec assez d’étoiles. Un niveau trop dur ? Tu peux en sauter un et y revenir plus tard.',
-      en: 'The map of the 7 worlds. Each world opens the next one, with enough stars. A level too hard? You may skip one and come back later.',
+      fr: 'La carte des 8 mondes. Chaque monde ouvre le suivant, avec assez d’étoiles. Un niveau trop dur ? Tu peux en sauter un et y revenir plus tard.',
+      en: 'The map of the 8 worlds. Each world opens the next one, with enough stars. A level too hard? You may skip one and come back later.',
     },
   },
   {
@@ -26,27 +26,11 @@ const STEPS = [
     },
   },
   {
-    sel: '[data-act=atelier]',
-    title: { fr: 'Atelier', en: 'Workshop' },
+    sel: '[data-act=achievements]',
+    title: { fr: 'Quêtes', en: 'Quests' },
     text: {
-      fr: 'Invente tes propres niveaux. Le jeu vérifie qu’ils sont faisables, puis tu les partages avec un code.',
-      en: 'Make your own levels. The game checks they can be solved, then you share them with a code.',
-    },
-  },
-  {
-    sel: '.title-top [data-act=shop]',
-    title: { fr: 'Tes éclats ✦', en: 'Your glimmers ✦' },
-    text: {
-      fr: 'La monnaie du jeu, gagnée en jouant : premier passage d’un niveau, nouvelles étoiles, succès, défi du jour. Un point rouge ? Un cadeau t’attend.',
-      en: 'The game’s currency, earned by playing: first clears, new stars, achievements, daily puzzles. A red dot? A gift is waiting.',
-    },
-  },
-  {
-    sel: '.shop-tile',
-    title: { fr: 'La boutique', en: 'The shop' },
-    text: {
-      fr: 'Chez Madame Phalène : des indices, et des chapeaux, lunettes, flammes et fêtes pour habiller tes Lumignons.',
-      en: 'Madame Phalène’s: hints, plus hats, glasses, flames and parties to dress up your Lumignons.',
+      fr: 'Chaque semaine, trois quêtes rapportent des éclats, et toutes réussies, un coffre offert ! Tes succès y sont aussi.',
+      en: 'Every week, three quests pay glimmers, and all three together a free chest! Your achievements are there too.',
     },
   },
   {
@@ -58,6 +42,14 @@ const STEPS = [
     },
   },
   {
+    sel: '.shop-tile',
+    title: { fr: 'La boutique et tes éclats ✦', en: 'The shop and your glimmers ✦' },
+    text: {
+      fr: 'Les éclats ✦ (ton compteur est en haut à droite) se gagnent en jouant : niveaux, étoiles, succès, défi du jour. Chez Madame Phalène, ils s’échangent contre des indices et de quoi habiller tes Lumignons. Un point rouge ? Un cadeau t’attend.',
+      en: 'Glimmers ✦ (your counter is at the top right) are earned by playing: levels, stars, achievements, daily puzzles. At Madame Phalène’s they buy hints and outfits for your Lumignons. A red dot? A gift is waiting.',
+    },
+  },
+  {
     sel: '.me-chip',
     title: { fr: 'Ton profil', en: 'Your profile' },
     text: {
@@ -66,19 +58,19 @@ const STEPS = [
     },
   },
   {
-    sel: ['[data-act=achievements]', '[data-act=notebook]'],
-    title: { fr: 'Quêtes et carnet', en: 'Quests and notebook' },
-    text: {
-      fr: 'Chaque semaine, trois quêtes rapportent des éclats, et toutes réussies, un coffre offert ! Tes succès y sont aussi. Le carnet explique chaque élément rencontré sur les îles.',
-      en: 'Every week, three quests pay glimmers, and all three together a free chest! Your achievements are there too. The notebook explains every element met on the islands.',
-    },
-  },
-  {
     sel: '[data-act=settings]',
-    title: { fr: 'Réglages', en: 'Settings' },
+    title: { fr: 'Réglages ⚙', en: 'Settings ⚙' },
     text: {
       fr: 'Son, langue, vitesse… et un code de sauvegarde pour garder ta progression ou la passer sur un autre appareil.',
       en: 'Sound, language, speed… and a backup code to keep your progress or move it to another device.',
+    },
+  },
+  {
+    sel: ['[data-act=atelier]', '[data-act=notebook]'],
+    title: { fr: 'Atelier et carnet', en: 'Workshop and notebook' },
+    text: {
+      fr: 'Tout en bas : l’atelier pour inventer tes propres niveaux et les partager, et le carnet qui explique chaque élément rencontré sur les îles.',
+      en: 'At the bottom: the workshop to make your own levels and share them, and the notebook that explains every element met on the islands.',
     },
   },
   {

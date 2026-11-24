@@ -25,6 +25,14 @@ const TAB_ICONS = {
   collection: '<svg viewBox="0 0 24 24"><path d="M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3z"/><path d="M5 17a3 3 0 0 1 3-3h11"/></svg>',
 };
 const TABS = ['featured', 'hat', 'glasses', 'flame', 'trail', 'party', 'hints', 'collection'];
+// What the shop shows at the top: four groups, each with its own little switch.
+const GROUPS = [
+  { id: 'today', icon: 'featured', tabs: ['featured', 'hints'] },
+  { id: 'outfit', icon: 'hat', tabs: ['hat', 'glasses', 'flame'] },
+  { id: 'effects', icon: 'trail', tabs: ['trail', 'party'] },
+  { id: 'collection', icon: 'collection', tabs: ['collection'] },
+];
+const groupOf = (tab) => GROUPS.find((g) => g.tabs.includes(tab)) || GROUPS[0];
 const WEARABLE = ['hat', 'glasses', 'flame', 'trail', 'party'];
 const PARTY_EMOJI = { classic: '✨', confetti: '🎊', balloons: '🎈', butterflies: '🦋', fireworks: '🎆', starfall: '🌠' };
 const pickOne = (a) => a[Math.floor(Math.random() * a.length)];
@@ -219,10 +227,11 @@ export function createShop(api) {
         <span class="hint-pill">💡 <b>${w.hints}</b></span>
         <button class="icon-btn info-btn" data-a="info" aria-label="${t('info')}"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5h.01"/></svg></button>
       </header>
-      <div class="shop-stage"><div class="bubble"></div>
+      <div class="shop-stage${WEARABLE.includes(tab) ? '' : ' no-who'}"><div class="bubble"></div>
         <div class="who">${[-1, 0, 1, 2, 3].map((c) => `<button data-who="${c}" class="${(c < 0 ? w.same : !w.same && scene.who === c) ? 'on' : ''}">${c < 0 ? t('everyone') : LUMI_NAMES[c]}</button>`).join('')}</div>
       </div>
-      <nav class="shop-tabs2">${TABS.map((k) => `<button data-tab="${k}" class="${k === tab ? 'on' : ''}">${TAB_ICONS[k]}<span>${t('shopTab.' + k)}</span>${tabHasNew(k) ? '<i class="dot"></i>' : ''}</button>`).join('')}</nav>
+      <nav class="shop-tabs2">${GROUPS.map((g) => `<button data-group="${g.id}" class="${g === groupOf(tab) ? 'on' : ''}">${TAB_ICONS[g.icon]}<span>${t('shopGroup.' + g.id)}</span>${g.tabs.some(tabHasNew) ? '<i class="dot"></i>' : ''}</button>`).join('')}</nav>
+      ${groupOf(tab).tabs.length > 1 ? `<div class="shop-sub" role="tablist">${groupOf(tab).tabs.map((k) => `<button data-tab="${k}" role="tab" class="${k === tab ? 'on' : ''}">${t('shopTab.' + k)}${tabHasNew(k) ? '<i class="dot"></i>' : ''}</button>`).join('')}</div>` : ''}
       <div class="shop-panel"></div>
       <div class="shop-action"></div>`;
     r.querySelector('[data-a=back]').onclick = () => (click(), back());
@@ -231,6 +240,13 @@ export function createShop(api) {
       b.onclick = () => {
         click();
         goTab(b.dataset.tab);
+      };
+    });
+    r.querySelectorAll('[data-group]').forEach((b) => {
+      b.onclick = () => {
+        click();
+        const g = GROUPS.find((x) => x.id === b.dataset.group);
+        if (g !== groupOf(tab)) goTab(g.tabs[0]);
       };
     });
     r.querySelectorAll('[data-who]').forEach((b) => (b.onclick = () => setWho(Number(b.dataset.who))));

@@ -48,7 +48,7 @@ const check = (ok, what) => {
       await p.click('.tour-next');
       if (!last) break;
     }
-    check(titles.includes('Podium') && titles.includes('La boutique') && titles.includes('Défi du jour') && titles.includes('Ton profil'), `each part of the menu is shown (${titles.join(', ')})`);
+    check(titles.includes('Podium') && titles.some((x) => x.startsWith('La boutique')) && titles.includes('Défi du jour') && titles.includes('Ton profil') && titles.includes('Atelier et carnet'),`each part of the menu is shown (${titles.join(', ')})`);
     check(titles[titles.length - 1] === 'Bon à savoir', 'it ends with things worth knowing');
     await p.waitForFunction(() => window.lumignons.screen === 'game' && window.lumignons.game.L?.id === '1-2', null, { timeout: 5000 });
     await p.waitForTimeout(400);

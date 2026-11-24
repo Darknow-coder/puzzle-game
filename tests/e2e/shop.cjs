@@ -127,13 +127,16 @@ const KEYS = ['', 'arrow', 'lily', 'mushroom', 'daisy', 'mirror', 'comet'];
       return { id: o.item.id, price: o.price, full: o.full };
     });
     check(offer.price < offer.full && (await p.textContent('#screen-shop .offer-card')).includes('−30 %'), 'today’s offer is shown at −30 %');
+    check(!(await p.isVisible('#screen-shop .who')), 'no Lumignon picker in the showcase, where there is nothing to wear');
     await p.click('#screen-shop .offer-card .btn');
     await p.waitForTimeout(300);
     check((await p.textContent('#screen-shop .shop-action')).includes(String(offer.price)), 'its card opens with the discounted price');
 
     // Trying on and buying a hat for all four.
-    await p.click('#screen-shop [data-tab=hat]');
+    check((await p.$$('#screen-shop .shop-tabs2 button')).length === 4, 'the shop has four tabs only (showcase, outfits, effects, collection)');
+    await p.click('#screen-shop [data-group=outfit]');
     await p.waitForTimeout(200);
+    check(await p.isVisible('#screen-shop .who'), 'the Lumignon picker comes with the outfits');
     await p.click('#screen-shop .sk-card[data-item="beret"]');
     await p.waitForTimeout(200);
     check((await p.evaluate(() => window.lumignons.shopScene.preview?.id)) === 'beret', 'touching a card makes the Lumignons try it on');
@@ -155,7 +158,7 @@ const KEYS = ['', 'arrow', 'lily', 'mushroom', 'daisy', 'mirror', 'comet'];
 
     // The surprise chest: a ceremony, then a new item.
     const ownedBefore = Object.keys((await wallet()).owned).length;
-    await p.click('#screen-shop [data-tab=featured]');
+    await p.click('#screen-shop [data-group=today]');
     await p.waitForTimeout(200);
     check((await p.textContent('#screen-shop .chest-card')).includes('Légendaire 4 %'), 'the chest shows its odds');
     await p.click('#screen-shop .chest-btn');
@@ -168,7 +171,7 @@ const KEYS = ['', 'arrow', 'lily', 'mushroom', 'daisy', 'mirror', 'comet'];
     check(Object.keys(w.owned).length === ownedBefore + 1 && chestName.length > 1 && w.log.includes('chest'), `the chest gives something new (${chestName})`);
 
     // Collection book.
-    await p.click('#screen-shop [data-tab=collection]');
+    await p.click('#screen-shop [data-group=collection]');
     await p.waitForTimeout(300);
     const book = await p.textContent('#screen-shop .shop-panel');
     check(book.includes('25 %') && book.includes('???'), 'the collection shows the milestones and silhouettes of what is missing');

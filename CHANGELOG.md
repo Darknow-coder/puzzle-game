@@ -1,5 +1,19 @@
 # Journal des versions
 
+## 3.10.0
+
+**Menus plus simples**
+
+- **Écran titre** : un grand bouton *Continuer*, puis une seule rangée de quatre tuiles (Défi du
+  jour, Quêtes, Podium, Boutique). Les *Réglages* passent dans une roue dentée en haut à droite, à côté
+  des éclats ; l’*Atelier* et le *Carnet* deviennent deux liens discrets sous les tuiles. Un seul
+  point rouge pour la boutique.
+- **Boutique** : quatre onglets au lieu de huit, sans défilement (*Vitrine*, *Tenues*, *Effets*,
+  *Collection*), chacun avec un petit sélecteur (*Du jour / Indices*, *Chapeaux / Lunettes /
+  Flammes*, *Traînées / Fêtes*). Le choix du Lumignon à habiller (Tous, Pip, Nim…) n’apparaît que
+  là où il sert.
+- La visite guidée du menu suit le nouvel ordre, en une étape de moins.
+
 ## 3.9.0
 
 **Graphismes**
