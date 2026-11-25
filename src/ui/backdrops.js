@@ -95,8 +95,9 @@ export class TitleScene {
       const x = i % this.L.w;
       const y = (i / this.L.w) | 0;
       const [cx, cy] = cell(x, y);
-      const spr = A.propSprite(x < 3 ? 'tree' : 'bush', S, 'meadow', x, this.dpr);
-      items.push([cy + S * 0.22, () => g.drawImage(spr.canvas, cx - spr.ax, cy + S * 0.22 - spr.ay, spr.w, spr.h)]);
+      const kind = x < 3 ? 'tree' : 'bush';
+      const spr = A.propSprite(kind, S, 'meadow', x, this.dpr);
+      items.push([cy + S * 0.22, () => A.drawPropAt(g, spr, kind, cx, cy + S * 0.22, t, x * 7 + y)]);
     }
     const [lx, ly] = cell(3, 1);
     const glowAmt = this.app.progressGlow ? this.app.progressGlow() : 0.5;

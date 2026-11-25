@@ -1011,7 +1011,7 @@ export class GameScene {
         const props = this.style.props;
         const kind = props[Math.floor(A.hash2(x, y, 7) * props.length)];
         const spr = A.propSprite(kind, S, this.worldKey, Math.floor(A.hash2(x, y, 3) * 7), this.dpr);
-        push(base, () => g.drawImage(spr.canvas, cx - spr.ax, base - spr.ay, spr.w, spr.h));
+        push(base, () => A.drawPropAt(g, spr, kind, cx, base, calm ? 0 : t, x * 7 + y));
         v++;
       }
       if (L.lantern[i] >= 0) {

@@ -137,6 +137,8 @@ const KEYS = ['', 'arrow', 'lily', 'mushroom', 'daisy', 'mirror', 'comet'];
     await p.click('#screen-shop [data-group=outfit]');
     await p.waitForTimeout(200);
     check(await p.isVisible('#screen-shop .who'), 'the Lumignon picker comes with the outfits');
+    await p.click('#screen-shop .shop-sub [data-tab=hat]'); // today's offer may have opened another shelf
+    await p.waitForTimeout(200);
     await p.click('#screen-shop .sk-card[data-item="beret"]');
     await p.waitForTimeout(200);
     check((await p.evaluate(() => window.lumignons.shopScene.preview?.id)) === 'beret', 'touching a card makes the Lumignons try it on');

@@ -1,5 +1,20 @@
 # Journal des versions
 
+## 3.11.0
+
+**Graphismes : un seul style**
+
+- Les objets des îles peints en 3.9 ne ressemblaient pas au reste du jeu : ils sont **redessinés dans
+  le style des Lumignons** (contour coloré, dégradé du clair au foncé, petit reflet, ombre douce). Arbres
+  fruitiers, buissons à baies, rochers moussus, fleurs, roseaux et massettes, souches, champignons
+  lumineux, vraies fougères, colonnes et blocs gravés d’une lune qui luit, arbres sombres à baies
+  violettes, ronces fleuries, sapins et rochers enneigés, cristaux, prismes, rochers-étoiles et
+  lunettes d’astronome. Les rochers prennent la teinte de leur monde.
+- Les plantes **se balancent doucement** dans le vent (pas avec « Animations réduites »).
+- L’**histoire** montre de nouveau les vrais Pip, Nim, Lou et Bo, sur les fonds peints des mondes et
+  au milieu des mêmes objets que dans les niveaux.
+- Le fond peint du Jardin des Comètes reste : il est de la même famille que ceux des autres mondes.
+
 ## 3.10.0
 
 **Menus plus simples**

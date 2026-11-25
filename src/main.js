@@ -29,7 +29,7 @@ import { createStory } from './ui/story.js';
 import { enigmaId, packSize, tierOf, enigmaInfo } from './enigmas.js';
 import * as Q from './quests.js';
 
-const VERSION = '3.10.0';
+const VERSION = '3.11.0';
 const $ = (sel, root = document) => root.querySelector(sel);
 const el = (tag, cls, html) => {
   const e = document.createElement(tag);
@@ -2154,7 +2154,6 @@ app.editor = editorScene;
 function boot() {
   A.loadSkyArt();
   A.loadArt({ chest: 'assets/shop/chest.webp' });
-  A.loadArt(Object.fromEntries(Object.keys(A.PAINTED_PROPS).map((k) => ['prop-' + k, `assets/props/${k}.webp`])));
   SV.loadSave();
   const s = SV.save.data.settings;
   setLang(s.lang || detectLang());

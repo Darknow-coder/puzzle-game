@@ -64,20 +64,6 @@ export const STORIES = {
   },
 };
 
-// Painted pages (assets/story, made with tools/imagegen); until one has
-// loaded, or if it cannot, the page is drawn live instead.
-const ART = {};
-function art(scene) {
-  if (typeof Image === 'undefined') return null;
-  if (!(scene in ART)) {
-    const im = new Image();
-    ART[scene] = null;
-    im.onload = () => (ART[scene] = im);
-    im.src = `assets/story/${scene}.webp`;
-  }
-  return ART[scene];
-}
-
 const W = 300;
 const H = 190;
 const STARS = A.makeStars(140, 31);
@@ -152,10 +138,18 @@ function constellation(g, cx, cy, r, t, k = 1) {
   g.restore();
 }
 
+/** One of the islands' props (the same drawings as in the levels). */
+function prop(g, kind, world, x, y, size, v = 1) {
+  const spr = A.propSprite(kind, size, world, v, 2);
+  g.drawImage(spr.canvas, x - spr.ax, y - spr.ay, spr.w, spr.h);
+}
+
 const SCENES = {
   sleep(g, t) {
     worldSky(g, 'dawn');
     island(g, 'dawn', 138);
+    prop(g, 'prism', 'dawn', 16, 146, 34, 1);
+    prop(g, 'prism', 'dawn', 286, 144, 30, 2);
     [44, 114, 186, 256].forEach((x, i) => {
       A.drawLantern(g, x - 8, 140, 50, i, { lit: 0.35, t });
       A.drawLumi(g, x + 18, 152, 38, { color: i, dir: 2, t: t + i, mood: 'sleep' });
@@ -175,6 +169,8 @@ const SCENES = {
     g.fillStyle = 'rgba(255,255,255,0.08)';
     for (let i = 0; i < 20; i++) g.fillRect(STARS[i].x * W, STARS[i].y * H, 1, 1);
     island(g, 'comets', 140);
+    prop(g, 'rock', 'gloom', 18, 148, 30);
+    prop(g, 'rock', 'gloom', 284, 146, 26, 2);
     A.drawLantern(g, 52, 142, 50, 1, { lit: 0.2, t });
     A.drawLantern(g, 248, 142, 50, 2, { lit: 0.2, t });
     A.drawLumi(g, 150, 156, 60, { color: 0, dir: 0, t, mood: 'scared' });
@@ -189,6 +185,7 @@ const SCENES = {
   fallen(g, t) {
     worldSky(g, 'comets');
     island(g, 'comets', 128);
+    prop(g, 'crystal', 'comets', 282, 132, 34);
     [[34, 140, 1], [92, 156, 2], [250, 140, 3], [204, 160, 0]].forEach(([x, y, d], i) => A.drawComet(g, x, y, 50, d, { t: t + i }));
     // One comet keeps flying back up to the sky.
     const k = (t * 0.35) % 1;
@@ -200,6 +197,8 @@ const SCENES = {
     const n = Math.floor(40 * (0.5 + 0.5 * Math.sin(t * 0.5)));
     A.drawStars(g, STARS.slice(0, n), W, H * 0.8, t);
     island(g, 'comets', 134);
+    prop(g, 'telescope', 'comets', 16, 140, 36);
+    prop(g, 'starrock', 'comets', 290, 140, 30);
     A.drawComet(g, 150, 142, 56, 0, { t });
     [46, 96, 204, 254].forEach((x, i) => A.drawLumi(g, x, 166, 46, { color: i, dir: i < 2 ? 1 : 3, t: t + i, mood: 'happy' }));
   },
@@ -208,9 +207,27 @@ const SCENES = {
     const lit = Math.min(1, (t % 6) / 4);
     A.drawStars(g, STARS, W, H, t, lit);
     island(g, 'comets', 140);
+    // Stars rising from the island, each with its golden tail, fading as they climb.
     for (let i = 0; i < 5; i++) {
       const k = (t * 0.3 + i / 5) % 1;
-      A.drawComet(g, 32 + i * 59, 146 - k * 110, 40, 0, { t: t + i, fly: Math.min(0.9, k * 1.2) });
+      const x = 32 + i * 59 + Math.sin(k * 3 + i) * 6;
+      const y = 140 - k * 120;
+      const a = Math.min(1, k * 6) * (1 - k * 0.7);
+      const tail = g.createLinearGradient(x, y, x, y + 34);
+      tail.addColorStop(0, `rgba(255,236,160,${0.8 * a})`);
+      tail.addColorStop(1, 'rgba(160,190,255,0)');
+      g.fillStyle = tail;
+      g.beginPath();
+      g.moveTo(x - 4, y);
+      g.quadraticCurveTo(x - 2, y + 22, x, y + 34);
+      g.quadraticCurveTo(x + 2, y + 22, x + 4, y);
+      g.closePath();
+      g.fill();
+      A.glow(g, x, y, 16, 'rgba(255,225,140,', 0.8 * a);
+      g.globalAlpha = a;
+      g.fillStyle = '#ffe9a0';
+      A.star(g, x, y, 6, 5, 0.46);
+      g.globalAlpha = 1;
     }
     [110, 190].forEach((x, i) => A.drawLumi(g, x, 170, 46, { color: i, dir: 0, t: t + i, mood: 'happy' }));
   },
@@ -226,6 +243,8 @@ const SCENES = {
     A.drawStars(g, STARS, W, H, t);
     constellation(g, 222, 38, 26, t, 0.8);
     island(g, 'meadow', 136);
+    prop(g, 'flowers', 'meadow', 8, 144, 26, 1);
+    prop(g, 'flowers', 'meadow', 294, 142, 24, 2);
     [40, 112, 186, 258].forEach((x, i) => {
       A.drawLantern(g, x - 14, 138, 44, i, { lit: 1, t });
       A.drawLumi(g, x + 12, 156, 42, { color: i, dir: 2, t: t + i * 0.7, mood: 'happy' });
@@ -271,14 +290,7 @@ export function createStory({ el, openModal, tr, getLang, click, sound }) {
         g.setTransform(2, 0, 0, 2, 0, 0);
         g.globalAlpha = 1;
         g.clearRect(0, 0, W, H);
-        const scene = story.pages[page].scene;
-        const t = (now - t0) / 1000;
-        const im = art(scene);
-        if (im) {
-          // A slow zoom keeps the painting alive.
-          const k = 1.02 + 0.04 * (0.5 - 0.5 * Math.cos(t * 0.25));
-          g.drawImage(im, (W - W * k) / 2, (H - H * k) / 2, W * k, H * k);
-        } else SCENES[scene](g, t);
+        SCENES[story.pages[page].scene](g, (now - t0) / 1000);
       }
       raf = requestAnimationFrame(frame);
     };
@@ -298,7 +310,6 @@ export function createStory({ el, openModal, tr, getLang, click, sound }) {
       } else m.close();
     };
     box.querySelector('[data-a=skip]').onclick = () => (click(), m.close());
-    story.pages.forEach((p) => art(p.scene)); // start loading every page now
     show();
     raf = requestAnimationFrame(frame);
     return m;
